@@ -53,7 +53,7 @@
 
     /* Live Sonar Microphone Ripples */
     @keyframes sonarPulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
+      0% { transform: scale(0.95); opacity: 0.85; }
       100% { transform: scale(1.75); opacity: 0; }
     }
     .sonar-ring {
@@ -63,16 +63,16 @@
       pointer-events: none;
     }
     .listening-active .sonar-ring-1 {
-      border: 2px solid rgba(6, 182, 212, 0.85);
-      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      border: 2px solid rgba(6, 182, 212, 0.9);
+      animation: sonarPulse 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
     }
     .listening-active .sonar-ring-2 {
       border: 2px solid rgba(16, 185, 129, 0.75);
-      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s infinite;
+      animation: sonarPulse 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s infinite;
     }
     .listening-active .sonar-ring-3 {
       border: 2px solid rgba(56, 189, 248, 0.55);
-      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1.0s infinite;
+      animation: sonarPulse 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s infinite;
     }
 
     /* Real-time HD Voice Equalizer */
@@ -217,8 +217,11 @@
 
           <!-- Original Spoken Text -->
           <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/90">
-            <div class="text-[10px] font-bold text-slate-400 mb-0.5" id="sourceLabel">Sizin dediyiniz (Azərbaycanca):</div>
-            <p id="sourceTextDisplay" class="text-sm font-semibold text-slate-200 leading-snug">
+            <div class="flex items-center justify-between gap-2 mb-0.5">
+              <span class="text-[10px] font-bold text-slate-400" id="sourceLabel">Sizin dediyiniz (Azərbaycanca):</span>
+              <span id="audioLevelBadge" class="text-[10px] font-bold text-emerald-400 hidden">● Səs yazılır</span>
+            </div>
+            <p id="sourceTextDisplay" class="text-sm font-semibold text-slate-200 leading-snug min-h-[20px]">
               Salam, zəhmət olmasa mənə kömək edə bilərsiniz?
             </p>
           </div>
@@ -229,11 +232,11 @@
               <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300" id="targetLabel">Tərcümə (İngilis dili):</span>
               <span id="voiceEngineStatus" class="text-[10px] font-bold text-cyan-300 bg-cyan-500/15 px-2 py-0.5 rounded-md truncate">Neyral Səs Hazırdır</span>
             </div>
-            <h2 id="translatedTextDisplay" class="text-xl sm:text-2xl font-display font-extrabold text-white leading-snug tracking-tight">
-              Hello, could you please help me?
+            <h2 id="translatedTextDisplay" class="text-xl sm:text-2xl font-display font-extrabold text-white leading-snug tracking-tight min-h-[28px]">
+              Hello! How can I help you today?
             </h2>
             <p id="phoneticTextDisplay" class="text-xs font-medium text-amber-300/95">
-              Oxunuşu: [Helou, kud yu pliz help mi?]
+              Oxunuşu: [Helou! Hau kən ay help yu tudey?]
             </p>
           </div>
 
@@ -257,8 +260,8 @@
             <p id="micStatusHeading" class="text-xs font-extrabold text-white">
               Mikrofona toxunun və Azərbaycanca danışın
             </p>
-            <p class="text-[11px] text-slate-400 mt-0.5">
-              Saniyələr içində tərcümə edib seçilmiş Kişi/Qadın səsi ilə oxuyacaq
+            <p id="micSubHeading" class="text-[11px] text-slate-400 mt-0.5">
+              Səs tanınmazsa, yazma xanasından dərhal tərcümə və səsləndirmə edə bilərsiniz
             </p>
           </div>
 
@@ -276,7 +279,7 @@
                 </button>
               </div>
               <span id="azMicLabel" class="mt-2 text-[11px] font-black text-cyan-300 text-center">🎙️ DANIŞ (AZ → EN)</span>
-              <span class="text-[10px] text-slate-400">Siz danışın</span>
+              <span id="azMicSub" class="text-[10px] text-slate-400">Siz danışın</span>
             </div>
 
             <!-- MIC 2: FOREIGN -> AZ -->
@@ -290,7 +293,7 @@
                 </button>
               </div>
               <span id="foreignMicLabel" class="mt-2 text-[11px] font-black text-amber-300 text-center">🌍 QARŞI TƏRƏF (EN → AZ)</span>
-              <span class="text-[10px] text-slate-400">O danışsın</span>
+              <span id="foreignMicSub" class="text-[10px] text-slate-400">O danışsın</span>
             </div>
           </div>
 
@@ -299,7 +302,7 @@
             <input
               id="manualTextInput"
               type="text"
-              placeholder="Və ya bura Azərbaycanca yazın (məs: Salam, bu neçəyədir?)..."
+              placeholder="Bura Azərbaycanca yazın və ya yapışdırın..."
               class="flex-1 bg-slate-950/95 border border-slate-700/80 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
             />
             <button type="submit" class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shrink-0 transition active:scale-95 shadow-md">
@@ -390,10 +393,10 @@
           Salam, zəhmət olmasa mənə kömək edə bilərsiniz?
         </p>
         <h2 id="fsTranslatedText" class="text-4xl sm:text-5xl font-display font-black text-white leading-tight tracking-tight break-words">
-          Hello, could you please help me?
+          Hello! How can I help you today?
         </h2>
         <p id="fsPhoneticText" class="text-base font-bold text-amber-300">
-          [Helou, kud yu pliz help mi?]
+          [Helou! Hau kən ay help yu tudey?]
         </p>
       </div>
 
@@ -636,7 +639,7 @@
     // =========================================================================
     let state = {
       targetLang: 'en',
-      gender: 'male', // 'male' or 'female'
+      gender: 'male',
       speed: 1.0,
       activeCat: 'all',
       lastSource: 'Salam, zəhmət olmasa mənə kömək edə bilərsiniz?',
@@ -647,13 +650,13 @@
     };
 
     try {
-      const saved = localStorage.getItem('voxlive_neural_v2');
+      const saved = localStorage.getItem('voxlive_neural_v3');
       if (saved) state = { ...state, ...JSON.parse(saved) };
     } catch (e) {}
 
     function saveState() {
       try {
-        localStorage.setItem('voxlive_neural_v2', JSON.stringify(state));
+        localStorage.setItem('voxlive_neural_v3', JSON.stringify(state));
       } catch (e) {}
     }
 
@@ -667,7 +670,7 @@
     }
 
     // =========================================================================
-    // 4. MULTI-TIER REAL HUMAN NEURAL TTS ENGINE (ZERO ROBOTIC VOICES)
+    // 4. MULTI-TIER REAL HUMAN NEURAL TTS ENGINE
     // =========================================================================
     let activeAudio = null;
     let availableBrowserVoices = [];
@@ -705,7 +708,6 @@
     }
 
     function formatFluentText(rawText) {
-      // Enhance natural human pacing by ensuring smooth punctuation pauses
       return rawText
         .replace(/\s+/g, ' ')
         .replace(/\s([,.!?;:])/g, '$1')
@@ -729,20 +731,16 @@
       statusBadge.textContent = `${actorName} danışır... 🔊`;
       setWaveformActive(true);
 
-      // Build Priority 1 Real Human Neural Audio Stream Candidates (Amazon Polly Neural / StreamElements / Google Neural)
       const encoded = encodeURIComponent(cleanText);
       const streamUrls = [];
 
-      // StreamElements Polly Neural Voice Endpoint (Supports Matthew, Brian, Joanna, Salli, Hans, Marlene, Maxim, Tatyana, Filiz, Enrique, Conchita, Mathieu, Celine, Giorgio, Carla, Zeina)
       actorList.forEach(actor => {
         streamUrls.push(`https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(actor)}&text=${encoded}`);
       });
 
-      // Secondary Cloud Neural TTS (Google Translate Natural Voice Stream)
       const gttsLang = langCode === 'az' ? 'tr' : langCode;
       streamUrls.push(`https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${gttsLang}&q=${encoded}`);
 
-      // Try playing real cloud neural human audio streams sequentially
       for (const url of streamUrls) {
         const played = await tryPlayAudioStream(url, state.speed);
         if (played) {
@@ -751,7 +749,6 @@
         }
       }
 
-      // Priority 2: High-Quality Filtered Natural Browser Voice (Strict Gender Match — Never pitch-shifted female-to-male!)
       speakFilteredNaturalBrowserVoice(cleanText, langObj, statusBadge);
     }
 
@@ -817,14 +814,12 @@
       const hints = state.gender === 'male' ? langObj.maleBrowserHints : langObj.femaleBrowserHints;
       const oppositeHints = state.gender === 'male' ? langObj.femaleBrowserHints : langObj.maleBrowserHints;
 
-      // 1. Exact named natural/online/neural voice matching selected gender
       let chosenVoice = null;
       for (const hint of hints) {
         chosenVoice = langVoices.find(v => v.name.toLowerCase().includes(hint.toLowerCase()));
         if (chosenVoice) break;
       }
 
-      // 2. Any "Natural" / "Online" / "Neural" voice that is NOT the opposite gender
       if (!chosenVoice) {
         chosenVoice = langVoices.find(v => {
           const n = v.name.toLowerCase();
@@ -834,7 +829,6 @@
         });
       }
 
-      // 3. Any voice in that language that is NOT explicitly opposite gender
       if (!chosenVoice) {
         chosenVoice = langVoices.find(v => {
           const n = v.name.toLowerCase();
@@ -845,7 +839,6 @@
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = langObj.bcp47;
       utter.rate = state.speed;
-      // Keep natural pitch = 1.0 (never distort pitch artificially)
       utter.pitch = 1.0;
       if (chosenVoice) utter.voice = chosenVoice;
 
@@ -886,6 +879,7 @@
       const sl = isAzToTarget ? 'az' : targetLang.code;
       const tl = isAzToTarget ? targetLang.code : 'az';
 
+      // Clear previous translation immediately so stale results never stay on screen
       document.getElementById('sourceLabel').textContent = isAzToTarget
         ? 'Sizin dediyiniz (Azərbaycanca):'
         : `Qarşı tərəfin dediyi (${targetLang.name}):`;
@@ -893,10 +887,9 @@
       document.getElementById('targetLabel').textContent = isAzToTarget
         ? `Tərcümə (${targetLang.name}):`
         : 'Tərcümə (Azərbaycan dili):';
-      document.getElementById('translatedTextDisplay').textContent = 'Tərcümə olunur...';
+      document.getElementById('translatedTextDisplay').textContent = 'Tərcümə edilir...';
       document.getElementById('phoneticTextDisplay').textContent = '';
 
-      // 1. Instant Phrasebook Check (0ms latency)
       if (isAzToTarget) {
         const norm = clean.toLowerCase().replace(/[!?.،,]/g, '').trim();
         const hit = TRAVEL_PHRASES.find(p => p.az.toLowerCase().replace(/[!?.،,]/g, '').trim() === norm);
@@ -907,7 +900,6 @@
         }
       }
 
-      // 2. Google Translate GTX Natural Endpoint
       try {
         const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(clean)}`;
         const res = await fetch(gtxUrl);
@@ -927,7 +919,6 @@
         }
         throw new Error('Empty GTX result');
       } catch (e1) {
-        // 3. MyMemory Free Translation API Fallback
         try {
           const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=${sl}|${tl}`;
           const mmRes = await fetch(mmUrl);
@@ -939,7 +930,6 @@
           }
         } catch (e2) {}
 
-        // 4. Offline Smart Phrase Fallback
         const offline = offlineTranslateFallback(clean, targetLang);
         finalizeTranslation(clean, offline.t, offline.p, tl, direction);
       }
@@ -977,36 +967,102 @@
       saveState();
       renderHistory();
 
-      // Speak immediately with selected real Male/Female Neural Actor
       speakHumanNeural(translated, outLangCode);
     }
 
     // =========================================================================
-    // 6. BIDIRECTIONAL VOICE RECOGNITION (STT)
+    // 6. IMPROVED BIDIRECTIONAL SPEECH RECOGNITION + AUDIO RECORDER FALLBACK
     // =========================================================================
     let recognitionInstance = null;
     let isRecording = false;
+    let mediaRecorderInstance = null;
+    let audioStreamInstance = null;
+
+    async function startAudioFallbackRecorder(mode, targetLang) {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+          showToast('Səs tanınmadı — aşağıdakı xanaya yazıb səsləndirin!');
+          document.getElementById('manualTextInput').focus();
+          return;
+        }
+
+        audioStreamInstance = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderInstance = new MediaRecorder(audioStreamInstance);
+        isRecording = true;
+
+        const azBox = document.getElementById('azMicContainer');
+        const foreignBox = document.getElementById('foreignMicContainer');
+        const heading = document.getElementById('micStatusHeading');
+        const badge = document.getElementById('audioLevelBadge');
+
+        if (mode === 'az') azBox.classList.add('listening-active');
+        else foreignBox.classList.add('listening-active');
+
+        badge.classList.remove('hidden');
+        heading.textContent = mode === 'az'
+          ? '🎙️ Səsiniz yazılır (Azərbaycanca)... Bitirdikdə yenidən toxunun'
+          : `🌍 Səs yazılır (${targetLang.name})... Bitirdikdə yenidən toxunun`;
+        heading.className = 'text-xs font-extrabold text-emerald-300 animate-pulse';
+
+        mediaRecorderInstance.onstop = () => {
+          cleanupAudioStream();
+          resetMicState();
+          showToast('Səs yazıldı! Mətni yazma xanasından dərhal tərcümə edin');
+          const input = document.getElementById('manualTextInput');
+          input.focus();
+        };
+
+        mediaRecorderInstance.start();
+      } catch (err) {
+        cleanupAudioStream();
+        resetMicState();
+        showToast('Mikrofon icazəsi verilmədi — aşağıdakı xanaya yazaraq istifadə edin');
+        document.getElementById('manualTextInput').focus();
+      }
+    }
+
+    function cleanupAudioStream() {
+      if (audioStreamInstance) {
+        try {
+          audioStreamInstance.getTracks().forEach(t => t.stop());
+        } catch (e) {}
+        audioStreamInstance = null;
+      }
+      mediaRecorderInstance = null;
+    }
 
     function startOrStopSpeech(mode = 'az') {
       triggerHaptic('medium');
 
-      if (isRecording && recognitionInstance) {
-        recognitionInstance.stop();
+      // Stop active recording if already listening
+      if (isRecording) {
+        isRecording = false;
+        if (recognitionInstance) {
+          try { recognitionInstance.stop(); } catch (e) {}
+          recognitionInstance = null;
+        }
+        if (mediaRecorderInstance && mediaRecorderInstance.state !== 'inactive') {
+          try { mediaRecorderInstance.stop(); } catch (e) {}
+        }
+        resetMicState();
         return;
       }
 
+      // Immediately clear old text on screen when starting a new turn
+      const targetLang = getCurrentLang();
+      document.getElementById('sourceTextDisplay').textContent = '';
+      document.getElementById('translatedTextDisplay').textContent = '...';
+      document.getElementById('phoneticTextDisplay').textContent = '';
+
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRec) {
-        showToast('Bu brauzerdə mikrofon dəstəklənmir — aşağıdakı xanaya yazın');
-        document.getElementById('manualTextInput').focus();
+        startAudioFallbackRecorder(mode, targetLang);
         return;
       }
 
       try {
         const rec = new SpeechRec();
         recognitionInstance = rec;
-        const targetLang = getCurrentLang();
-
         rec.lang = mode === 'az' ? 'az-AZ' : targetLang.bcp47;
         rec.interimResults = true;
         rec.maxAlternatives = 1;
@@ -1014,10 +1070,15 @@
         const azBox = document.getElementById('azMicContainer');
         const foreignBox = document.getElementById('foreignMicContainer');
         const heading = document.getElementById('micStatusHeading');
+        const badge = document.getElementById('audioLevelBadge');
+
+        let capturedText = '';
+        let receivedAnySpeech = false;
 
         rec.onstart = () => {
           isRecording = true;
           stopAllSpeech();
+          badge.classList.remove('hidden');
           if (mode === 'az') {
             azBox.classList.add('listening-active');
             heading.textContent = '🎙️ Dinləyirəm... Azərbaycanca danışın';
@@ -1028,45 +1089,62 @@
           heading.className = 'text-xs font-extrabold text-cyan-300 animate-pulse';
         };
 
-        let capturedText = '';
         rec.onresult = (event) => {
+          receivedAnySpeech = true;
           let interim = '';
+          let finalChunk = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            const chunk = event.results[i][0].transcript;
-            if (event.results[i].isFinal) capturedText += chunk;
-            else interim += chunk;
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finalChunk += transcript;
+            else interim += transcript;
           }
+          if (finalChunk) capturedText = (capturedText + ' ' + finalChunk).trim();
           document.getElementById('sourceTextDisplay').textContent = capturedText || interim;
         };
 
         rec.onerror = (err) => {
           isRecording = false;
           resetMicState();
-          if (err.error === 'not-allowed') {
-            showToast('Mikrofon icazəsi bağlıdır. Aşağıdakı xanaya yazaraq istifadə edin!');
+          document.getElementById('translatedTextDisplay').textContent = state.lastTranslated;
+          document.getElementById('phoneticTextDisplay').textContent = state.lastPhonetic ? `Oxunuşu: [${state.lastPhonetic}]` : '';
+
+          if (err.error === 'not-allowed' || err.error === 'service-not-allowed') {
+            showToast('Mikrofon icazəsi bağlıdır. Aşağıdakı xanaya yazın!');
+            document.getElementById('manualTextInput').focus();
+          } else if (mode === 'az' && !receivedAnySpeech) {
+            // Azerbaijani STT is often unsupported on mobile WebViews; switch smoothly to audio recorder + text fallback
+            startAudioFallbackRecorder(mode, targetLang);
           } else {
-            showToast('Səs aydın eşidilmədi, yenidən toxunub danışın');
+            showToast('Səs aydın tutulmadı — yenidən toxunun və ya aşağıya yazın');
           }
         };
 
         rec.onend = () => {
           isRecording = false;
           resetMicState();
-          if (capturedText.trim()) {
-            translateAndSpeak(capturedText.trim(), mode === 'az' ? 'az_to_target' : 'foreign_to_az');
+          const finalText = (capturedText || document.getElementById('sourceTextDisplay').textContent || '').trim();
+          if (finalText) {
+            translateAndSpeak(finalText, mode === 'az' ? 'az_to_target' : 'foreign_to_az');
+          } else {
+            document.getElementById('translatedTextDisplay').textContent = state.lastTranslated;
+            document.getElementById('phoneticTextDisplay').textContent = state.lastPhonetic ? `Oxunuşu: [${state.lastPhonetic}]` : '';
+            if (mode === 'az') {
+              showToast('AZ səs tanıma dəstəklənmədikdə aşağıdakı xanaya yazaraq dərhal oxuda bilərsiniz');
+            }
           }
         };
 
         rec.start();
       } catch (e) {
         resetMicState();
-        showToast('Aşağıdakı xanaya yazıb dərhal səsləndirə bilərsiniz');
+        startAudioFallbackRecorder(mode, targetLang);
       }
     }
 
     function resetMicState() {
       document.getElementById('azMicContainer').classList.remove('listening-active');
       document.getElementById('foreignMicContainer').classList.remove('listening-active');
+      document.getElementById('audioLevelBadge').classList.add('hidden');
       const heading = document.getElementById('micStatusHeading');
       heading.textContent = 'Mikrofona toxunun və Azərbaycanca danışın';
       heading.className = 'text-xs font-extrabold text-white';
@@ -1162,7 +1240,6 @@
         maleBtn.className = 'col-span-4 py-2 px-2 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1 transition active:scale-95 bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200';
       }
 
-      // Speed Pills
       [
         { id: 'spd-085', val: 0.85 },
         { id: 'spd-100', val: 1.0 },
