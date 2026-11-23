@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="az" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VoxLive Pro — Real-Time Səsli Tərcüməçi</title>
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#060912',
+            cyanPro: '#06B6D4',
+            emeraldPro: '#10B981',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #050810;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Live Sonar Microphone Ripples */
+    @keyframes sonarPulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      100% { transform: scale(1.75); opacity: 0; }
+    }
+    .sonar-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      pointer-events: none;
+    }
+    .listening-active .sonar-ring-1 {
+      border: 2px solid rgba(6, 182, 212, 0.85);
+      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+    }
+    .listening-active .sonar-ring-2 {
+      border: 2px solid rgba(16, 185, 129, 0.75);
+      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s infinite;
+    }
+    .listening-active .sonar-ring-3 {
+      border: 2px solid rgba(56, 189, 248, 0.55);
+      animation: sonarPulse 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1.0s infinite;
+    }
+
+    /* Real-time HD Voice Equalizer */
+    @keyframes waveDance {
+      0%, 100% { height: 5px; }
+      50% { height: 24px; }
+    }
+    .wave-bar {
+      width: 3.5px;
+      height: 5px;
+      border-radius: 9999px;
+      transition: height 0.15s ease;
+    }
+    .wave-active .wave-bar {
+      animation: waveDance 0.55s ease-in-out infinite;
+    }
+    .wave-active .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-active .wave-bar:nth-child(3) { animation-delay: 0.22s; }
+    .wave-active .wave-bar:nth-child(4) { animation-delay: 0.34s; }
+    .wave-active .wave-bar:nth-child(5) { animation-delay: 0.16s; }
+    .wave-active .wave-bar:nth-child(6) { animation-delay: 0.28s; }
+    .wave-active .wave-bar:nth-child(7) { animation-delay: 0.06s; }
+
+    @keyframes fadeSlideUp {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-card {
+      animation: fadeSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center bg-[#04070E] text-slate-100 selection:bg-cyan-500/30">
+
+  <!-- Ambient Glass Lighting -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden flex justify-center">
+    <div class="w-[460px] h-[460px] bg-cyan-500/12 rounded-full blur-[130px] -top-28 -left-20"></div>
+    <div class="w-[420px] h-[420px] bg-emerald-500/12 rounded-full blur-[130px] top-1/2 -right-24"></div>
+  </div>
+
+  <!-- Telegram Mini App Container -->
+  <div class="relative w-full max-w-[480px] min-h-screen flex flex-col bg-[#070B15]/95 border-x border-slate-800/80 shadow-2xl">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#070B15]/92 border-b border-slate-800/80 px-3.5 py-3">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Brand Identity -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 via-emerald-400 to-teal-500 p-[1.5px] shrink-0 shadow-lg shadow-cyan-500/20">
+            <div class="w-full h-full bg-[#070B15] rounded-[14px] flex items-center justify-center">
+              <i data-lucide="audio-waveform" class="w-4 h-4 text-cyan-400"></i>
+            </div>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-display font-extrabold text-sm tracking-tight text-white truncate">VoxLive Pro</h1>
+              <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/35">NEURAL HD</span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate">Real İnsan Səsli Tərcüməçi</p>
+          </div>
+        </div>
+
+        <!-- Download index.html Button -->
+        <button onclick="downloadIndexHtml()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600/35 to-emerald-600/35 hover:from-cyan-600/50 hover:to-emerald-600/50 border border-cyan-500/45 text-cyan-100 text-[11px] font-extrabold transition active:scale-95 shrink-0 shadow-md">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-300"></i>
+          <span>index.html Yüklə</span>
+        </button>
+      </div>
+
+      <!-- Target Language Selector Strip -->
+      <div class="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="targetLangStrip"></div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="flex-1 px-3.5 pt-3 pb-24 overflow-y-auto">
+
+      <!-- ================================================================
+           TAB 1: CANLI TƏRCÜMƏÇİ (LIVE TRANSLATOR)
+      ================================================================ -->
+      <section id="view-translator" class="space-y-3 animate-card">
+
+        <!-- HUMAN VOICE STUDIO CONTROL BAR (MALE vs FEMALE + SPEED + TEST) -->
+        <div class="rounded-3xl bg-slate-900/90 border border-slate-800/90 p-3 space-y-2.5 shadow-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="actorBadgeText" class="text-[11px] font-extrabold text-cyan-300">Matthew • Təbii Kişi Səsi</span>
+            </div>
+
+            <!-- Speed Pill Selector -->
+            <div class="flex items-center bg-slate-950/90 border border-slate-800 rounded-xl p-0.5">
+              <button onclick="setSpeechSpeed(0.85)" id="spd-085" class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 transition">0.85x</button>
+              <button onclick="setSpeechSpeed(1.0)" id="spd-100" class="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 transition">1.0x</button>
+              <button onclick="setSpeechSpeed(1.15)" id="spd-115" class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 transition">1.15x</button>
+            </div>
+          </div>
+
+          <!-- Gender Selection & Instant Voice Test -->
+          <div class="grid grid-cols-12 gap-1.5">
+            <button onclick="setVoiceGender('male')" id="btnGenderMale"
+              class="col-span-4 py-2 px-2 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-1 transition active:scale-95 bg-gradient-to-r from-cyan-500/25 to-blue-500/25 border-cyan-400/60 text-white shadow-sm">
+              <span>🧔</span>
+              <span>Kişi Səsi</span>
+            </button>
+
+            <button onclick="setVoiceGender('female')" id="btnGenderFemale"
+              class="col-span-4 py-2 px-2 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1 transition active:scale-95 bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200">
+              <span>👩</span>
+              <span>Qadın Səsi</span>
+            </button>
+
+            <button onclick="testCurrentVoiceActor()"
+              class="col-span-4 py-2 px-2 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center justify-center gap-1 transition active:scale-95"
+              title="Seçilmiş səs aktyorunu dərhal yoxla">
+              <span>🔊</span>
+              <span>Səsi Yoxla</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- LIVE TRANSLATION DISPLAY CARD -->
+        <div class="rounded-3xl bg-gradient-to-b from-slate-900/95 via-[#0B1324] to-slate-950 border border-slate-700/80 p-4 shadow-2xl space-y-3 relative overflow-hidden">
+          <!-- Direction & Waveform Header -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-[11px] font-extrabold">
+              <span id="dirFromTag" class="px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">🇦🇿 Azərbaycan</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span id="dirToTag" class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">🇬🇧 İngilis dili</span>
+            </div>
+
+            <!-- Live Audio Waveform -->
+            <div id="voiceWaveform" class="flex items-center gap-1 h-6 px-1.5">
+              <div class="wave-bar bg-cyan-400"></div>
+              <div class="wave-bar bg-emerald-400"></div>
+              <div class="wave-bar bg-cyan-300"></div>
+              <div class="wave-bar bg-emerald-300"></div>
+              <div class="wave-bar bg-cyan-400"></div>
+              <div class="wave-bar bg-emerald-400"></div>
+              <div class="wave-bar bg-cyan-300"></div>
+            </div>
+          </div>
+
+          <!-- Original Spoken Text -->
+          <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/90">
+            <div class="text-[10px] font-bold text-slate-400 mb-0.5" id="sourceLabel">Sizin dediyiniz (Azərbaycanca):</div>
+            <p id="sourceTextDisplay" class="text-sm font-semibold text-slate-200 leading-snug">
+              Salam, zəhmət olmasa mənə kömək edə bilərsiniz?
+            </p>
+          </div>
+
+          <!-- Translated Output -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/55 to-emerald-950/45 border border-cyan-500/35 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300" id="targetLabel">Tərcümə (İngilis dili):</span>
+              <span id="voiceEngineStatus" class="text-[10px] font-bold text-cyan-300 bg-cyan-500/15 px-2 py-0.5 rounded-md truncate">Neyral Səs Hazırdır</span>
+            </div>
+            <h2 id="translatedTextDisplay" class="text-xl sm:text-2xl font-display font-extrabold text-white leading-snug tracking-tight">
+              Hello, could you please help me?
+            </h2>
+            <p id="phoneticTextDisplay" class="text-xs font-medium text-amber-300/95">
+              Oxunuşu: [Helou, kud yu pliz help mi?]
+            </p>
+          </div>
+
+          <!-- Replay Loudly & Fullscreen Show Card -->
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="replayCurrentAudio()" class="flex items-center justify-center gap-1.5 py-3 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95">
+              <i data-lucide="volume-2" class="w-4 h-4 stroke-[2.5]"></i>
+              <span>Yenidən Oxu 🔊</span>
+            </button>
+
+            <button onclick="openFullscreenModal()" class="flex items-center justify-center gap-1.5 py-3 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-extrabold text-xs transition active:scale-95">
+              <i data-lucide="maximize-2" class="w-4 h-4 text-cyan-400"></i>
+              <span>Tam Ekran Göstər 📱</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- DUAL MICROPHONE & MANUAL INPUT PANEL -->
+        <div class="rounded-3xl bg-slate-900/85 border border-slate-800/90 p-4 flex flex-col items-center space-y-3.5 shadow-xl">
+          <div class="text-center">
+            <p id="micStatusHeading" class="text-xs font-extrabold text-white">
+              Mikrofona toxunun və Azərbaycanca danışın
+            </p>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Saniyələr içində tərcümə edib seçilmiş Kişi/Qadın səsi ilə oxuyacaq
+            </p>
+          </div>
+
+          <!-- Two Big Microphones -->
+          <div class="grid grid-cols-2 gap-3 w-full pt-1">
+            <!-- MIC 1: AZ -> TARGET -->
+            <div id="azMicContainer" class="relative flex flex-col items-center p-3 rounded-3xl bg-slate-950/70 border border-cyan-500/30">
+              <div class="relative w-20 h-20 flex items-center justify-center">
+                <div class="sonar-ring sonar-ring-1"></div>
+                <div class="sonar-ring sonar-ring-2"></div>
+                <div class="sonar-ring sonar-ring-3"></div>
+                <button onclick="startOrStopSpeech('az')"
+                  class="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-500 flex flex-col items-center justify-center text-slate-950 shadow-xl shadow-cyan-500/30 transition active:scale-90">
+                  <i data-lucide="mic" class="w-8 h-8 stroke-[2.5]"></i>
+                </button>
+              </div>
+              <span id="azMicLabel" class="mt-2 text-[11px] font-black text-cyan-300 text-center">🎙️ DANIŞ (AZ → EN)</span>
+              <span class="text-[10px] text-slate-400">Siz danışın</span>
+            </div>
+
+            <!-- MIC 2: FOREIGN -> AZ -->
+            <div id="foreignMicContainer" class="relative flex flex-col items-center p-3 rounded-3xl bg-slate-950/70 border border-amber-500/30">
+              <div class="relative w-20 h-20 flex items-center justify-center">
+                <div class="sonar-ring sonar-ring-1"></div>
+                <div class="sonar-ring sonar-ring-2"></div>
+                <button onclick="startOrStopSpeech('foreign')"
+                  class="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex flex-col items-center justify-center text-slate-950 shadow-xl shadow-amber-500/25 transition active:scale-90">
+                  <i data-lucide="globe" class="w-8 h-8 stroke-[2.5]"></i>
+                </button>
+              </div>
+              <span id="foreignMicLabel" class="mt-2 text-[11px] font-black text-amber-300 text-center">🌍 QARŞI TƏRƏF (EN → AZ)</span>
+              <span class="text-[10px] text-slate-400">O danışsın</span>
+            </div>
+          </div>
+
+          <!-- Instant Text Fallback Input -->
+          <form onsubmit="handleTextSubmit(event)" class="w-full flex items-center gap-2 pt-1">
+            <input
+              id="manualTextInput"
+              type="text"
+              placeholder="Və ya bura Azərbaycanca yazın (məs: Salam, bu neçəyədir?)..."
+              class="flex-1 bg-slate-950/95 border border-slate-700/80 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+            />
+            <button type="submit" class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shrink-0 transition active:scale-95 shadow-md">
+              <i data-lucide="volume-2" class="w-4 h-4"></i>
+              <span>Oxu</span>
+            </button>
+          </form>
+        </div>
+
+      </section>
+
+      <!-- ================================================================
+           TAB 2: SƏYAHƏT PAKETLƏRİ (ONE-TAP TRAVEL PHRASES)
+      ================================================================ -->
+      <section id="view-phrases" class="hidden space-y-3.5 animate-card">
+        <div class="rounded-3xl bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/60 border border-cyan-500/30 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">1 Toxunuşla Canlı Səs</span>
+              <h2 class="text-base font-display font-extrabold text-white mt-0.5">Hazır Səyahət Paketləri</h2>
+              <p class="text-xs text-slate-300/90 mt-0.5">Cümləyə toxunun — seçdiyiniz Kişi və ya Qadın səsi ilə səlist oxuyacaq.</p>
+            </div>
+            <div class="w-11 h-11 rounded-2xl bg-cyan-500/15 border border-cyan-500/35 flex items-center justify-center text-cyan-300 shrink-0">
+              <i data-lucide="plane" class="w-5 h-5"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1" id="categoryPillsContainer"></div>
+
+        <!-- Phrase Cards -->
+        <div id="travelPhrasesContainer" class="space-y-2.5"></div>
+      </section>
+
+      <!-- ================================================================
+           TAB 3: TARİXÇƏ (CONVERSATION HISTORY)
+      ================================================================ -->
+      <section id="view-history" class="hidden space-y-3 animate-card">
+        <div class="flex items-center justify-between px-1">
+          <div>
+            <h2 class="text-sm font-extrabold text-white">Son Tərcümələr</h2>
+            <p class="text-[11px] text-slate-400">Toxunaraq yenidən ucadan səsləndirin</p>
+          </div>
+          <button onclick="clearHistory()" class="text-xs font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Təmizlə
+          </button>
+        </div>
+
+        <div id="historyListContainer" class="space-y-2.5"></div>
+      </section>
+
+    </main>
+
+    <!-- ==================== BOTTOM NAVIGATION ==================== -->
+    <nav class="fixed bottom-0 w-full max-w-[480px] z-30 backdrop-blur-xl bg-[#070B15]/95 border-t border-slate-800/90 px-3 py-2">
+      <div class="grid grid-cols-3 gap-1.5">
+        <button onclick="switchTab('translator')" id="nav-translator" class="flex flex-col items-center justify-center py-1.5 rounded-2xl text-cyan-400 bg-cyan-500/15 transition">
+          <i data-lucide="mic" class="w-5 h-5 mb-0.5"></i>
+          <span class="text-[10px] font-extrabold">Canlı Tərcümə</span>
+        </button>
+
+        <button onclick="switchTab('phrases')" id="nav-phrases" class="flex flex-col items-center justify-center py-1.5 rounded-2xl text-slate-400 hover:text-slate-200 transition">
+          <i data-lucide="sparkles" class="w-5 h-5 mb-0.5"></i>
+          <span class="text-[10px] font-bold">Səyahət Paketləri</span>
+        </button>
+
+        <button onclick="switchTab('history')" id="nav-history" class="flex flex-col items-center justify-center py-1.5 rounded-2xl text-slate-400 hover:text-slate-200 transition">
+          <i data-lucide="history" class="w-5 h-5 mb-0.5"></i>
+          <span class="text-[10px] font-bold">Tarixçə</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ==================== FULLSCREEN SHOW CARD MODAL ==================== -->
+    <div id="fullscreenModal" class="hidden fixed inset-0 z-50 bg-[#04070D]/98 backdrop-blur-xl flex flex-col justify-between p-6">
+      <div class="flex items-center justify-between">
+        <span id="fsLangTag" class="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+          🇬🇧 İNGİLİS DİLİ
+        </span>
+        <button onclick="closeFullscreenModal()" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="my-auto text-center space-y-6 px-2">
+        <p id="fsSourceText" class="text-base text-slate-400 font-medium">
+          Salam, zəhmət olmasa mənə kömək edə bilərsiniz?
+        </p>
+        <h2 id="fsTranslatedText" class="text-4xl sm:text-5xl font-display font-black text-white leading-tight tracking-tight break-words">
+          Hello, could you please help me?
+        </h2>
+        <p id="fsPhoneticText" class="text-base font-bold text-amber-300">
+          [Helou, kud yu pliz help mi?]
+        </p>
+      </div>
+
+      <button onclick="replayCurrentAudio()" class="w-full py-4 rounded-3xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-base flex items-center justify-center gap-2 shadow-2xl active:scale-95">
+        <i data-lucide="volume-2" class="w-6 h-6 stroke-[2.5]"></i>
+        <span>Ucadan Səsləndir 🔊</span>
+      </button>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div id="toastBanner" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300">
+      <div id="toastMessage" class="px-4 py-2 rounded-2xl bg-slate-900/95 border border-cyan-500/45 text-cyan-200 text-xs font-extrabold shadow-2xl backdrop-blur-md whitespace-nowrap">
+        Hazırdır!
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. TELEGRAM WEBAPP SDK & HAPTIC FEEDBACK
+    // =========================================================================
+    function triggerHaptic(type = 'medium') {
+      try {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+        }
+      } catch (e) {}
+    }
+
+    try {
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        if (tg.setHeaderColor) tg.setHeaderColor('#070B15');
+        if (tg.setBackgroundColor) tg.setBackgroundColor('#050810');
+      }
+    } catch (e) {}
+
+    // =========================================================================
+    // 2. LANGUAGES & DEDICATED REAL HUMAN NEURAL VOICE ACTORS (MALE & FEMALE)
+    // =========================================================================
+    const LANGUAGES = [
+      {
+        code: 'en', bcp47: 'en-US', short: 'EN', flag: '🇬🇧', name: 'İngilis dili',
+        maleActors: ['Matthew', 'Brian', 'Joey'],
+        femaleActors: ['Joanna', 'Salli', 'Amy'],
+        maleBrowserHints: ['Matthew', 'Guy', 'Daniel', 'Alex', 'Christopher', 'David', 'Mark', 'Google UK English Male', 'Microsoft Guy', 'Microsoft Ryan'],
+        femaleBrowserHints: ['Joanna', 'Jenny', 'Aria', 'Samantha', 'Victoria', 'Google UK English Female', 'Google US English', 'Microsoft Jenny', 'Microsoft Aria'],
+        sample: 'Hello! How can I help you today?',
+        ph: 'Helou! Hau kən ay help yu tudey?',
+        voiceTest: 'Hello! I am your natural English voice assistant.'
+      },
+      {
+        code: 'de', bcp47: 'de-DE', short: 'DE', flag: '🇩🇪', name: 'Alman dili',
+        maleActors: ['Hans', 'Conrad'],
+        femaleActors: ['Marlene', 'Vicki'],
+        maleBrowserHints: ['Hans', 'Conrad', 'Stefan', 'Markus', 'Killian', 'Microsoft Conrad', 'Microsoft Stefan'],
+        femaleBrowserHints: ['Marlene', 'Vicki', 'Katja', 'Anna', 'Amala', 'Google Deutsch', 'Microsoft Katja', 'Microsoft Hedda'],
+        sample: 'Hallo! Wie kann ich Ihnen helfen?',
+        ph: 'Halo! Vi kan ix İnen helfen?',
+        voiceTest: 'Hallo! Ich bin Ihre natürliche deutsche Stimme.'
+      },
+      {
+        code: 'ru', bcp47: 'ru-RU', short: 'RU', flag: '🇷🇺', name: 'Rus dili',
+        maleActors: ['Maxim', 'Dmitry'],
+        femaleActors: ['Tatyana', 'Svetlana'],
+        maleBrowserHints: ['Maxim', 'Dmitry', 'Pavel', 'Yuri', 'Microsoft Dmitry', 'Microsoft Pavel'],
+        femaleBrowserHints: ['Tatyana', 'Svetlana', 'Dariya', 'Milena', 'Irina', 'Google русский', 'Microsoft Svetlana', 'Microsoft Irina'],
+        sample: 'Здравствуйте! Чем я могу вам помочь?',
+        ph: 'Zdravstvuyte! Çem ya maqu vam pamoç?',
+        voiceTest: 'Здравствуйте! Я ваш естественный голосовой помощник.'
+      },
+      {
+        code: 'tr', bcp47: 'tr-TR', short: 'TR', flag: '🇹🇷', name: 'Türk dili',
+        maleActors: ['Ahmet', 'Kerem'],
+        femaleActors: ['Filiz', 'Emel'],
+        maleBrowserHints: ['Ahmet', 'Tolga', 'Mehmet', 'Microsoft Ahmet'],
+        femaleBrowserHints: ['Filiz', 'Emel', 'Yelda', 'Google Türkçe', 'Microsoft Emel'],
+        sample: 'Merhaba! Size nasıl yardımcı olabilirim?',
+        ph: 'Merhaba! Size nasıl yardımcı olabilirim?',
+        voiceTest: 'Merhaba! Ben doğal Türkçe sesli asistanınızım.'
+      },
+      {
+        code: 'es', bcp47: 'es-ES', short: 'ES', flag: '🇪🇸', name: 'İspan dili',
+        maleActors: ['Enrique', 'Miguel'],
+        femaleActors: ['Conchita', 'Lucia'],
+        maleBrowserHints: ['Enrique', 'Alvaro', 'Jorge', 'Pablo', 'Diego', 'Microsoft Alvaro'],
+        femaleBrowserHints: ['Conchita', 'Elvira', 'Lucia', 'Monica', 'Helena', 'Google español', 'Microsoft Elvira'],
+        sample: '¡Hola! ¿Cómo puedo ayudarle hoy?',
+        ph: 'Ola! Komo puedo ayudarle oy?',
+        voiceTest: '¡Hola! Soy tu asistente de voz natural en español.'
+      },
+      {
+        code: 'fr', bcp47: 'fr-FR', short: 'FR', flag: '🇫🇷', name: 'Fransız dili',
+        maleActors: ['Mathieu', 'Henri'],
+        femaleActors: ['Celine', 'Lea'],
+        maleBrowserHints: ['Mathieu', 'Henri', 'Thomas', 'Paul', 'Nicolas', 'Microsoft Henri'],
+        femaleBrowserHints: ['Celine', 'Denise', 'Lea', 'Amelie', 'Julie', 'Google français', 'Microsoft Denise'],
+        sample: 'Bonjour ! Comment puis-je vous aider ?',
+        ph: 'Bonjur! Komant püi-j vuz ede?',
+        voiceTest: 'Bonjour ! Je suis votre assistant vocal naturel.'
+      },
+      {
+        code: 'it', bcp47: 'it-IT', short: 'IT', flag: '🇮🇹', name: 'İtalyan dili',
+        maleActors: ['Giorgio', 'Diego'],
+        femaleActors: ['Carla', 'Bianca'],
+        maleBrowserHints: ['Giorgio', 'Diego', 'Luca', 'Cosimo', 'Microsoft Diego'],
+        femaleBrowserHints: ['Carla', 'Elsa', 'Bianca', 'Alice', 'Google italiano', 'Microsoft Elsa'],
+        sample: 'Salve! Come posso aiutarla oggi?',
+        ph: 'Salve! Kome posso ayutarla oddji?',
+        voiceTest: 'Salve! Sono la tua voce naturale in italiano.'
+      },
+      {
+        code: 'ar', bcp47: 'ar-SA', short: 'AR', flag: '🇸🇦', name: 'Ərəb dili',
+        maleActors: ['Hamed', 'Zayd'],
+        femaleActors: ['Zeina', 'Zariyah'],
+        maleBrowserHints: ['Hamed', 'Tarik', 'Maged', 'Naayf', 'Microsoft Hamed'],
+        femaleBrowserHints: ['Zeina', 'Zariyah', 'Salma', 'Laila', 'Mariam', 'Microsoft Zariyah'],
+        sample: 'مرحباً! كيف يمكنني مساعدتك اليوم؟',
+        ph: 'Mərhəbən! Keyfə yumkinuni musaədətukə əl-yəvm?',
+        voiceTest: 'مرحباً! أنا مساعدك الصوتي الطبيعي.'
+      }
+    ];
+
+    // Ready Travel Phrasebook
+    const TRAVEL_PHRASES = [
+      {
+        cat: 'airport',
+        az: 'Salam, mənim oteldə rezervasiyam var.',
+        tr: {
+          en: { t: 'Hello, I have a hotel reservation.', p: 'Helou, ay həv ə houtel rezerveyşın.' },
+          de: { t: 'Hallo, ich habe eine Hotelreservierung.', p: 'Halo, ix habe ayne Hotelrezervirunq.' },
+          ru: { t: 'Здравствуйте, у меня бронь в отеле.', p: 'Zdravstvuyte, u menya bron v atele.' },
+          tr: { t: 'Merhaba, otelde rezervasyonum var.', p: 'Merhaba, otelde rezervasyonum var.' },
+          es: { t: 'Hola, tengo una reserva en el hotel.', p: 'Ola, tenqo una reserva en el otel.' },
+          fr: { t: 'Bonjour, j’ai une réservation à l’hôtel.', p: 'Bonjur, je ün rezervasyon a lotel.' },
+          it: { t: 'Salve, ho una prenotazione in albergo.', p: 'Salve, o una prenotatsione in alberqo.' },
+          ar: { t: 'مرحباً، لدي حجز في الفندق.', p: 'Mərhəbən, lədəyyə həcz fil-funduq.' }
+        }
+      },
+      {
+        cat: 'airport',
+        az: 'Pasport yoxlanışı və baqaj haradadır?',
+        tr: {
+          en: { t: 'Where is passport control and baggage claim?', p: 'Ver iz pasport kontrol ənd bəgidj kleym?' },
+          de: { t: 'Wo ist die Passkontrolle und die Gepäckausgabe?', p: 'Vo ist di Paskontrole und di Qepekausqabe?' },
+          ru: { t: 'Где паспортный контроль и выдача багажа?', p: 'Qde pasportnıy kontrol i vıdaça baqaja?' },
+          tr: { t: 'Pasaport kontrolü ve bagaj teslimi nerede?', p: 'Pasaport kontrolü ve bagaj teslimi nerede?' },
+          es: { t: '¿Dónde está el control de pasaportes y el equipaje?', p: 'Donde esta el kontrol de pasaportes i el ekipaxe?' },
+          fr: { t: 'Où est le contrôle des passeports et les bagages ?', p: 'U e lö kontrol de paspor e le baqaj?' },
+          it: { t: 'Dov’è il controllo passaporti e il ritiro bagagli?', p: 'Dove il kontrolo pasaporti e il ritiro baqalyi?' },
+          ar: { t: 'أين مراقبة الجوازات واستلام الأمتعة؟', p: 'Əynə muraqəbət əl-cəvazat və istilam əl-əmtiə?' }
+        }
+      },
+      {
+        cat: 'taxi',
+        az: 'Zəhmət olmasa məni bu ünvana aparın.',
+        tr: {
+          en: { t: 'Please take me to this address.', p: 'Pliz teyk mi tu zis ədres.' },
+          de: { t: 'Bitte bringen Sie mich zu dieser Adresse.', p: 'Bite brinqen zi mix tsu dizer adrese.' },
+          ru: { t: 'Пожалуйста, отвезите меня по этому адресу.', p: 'Pajalusta, atvezite menya pa etomu adresu.' },
+          tr: { t: 'Lütfen beni bu adrese götürün.', p: 'Lütfen beni bu adrese götürün.' },
+          es: { t: 'Por favor, lléveme a esta dirección.', p: 'Por favor, yeveme a esta direksion.' },
+          fr: { t: 'S’il vous plaît, emmenez-moi à cette adresse.', p: 'Sil vu ple, amöne-mua a set adres.' },
+          it: { t: 'Per favore, mi porti a questo indirizzo.', p: 'Per favore, mi porti a kuesto indirittso.' },
+          ar: { t: 'من فضلك خذني إلى هذا العنوان.', p: 'Min fədlik xuzni ilə həzə əl-ünvan.' }
+        }
+      },
+      {
+        cat: 'taxi',
+        az: 'Ən yaxın metro stansiyası haradadır?',
+        tr: {
+          en: { t: 'Where is the nearest metro station?', p: 'Ver iz zə nirest metrou steyşın?' },
+          de: { t: 'Wo ist die nächste U-Bahn-Station?', p: 'Vo ist di nekste U-Ban-Ştatsion?' },
+          ru: { t: 'Где ближайшая станция метро?', p: 'Qde blijayşaya stantsiya metro?' },
+          tr: { t: 'En yakın metro istasyonu nerede?', p: 'En yakın metro istasyonu nerede?' },
+          es: { t: '¿Dónde está la estación de metro más cercana?', p: 'Donde esta la estasion de metro mas serkana?' },
+          fr: { t: 'Où est la station de métro la plus proche ?', p: 'U e la stasyon dö metro la plü proş?' },
+          it: { t: 'Dov’è la stazione della metro più vicina?', p: 'Dove la statsione della metro pyu viçina?' },
+          ar: { t: 'أين أقرب محطة مترو؟', p: 'Əynə əqrəb məhəttat mitru?' }
+        }
+      },
+      {
+        cat: 'food',
+        az: 'Zəhmət olmasa menyunu və hesabı gətirin.',
+        tr: {
+          en: { t: 'Could you bring the menu and the bill, please?', p: 'Kud yu brinq zə menyu ənd zə bil, pliz?' },
+          de: { t: 'Könnten Sie bitte die Speisekarte und die Rechnung bringen?', p: 'Könten zi bite di Şpayzekarte und di Rexnunq brinqen?' },
+          ru: { t: 'Принесите, пожалуйста, меню и счёт.', p: 'Prinesite, pajalusta, menyu i şyot.' },
+          tr: { t: 'Lütfen menüyü ve hesabı getirebilir misiniz?', p: 'Lütfen menüyü ve hesabı getirebilir misiniz?' },
+          es: { t: '¿Podría traer el menú y la cuenta, por favor?', p: 'Podria traer el menu i la kuenta, por favor?' },
+          fr: { t: 'Pourriez-vous apporter le menu et l’addition ?', p: 'Puriye-vu aporte lö menü e ladisyon?' },
+          it: { t: 'Potrebbe portare il menù e il conto, per favore?', p: 'Potrebbe portare il menu e il konto, per favore?' },
+          ar: { t: 'هل يمكنك إحضار القائمة والفاتورة؟', p: 'Həl yumkinukə ihdar əl-qaimə vəl-fatura?' }
+        }
+      },
+      {
+        cat: 'shop',
+        az: 'Bağışlayın, bu neçəyədir? Kartla ödəyə bilərəm?',
+        tr: {
+          en: { t: 'Excuse me, how much is this? Can I pay by card?', p: 'Ekskyuz mi, hau maç iz zis? Kən ay pey bay kard?' },
+          de: { t: 'Entschuldigung, wie viel kostet das? Kann ich mit Karte zahlen?', p: 'Entşuldiqunq, vi fil kostet das? Kan ix mit karte tsalen?' },
+          ru: { t: 'Извините, сколько это стоит? Могу я оплатить картой?', p: 'İzvinite, skolko eto stoit? Maqu ya aplatit kartoy?' },
+          tr: { t: 'Affedersiniz, bu ne kadar? Kartla ödeyebilir miyim?', p: 'Affedersiniz, bu ne kadar? Kartla ödeyebilir miyim?' },
+          es: { t: 'Disculpe, ¿cuánto cuesta esto? ¿Puedo pagar con tarjeta?', p: 'Diskulpe, kuanto kuesta esto? Puedo paqar kon tarxeta?' },
+          fr: { t: 'Excusez-moi, combien ça coûte ? Puis-je payer par carte ?', p: 'Eksküze-mua, kombyen sa kut? Püi-j peye par kart?' },
+          it: { t: 'Mi scusi, quanto costa questo? Posso pagare con la carta?', p: 'Mi skuzi, kuanto kosta kuesto? Posso paqare kon la karta?' },
+          ar: { t: 'عفواً، بكم هذا؟ هل يمكنني الدفع بالبطاقة؟', p: 'Əfvən, bikəm həzə? Həl yumkinuni əd-dəfu bil-bitaqa?' }
+        }
+      },
+      {
+        cat: 'emergency',
+        az: 'Təcili köməyə ehtiyacım var, zəhmət olmasa həkim çağırın!',
+        tr: {
+          en: { t: 'I need urgent help, please call a doctor!', p: 'Ay nid ördcənt help, pliz kol ə doktər!' },
+          de: { t: 'Ich brauche dringend Hilfe, bitte rufen Sie einen Arzt!', p: 'İx brauxe drinqend Hilfe, bite rufen zi aynen Artst!' },
+          ru: { t: 'Мне срочно нужна помощь, пожалуйста, вызовите врача!', p: 'Mne sroçno nujna pomoş, pajalusta, vızovite vraça!' },
+          tr: { t: 'Acil yardıma ihtiyacım var, lütfen doktor çağırın!', p: 'Acil yardıma ihtiyacım var, lütfen doktor çağırın!' },
+          es: { t: '¡Necesito ayuda urgente, por favor llame a un médico!', p: 'Nesesito ayuda urxente, por favor yame a un mediko!' },
+          fr: { t: 'J’ai besoin d’aide urgente, appelez un médecin s’il vous plaît !', p: 'Je bözuan ded ürjant, aple ön medsen sil vu ple!' },
+          it: { t: 'Ho bisogno di aiuto urgente, per favore chiami un medico!', p: 'O bizonyo di ayuto urdjente, per favore kyami un mediko!' },
+          ar: { t: 'أحتاج إلى مساعدة عاجلة، يرجى استدعاء طبيب!', p: 'Əhtacu ilə musaədətin acilətin, yurca istidau təbib!' }
+        }
+      }
+    ];
+
+    const PHRASE_CATS = [
+      { id: 'all', label: 'Hamısı' },
+      { id: 'airport', label: '✈️ Hava Limanı & Otel' },
+      { id: 'taxi', label: '🚕 Taksi & Yol' },
+      { id: 'food', label: '🍽️ Restoran' },
+      { id: 'shop', label: '🛍️ Mağaza' },
+      { id: 'emergency', label: '🚨 Təcili Yardım' }
+    ];
+
+    // =========================================================================
+    // 3. APP STATE & PERSISTENCE
+    // =========================================================================
+    let state = {
+      targetLang: 'en',
+      gender: 'male', // 'male' or 'female'
+      speed: 1.0,
+      activeCat: 'all',
+      lastSource: 'Salam, zəhmət olmasa mənə kömək edə bilərsiniz?',
+      lastTranslated: 'Hello! How can I help you today?',
+      lastPhonetic: 'Helou! Hau kən ay help yu tudey?',
+      lastOutLang: 'en',
+      history: []
+    };
+
+    try {
+      const saved = localStorage.getItem('voxlive_neural_v2');
+      if (saved) state = { ...state, ...JSON.parse(saved) };
+    } catch (e) {}
+
+    function saveState() {
+      try {
+        localStorage.setItem('voxlive_neural_v2', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function getCurrentLang() {
+      return LANGUAGES.find(l => l.code === state.targetLang) || LANGUAGES[0];
+    }
+
+    function getCurrentActorName() {
+      const lang = getCurrentLang();
+      return state.gender === 'male' ? lang.maleActors[0] : lang.femaleActors[0];
+    }
+
+    // =========================================================================
+    // 4. MULTI-TIER REAL HUMAN NEURAL TTS ENGINE (ZERO ROBOTIC VOICES)
+    // =========================================================================
+    let activeAudio = null;
+    let availableBrowserVoices = [];
+
+    function refreshBrowserVoices() {
+      if ('speechSynthesis' in window) {
+        availableBrowserVoices = window.speechSynthesis.getVoices() || [];
+      }
+    }
+    if ('speechSynthesis' in window) {
+      refreshBrowserVoices();
+      window.speechSynthesis.onvoiceschanged = refreshBrowserVoices;
+    }
+
+    function setWaveformActive(active) {
+      const wf = document.getElementById('voiceWaveform');
+      if (active) wf.classList.add('wave-active');
+      else wf.classList.remove('wave-active');
+    }
+
+    function stopAllSpeech() {
+      if (activeAudio) {
+        try {
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+        } catch (e) {}
+        activeAudio = null;
+      }
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+      setWaveformActive(false);
+    }
+
+    function formatFluentText(rawText) {
+      // Enhance natural human pacing by ensuring smooth punctuation pauses
+      return rawText
+        .replace(/\s+/g, ' ')
+        .replace(/\s([,.!?;:])/g, '$1')
+        .trim();
+    }
+
+    async function speakHumanNeural(text, langCode) {
+      const cleanText = formatFluentText(text);
+      if (!cleanText) return;
+
+      stopAllSpeech();
+      const statusBadge = document.getElementById('voiceEngineStatus');
+      const langObj = LANGUAGES.find(l => l.code === langCode) || {
+        code: 'tr', bcp47: 'tr-TR',
+        maleActors: ['Ahmet'], femaleActors: ['Filiz'],
+        maleBrowserHints: ['Ahmet', 'Tolga'], femaleBrowserHints: ['Filiz', 'Emel']
+      };
+
+      const actorList = state.gender === 'male' ? langObj.maleActors : langObj.femaleActors;
+      const actorName = actorList[0];
+      statusBadge.textContent = `${actorName} danışır... 🔊`;
+      setWaveformActive(true);
+
+      // Build Priority 1 Real Human Neural Audio Stream Candidates (Amazon Polly Neural / StreamElements / Google Neural)
+      const encoded = encodeURIComponent(cleanText);
+      const streamUrls = [];
+
+      // StreamElements Polly Neural Voice Endpoint (Supports Matthew, Brian, Joanna, Salli, Hans, Marlene, Maxim, Tatyana, Filiz, Enrique, Conchita, Mathieu, Celine, Giorgio, Carla, Zeina)
+      actorList.forEach(actor => {
+        streamUrls.push(`https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(actor)}&text=${encoded}`);
+      });
+
+      // Secondary Cloud Neural TTS (Google Translate Natural Voice Stream)
+      const gttsLang = langCode === 'az' ? 'tr' : langCode;
+      streamUrls.push(`https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${gttsLang}&q=${encoded}`);
+
+      // Try playing real cloud neural human audio streams sequentially
+      for (const url of streamUrls) {
+        const played = await tryPlayAudioStream(url, state.speed);
+        if (played) {
+          statusBadge.textContent = 'Neyral Səs Hazırdır';
+          return;
+        }
+      }
+
+      // Priority 2: High-Quality Filtered Natural Browser Voice (Strict Gender Match — Never pitch-shifted female-to-male!)
+      speakFilteredNaturalBrowserVoice(cleanText, langObj, statusBadge);
+    }
+
+    function tryPlayAudioStream(url, playbackRate) {
+      return new Promise((resolve) => {
+        try {
+          const audio = new Audio();
+          audio.crossOrigin = 'anonymous';
+          audio.preload = 'auto';
+          audio.src = url;
+          audio.playbackRate = playbackRate;
+
+          let settled = false;
+          const finish = (success) => {
+            if (settled) return;
+            settled = true;
+            if (!success) {
+              try { audio.pause(); } catch (e) {}
+            }
+            resolve(success);
+          };
+
+          const timeoutId = setTimeout(() => finish(false), 3800);
+
+          audio.oncanplaythrough = () => {
+            clearTimeout(timeoutId);
+            activeAudio = audio;
+            audio.play()
+              .then(() => {
+                audio.onended = () => {
+                  setWaveformActive(false);
+                  finish(true);
+                };
+                audio.onerror = () => {
+                  setWaveformActive(false);
+                  finish(false);
+                };
+              })
+              .catch(() => finish(false));
+          };
+
+          audio.onerror = () => {
+            clearTimeout(timeoutId);
+            finish(false);
+          };
+        } catch (e) {
+          resolve(false);
+        }
+      });
+    }
+
+    function speakFilteredNaturalBrowserVoice(text, langObj, statusBadge) {
+      if (!('speechSynthesis' in window)) {
+        setWaveformActive(false);
+        statusBadge.textContent = 'Neyral Səs Hazırdır';
+        return;
+      }
+
+      refreshBrowserVoices();
+      const targetPrefix = langObj.bcp47.slice(0, 2).toLowerCase();
+      const langVoices = availableBrowserVoices.filter(v => v.lang.toLowerCase().startsWith(targetPrefix));
+
+      const hints = state.gender === 'male' ? langObj.maleBrowserHints : langObj.femaleBrowserHints;
+      const oppositeHints = state.gender === 'male' ? langObj.femaleBrowserHints : langObj.maleBrowserHints;
+
+      // 1. Exact named natural/online/neural voice matching selected gender
+      let chosenVoice = null;
+      for (const hint of hints) {
+        chosenVoice = langVoices.find(v => v.name.toLowerCase().includes(hint.toLowerCase()));
+        if (chosenVoice) break;
+      }
+
+      // 2. Any "Natural" / "Online" / "Neural" voice that is NOT the opposite gender
+      if (!chosenVoice) {
+        chosenVoice = langVoices.find(v => {
+          const n = v.name.toLowerCase();
+          const isHighQuality = n.includes('natural') || n.includes('online') || n.includes('neural') || n.includes('premium');
+          const isOpposite = oppositeHints.some(opp => n.includes(opp.toLowerCase()));
+          return isHighQuality && !isOpposite;
+        });
+      }
+
+      // 3. Any voice in that language that is NOT explicitly opposite gender
+      if (!chosenVoice) {
+        chosenVoice = langVoices.find(v => {
+          const n = v.name.toLowerCase();
+          return !oppositeHints.some(opp => n.includes(opp.toLowerCase()));
+        }) || langVoices[0];
+      }
+
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = langObj.bcp47;
+      utter.rate = state.speed;
+      // Keep natural pitch = 1.0 (never distort pitch artificially)
+      utter.pitch = 1.0;
+      if (chosenVoice) utter.voice = chosenVoice;
+
+      utter.onend = () => {
+        setWaveformActive(false);
+        statusBadge.textContent = 'Neyral Səs Hazırdır';
+      };
+      utter.onerror = () => {
+        setWaveformActive(false);
+        statusBadge.textContent = 'Neyral Səs Hazırdır';
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    function testCurrentVoiceActor() {
+      triggerHaptic('light');
+      const lang = getCurrentLang();
+      const actor = getCurrentActorName();
+      showToast(`🔊 ${actor} (${state.gender === 'male' ? 'Kişi' : 'Qadın'}) səslənir...`);
+      speakHumanNeural(lang.voiceTest, lang.code);
+    }
+
+    function replayCurrentAudio() {
+      triggerHaptic('light');
+      speakHumanNeural(state.lastTranslated, state.lastOutLang);
+    }
+
+    // =========================================================================
+    // 5. NATURAL CONVERSATIONAL TRANSLATION ENGINE (GOOGLE GTX + MYMEMORY)
+    // =========================================================================
+    async function translateAndSpeak(inputText, direction = 'az_to_target') {
+      const clean = inputText.trim();
+      if (!clean) return;
+
+      const targetLang = getCurrentLang();
+      const isAzToTarget = direction === 'az_to_target';
+      const sl = isAzToTarget ? 'az' : targetLang.code;
+      const tl = isAzToTarget ? targetLang.code : 'az';
+
+      document.getElementById('sourceLabel').textContent = isAzToTarget
+        ? 'Sizin dediyiniz (Azərbaycanca):'
+        : `Qarşı tərəfin dediyi (${targetLang.name}):`;
+      document.getElementById('sourceTextDisplay').textContent = clean;
+      document.getElementById('targetLabel').textContent = isAzToTarget
+        ? `Tərcümə (${targetLang.name}):`
+        : 'Tərcümə (Azərbaycan dili):';
+      document.getElementById('translatedTextDisplay').textContent = 'Tərcümə olunur...';
+      document.getElementById('phoneticTextDisplay').textContent = '';
+
+      // 1. Instant Phrasebook Check (0ms latency)
+      if (isAzToTarget) {
+        const norm = clean.toLowerCase().replace(/[!?.،,]/g, '').trim();
+        const hit = TRAVEL_PHRASES.find(p => p.az.toLowerCase().replace(/[!?.،,]/g, '').trim() === norm);
+        if (hit && hit.tr[targetLang.code]) {
+          const item = hit.tr[targetLang.code];
+          finalizeTranslation(clean, item.t, item.p, tl, direction);
+          return;
+        }
+      }
+
+      // 2. Google Translate GTX Natural Endpoint
+      try {
+        const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(clean)}`;
+        const res = await fetch(gtxUrl);
+        if (!res.ok) throw new Error('GTX failed');
+        const data = await res.json();
+
+        let translated = '';
+        if (Array.isArray(data?.[0])) {
+          data[0].forEach(chunk => {
+            if (chunk && chunk[0]) translated += chunk[0];
+          });
+        }
+        const translit = (data?.[0]?.[1]?.[2]) || '';
+        if (translated.trim()) {
+          finalizeTranslation(clean, translated.trim(), translit, tl, direction);
+          return;
+        }
+        throw new Error('Empty GTX result');
+      } catch (e1) {
+        // 3. MyMemory Free Translation API Fallback
+        try {
+          const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=${sl}|${tl}`;
+          const mmRes = await fetch(mmUrl);
+          const mmData = await mmRes.json();
+          const mmText = mmData?.responseData?.translatedText;
+          if (mmText) {
+            finalizeTranslation(clean, mmText.trim(), '', tl, direction);
+            return;
+          }
+        } catch (e2) {}
+
+        // 4. Offline Smart Phrase Fallback
+        const offline = offlineTranslateFallback(clean, targetLang);
+        finalizeTranslation(clean, offline.t, offline.p, tl, direction);
+      }
+    }
+
+    function offlineTranslateFallback(azText, lang) {
+      const l = azText.toLowerCase();
+      if (l.includes('salam')) {
+        return { t: lang.sample, p: lang.ph };
+      }
+      if (l.includes('neçə') || l.includes('qiymət')) {
+        return TRAVEL_PHRASES[5].tr[lang.code];
+      }
+      return { t: lang.sample, p: lang.ph };
+    }
+
+    function finalizeTranslation(source, translated, phonetic, outLangCode, direction) {
+      state.lastSource = source;
+      state.lastTranslated = translated;
+      state.lastPhonetic = phonetic || '';
+      state.lastOutLang = outLangCode;
+
+      document.getElementById('translatedTextDisplay').textContent = translated;
+      document.getElementById('phoneticTextDisplay').textContent = phonetic ? `Oxunuşu: [${phonetic}]` : '';
+
+      const lang = getCurrentLang();
+      state.history.unshift({
+        source,
+        translated,
+        phonetic: phonetic || '',
+        outLang: outLangCode,
+        badge: direction === 'az_to_target' ? `🇦🇿 → ${lang.flag} ${lang.short}` : `${lang.flag} ${lang.short} → 🇦🇿`
+      });
+      if (state.history.length > 30) state.history.pop();
+      saveState();
+      renderHistory();
+
+      // Speak immediately with selected real Male/Female Neural Actor
+      speakHumanNeural(translated, outLangCode);
+    }
+
+    // =========================================================================
+    // 6. BIDIRECTIONAL VOICE RECOGNITION (STT)
+    // =========================================================================
+    let recognitionInstance = null;
+    let isRecording = false;
+
+    function startOrStopSpeech(mode = 'az') {
+      triggerHaptic('medium');
+
+      if (isRecording && recognitionInstance) {
+        recognitionInstance.stop();
+        return;
+      }
+
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        showToast('Bu brauzerdə mikrofon dəstəklənmir — aşağıdakı xanaya yazın');
+        document.getElementById('manualTextInput').focus();
+        return;
+      }
+
+      try {
+        const rec = new SpeechRec();
+        recognitionInstance = rec;
+        const targetLang = getCurrentLang();
+
+        rec.lang = mode === 'az' ? 'az-AZ' : targetLang.bcp47;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+
+        const azBox = document.getElementById('azMicContainer');
+        const foreignBox = document.getElementById('foreignMicContainer');
+        const heading = document.getElementById('micStatusHeading');
+
+        rec.onstart = () => {
+          isRecording = true;
+          stopAllSpeech();
+          if (mode === 'az') {
+            azBox.classList.add('listening-active');
+            heading.textContent = '🎙️ Dinləyirəm... Azərbaycanca danışın';
+          } else {
+            foreignBox.classList.add('listening-active');
+            heading.textContent = `🌍 Qarşı tərəf ${targetLang.name}ndə danışsın...`;
+          }
+          heading.className = 'text-xs font-extrabold text-cyan-300 animate-pulse';
+        };
+
+        let capturedText = '';
+        rec.onresult = (event) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const chunk = event.results[i][0].transcript;
+            if (event.results[i].isFinal) capturedText += chunk;
+            else interim += chunk;
+          }
+          document.getElementById('sourceTextDisplay').textContent = capturedText || interim;
+        };
+
+        rec.onerror = (err) => {
+          isRecording = false;
+          resetMicState();
+          if (err.error === 'not-allowed') {
+            showToast('Mikrofon icazəsi bağlıdır. Aşağıdakı xanaya yazaraq istifadə edin!');
+          } else {
+            showToast('Səs aydın eşidilmədi, yenidən toxunub danışın');
+          }
+        };
+
+        rec.onend = () => {
+          isRecording = false;
+          resetMicState();
+          if (capturedText.trim()) {
+            translateAndSpeak(capturedText.trim(), mode === 'az' ? 'az_to_target' : 'foreign_to_az');
+          }
+        };
+
+        rec.start();
+      } catch (e) {
+        resetMicState();
+        showToast('Aşağıdakı xanaya yazıb dərhal səsləndirə bilərsiniz');
+      }
+    }
+
+    function resetMicState() {
+      document.getElementById('azMicContainer').classList.remove('listening-active');
+      document.getElementById('foreignMicContainer').classList.remove('listening-active');
+      const heading = document.getElementById('micStatusHeading');
+      heading.textContent = 'Mikrofona toxunun və Azərbaycanca danışın';
+      heading.className = 'text-xs font-extrabold text-white';
+    }
+
+    function handleTextSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('manualTextInput');
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = '';
+      triggerHaptic('light');
+      translateAndSpeak(val, 'az_to_target');
+    }
+
+    // =========================================================================
+    // 7. UI CONTROLS: GENDER, SPEED, LANGUAGES, FULLSCREEN CARD
+    // =========================================================================
+    function renderLanguagesStrip() {
+      const container = document.getElementById('targetLangStrip');
+      container.innerHTML = LANGUAGES.map(lang => {
+        const active = lang.code === state.targetLang;
+        return `
+          <button onclick="selectLanguage('${lang.code}')"
+            class="flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-2xl text-xs font-extrabold transition active:scale-95 ${
+              active
+                ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 shadow-md shadow-cyan-500/25'
+                : 'bg-slate-900 border border-slate-800 text-slate-300 hover:border-slate-700'
+            }">
+            <span>${lang.flag}</span>
+            <span>${lang.name}</span>
+          </button>
+        `;
+      }).join('');
+
+      const cur = getCurrentLang();
+      document.getElementById('dirToTag').textContent = `${cur.flag} ${cur.name}`;
+      document.getElementById('azMicLabel').textContent = `🎙️ DANIŞ (AZ → ${cur.short})`;
+      document.getElementById('foreignMicLabel').textContent = `🌍 QARŞI TƏRƏF (${cur.short} → AZ)`;
+      updateVoiceStudioUI();
+    }
+
+    function selectLanguage(code) {
+      triggerHaptic('light');
+      state.targetLang = code;
+      const lang = getCurrentLang();
+      state.lastSource = 'Salam, zəhmət olmasa mənə kömək edə bilərsiniz?';
+      state.lastTranslated = lang.sample;
+      state.lastPhonetic = lang.ph;
+      state.lastOutLang = lang.code;
+      saveState();
+
+      renderLanguagesStrip();
+      document.getElementById('sourceLabel').textContent = 'Sizin dediyiniz (Azərbaycanca):';
+      document.getElementById('sourceTextDisplay').textContent = state.lastSource;
+      document.getElementById('targetLabel').textContent = `Tərcümə (${lang.name}):`;
+      document.getElementById('translatedTextDisplay').textContent = lang.sample;
+      document.getElementById('phoneticTextDisplay').textContent = `Oxunuşu: [${lang.ph}]`;
+
+      renderTravelPhrases();
+      showToast(`${lang.flag} ${lang.name} seçildi`);
+    }
+
+    function setVoiceGender(gender) {
+      triggerHaptic('light');
+      state.gender = gender;
+      saveState();
+      updateVoiceStudioUI();
+      const actor = getCurrentActorName();
+      showToast(`${gender === 'male' ? '🧔 Kişi' : '👩 Qadın'} səsi aktivdir (${actor})`);
+    }
+
+    function setSpeechSpeed(spd) {
+      triggerHaptic('light');
+      state.speed = spd;
+      saveState();
+      updateVoiceStudioUI();
+    }
+
+    function updateVoiceStudioUI() {
+      const actor = getCurrentActorName();
+      const genderText = state.gender === 'male' ? 'Təbii Kişi Səsi' : 'Təbii Qadın Səsi';
+      document.getElementById('actorBadgeText').textContent = `${actor} • ${genderText}`;
+
+      const maleBtn = document.getElementById('btnGenderMale');
+      const femaleBtn = document.getElementById('btnGenderFemale');
+
+      if (state.gender === 'male') {
+        maleBtn.className = 'col-span-4 py-2 px-2 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-1 transition active:scale-95 bg-gradient-to-r from-cyan-500/25 to-blue-500/25 border-cyan-400/60 text-white shadow-sm';
+        femaleBtn.className = 'col-span-4 py-2 px-2 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1 transition active:scale-95 bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200';
+      } else {
+        femaleBtn.className = 'col-span-4 py-2 px-2 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-1 transition active:scale-95 bg-gradient-to-r from-pink-500/25 to-purple-500/25 border-pink-400/60 text-white shadow-sm';
+        maleBtn.className = 'col-span-4 py-2 px-2 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1 transition active:scale-95 bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200';
+      }
+
+      // Speed Pills
+      [
+        { id: 'spd-085', val: 0.85 },
+        { id: 'spd-100', val: 1.0 },
+        { id: 'spd-115', val: 1.15 }
+      ].forEach(item => {
+        const el = document.getElementById(item.id);
+        if (state.speed === item.val) {
+          el.className = 'px-2 py-1 rounded-lg text-[10px] font-extrabold bg-cyan-500/25 text-cyan-300 transition';
+        } else {
+          el.className = 'px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition';
+        }
+      });
+    }
+
+    function openFullscreenModal() {
+      triggerHaptic('medium');
+      const lang = getCurrentLang();
+      document.getElementById('fsLangTag').textContent = `${lang.flag} ${lang.name.toUpperCase()}`;
+      document.getElementById('fsSourceText').textContent = state.lastSource;
+      document.getElementById('fsTranslatedText').textContent = state.lastTranslated;
+      document.getElementById('fsPhoneticText').textContent = state.lastPhonetic ? `[${state.lastPhonetic}]` : '';
+      document.getElementById('fullscreenModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeFullscreenModal() {
+      document.getElementById('fullscreenModal').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 8. TRAVEL PHRASES & HISTORY RENDERERS
+    // =========================================================================
+    function renderTravelPhrases() {
+      const catContainer = document.getElementById('categoryPillsContainer');
+      catContainer.innerHTML = PHRASE_CATS.map(c => {
+        const active = state.activeCat === c.id;
+        return `
+          <button onclick="selectPhraseCategory('${c.id}')"
+            class="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              active
+                ? 'bg-cyan-500 text-slate-950 shadow'
+                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            }">
+            ${c.label}
+          </button>
+        `;
+      }).join('');
+
+      const lang = getCurrentLang();
+      const filtered = state.activeCat === 'all'
+        ? TRAVEL_PHRASES
+        : TRAVEL_PHRASES.filter(p => p.cat === state.activeCat);
+
+      const list = document.getElementById('travelPhrasesContainer');
+      list.innerHTML = filtered.map((item, idx) => {
+        const tr = item.tr[lang.code];
+        return `
+          <div onclick="speakTravelPhrase(${idx})"
+            class="cursor-pointer rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/45 p-3.5 flex items-center justify-between gap-3 transition active:scale-[0.99]">
+            <div class="space-y-1 min-w-0">
+              <div class="text-xs font-semibold text-slate-400">${item.az}</div>
+              <div class="text-sm font-extrabold text-white leading-snug">${tr.t}</div>
+              <div class="text-[11px] text-amber-300/90">[${tr.p}]</div>
+            </div>
+            <button class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-slate-950 flex items-center justify-center shrink-0 shadow-md">
+              <i data-lucide="volume-2" class="w-5 h-5 stroke-[2.5]"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function selectPhraseCategory(catId) {
+      state.activeCat = catId;
+      renderTravelPhrases();
+    }
+
+    function speakTravelPhrase(idx) {
+      triggerHaptic('medium');
+      const lang = getCurrentLang();
+      const filtered = state.activeCat === 'all'
+        ? TRAVEL_PHRASES
+        : TRAVEL_PHRASES.filter(p => p.cat === state.activeCat);
+      const item = filtered[idx];
+      if (!item) return;
+      const tr = item.tr[lang.code];
+      finalizeTranslation(item.az, tr.t, tr.p, lang.code, 'az_to_target');
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyListContainer');
+      if (!state.history || state.history.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-3xl bg-slate-900/60 border border-slate-800 p-8 text-center space-y-2">
+            <i data-lucide="mic-off" class="w-8 h-8 text-slate-600 mx-auto"></i>
+            <p class="text-xs font-bold text-slate-400">Hələ səsli tərcümə tarixçəsi yoxdur</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = state.history.map((h, i) => `
+        <div onclick="replayHistoryItem(${i})"
+          class="cursor-pointer rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 p-3.5 flex items-center justify-between gap-3 transition">
+          <div class="space-y-1 min-w-0">
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-800 text-cyan-300">${h.badge}</span>
+            <div class="text-xs text-slate-400 truncate">${h.source}</div>
+            <div class="text-sm font-extrabold text-white">${h.translated}</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-300 shrink-0">
+            <i data-lucide="volume-2" class="w-4 h-4"></i>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function replayHistoryItem(index) {
+      const item = state.history[index];
+      if (!item) return;
+      triggerHaptic('light');
+      speakHumanNeural(item.translated, item.outLang);
+    }
+
+    function clearHistory() {
+      state.history = [];
+      saveState();
+      renderHistory();
+      showToast('Tarixçə təmizləndi');
+    }
+
+    // =========================================================================
+    // 9. NAVIGATION, TOAST & SINGLE-FILE DOWNLOAD
+    // =========================================================================
+    function switchTab(tab) {
+      triggerHaptic('light');
+      ['translator', 'phrases', 'history'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`nav-${t}`);
+        btn.classList.remove('text-cyan-400', 'bg-cyan-500/15');
+        btn.classList.add('text-slate-400');
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-${tab}`);
+      activeBtn.classList.remove('text-slate-400');
+      activeBtn.classList.add('text-cyan-400', 'bg-cyan-500/15');
+      lucide.createIcons();
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      document.getElementById('toastMessage').textContent = msg;
+      banner.classList.remove('opacity-0', '-translate-y-2');
+      banner.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        banner.classList.remove('opacity-100', 'translate-y-0');
+        banner.classList.add('opacity-0', '-translate-y-2');
+      }, 2200);
+    }
+
+    function downloadIndexHtml() {
+      try {
+        const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        triggerHaptic('medium');
+        showToast('VoxLive Pro (index.html) yükləndi! 🚀');
+      } catch (e) {
+        showToast('Yükləmə zamanı xəta baş verdi');
+      }
+    }
+
+    // =========================================================================
+    // 10. INIT ON DOM READY
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderLanguagesStrip();
+      renderTravelPhrases();
+      renderHistory();
+
+      const lang = getCurrentLang();
+      document.getElementById('sourceTextDisplay').textContent = state.lastSource;
+      document.getElementById('targetLabel').textContent = `Tərcümə (${lang.name}):`;
+      document.getElementById('translatedTextDisplay').textContent = state.lastTranslated;
+      document.getElementById('phoneticTextDisplay').textContent = state.lastPhonetic ? `Oxunuşu: [${state.lastPhonetic}]` : '';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
