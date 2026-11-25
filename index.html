@@ -1,2279 +1,1349 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-<meta name="theme-color" content="#0a0a0f" />
-<title>AI Creator — Mini App</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --bg2: #13131c;
-    --bg3: #1a1a26;
-    --bg4: #22222f;
-    --border: #2a2a3a;
-    --border2: #363648;
-    --text: #ededf5;
-    --text2: #9a9ab0;
-    --text3: #5a5a70;
-    --accent: #7c5cff;
-    --accent-soft: rgba(124,92,255,0.14);
-    --accent2: #ff5c8a;
-    --success: #4ade80;
-    --danger: #f87171;
-    --warning: #fbbf24;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --nav-h: 64px;
-    --hdr-h: 56px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-  input, textarea, select { font-family: inherit; font-size: 14px; color: var(--text); }
-  input:focus, textarea:focus, select:focus { outline: none; }
-  ::-webkit-scrollbar { width: 0; height: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Restoran & Kafe POS</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f1318;
+      --card: #171d26;
+      --card2: #1f2733;
+      --border: #2b3545;
+      --text: #f3f5f8;
+      --muted: #9aa6b8;
+      --accent: #e53935;
+      --accent2: #ff6b35;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 84px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(15, 19, 24, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      background: var(--card2);
+      transition: transform 0.08s ease, opacity 0.15s ease;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-green { background: var(--green); color: #062110; }
+    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-amber { background: var(--amber); color: #1d1202; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); }
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
-  #app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
+    .container { padding: 12px 14px; max-width: 960px; margin: 0 auto; }
+    .section { display: none; }
+    .section.active { display: block; }
 
-  /* ===== HEADER ===== */
-  #appHeader {
-    height: var(--hdr-h);
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 0 16px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    z-index: 10;
-  }
-  .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-  .logo span { color: var(--accent); }
-  .balance-chip {
-    display:flex; align-items:center; gap:6px;
-    background: var(--accent-soft);
-    border: 1px solid rgba(124,92,255,0.35);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 13px;
-    transition: transform 0.15s;
-  }
-  .balance-chip:active { transform: scale(0.96); }
-  .balance-chip svg { width: 16px; height: 16px; color: var(--accent); }
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      background: #131820;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+      gap: 4px;
+    }
+    .nav-btn {
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 7px 4px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .nav-btn.active {
+      background: rgba(229, 57, 53, 0.16);
+      color: #fff;
+    }
+    .nav-icon { font-size: 17px; }
 
-  /* ===== CONTENT ===== */
-  #content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    padding-bottom: calc(var(--nav-h) + 24px + env(safe-area-inset-bottom, 0px));
-  }
+    /* Chips / Tabs */
+    .tabs-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      scrollbar-width: none;
+    }
+    .tabs-row::-webkit-scrollbar { display: none; }
+    .chip {
+      white-space: nowrap;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
 
-  /* ===== BOTTOM NAV ===== */
-  #bottomNav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(13,13,20,0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display:flex;
-    z-index: 20;
-  }
-  .nav-btn {
-    flex:1;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-    color: var(--text3);
-    font-size: 10.5px; font-weight: 500;
-    transition: color 0.18s;
-    position: relative;
-  }
-  .nav-btn svg { width: 22px; height: 22px; transition: transform 0.2s; }
-  .nav-btn.active { color: var(--accent); }
-  .nav-btn.active svg { transform: translateY(-1px); }
-  .nav-btn.center { }
-  .nav-btn.center svg {
-    width: 44px; height: 44px;
-    padding: 10px;
-    background: linear-gradient(135deg, var(--accent), #9d7cff);
-    border-radius: 50%;
-    color: white;
-    box-shadow: 0 4px 20px rgba(124,92,255,0.45);
-    margin-top: -10px;
-  }
-  .nav-btn.center.active svg { box-shadow: 0 4px 24px rgba(124,92,255,0.7); }
+    /* Tables Grid */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .tables-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 102px;
+      cursor: pointer;
+    }
+    .table-card.busy {
+      border-color: var(--amber);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card));
+    }
+    .table-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .table-name { font-size: 15px; font-weight: 800; }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .badge-free { background: rgba(34, 197, 94, 0.16); color: var(--green); }
+    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--amber); }
+    .table-meta {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .table-sum { font-size: 16px; font-weight: 800; color: #fff; }
+    .table-time { font-size: 11px; color: var(--muted); }
+    .del-table-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      padding: 3px 7px;
+      font-size: 11px;
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+    }
 
-  /* ===== COMMON UI ===== */
-  .section-title { font-size: 16px; font-weight: 700; margin: 20px 0 12px; }
-  .section-title:first-child { margin-top: 0; }
-  .empty { text-align:center; color: var(--text3); padding: 40px 20px; font-size: 13px; }
+    /* Order View */
+    .order-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .search-input, .input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 640px) {
+      .menu-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .menu-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .menu-name { font-size: 13px; font-weight: 700; line-height: 1.3; }
+    .menu-desc { font-size: 11px; color: var(--muted); }
+    .price-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .price-btn {
+      flex: 1;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      padding: 7px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+    }
+    .price-btn span { color: var(--green); display: block; font-size: 13px; }
 
-  .chip {
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    transition: all 0.18s;
-  }
-  .chip.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
+    /* Cart */
+    .cart-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-row:last-child { border-bottom: none; }
+    .qty-controls { display: flex; align-items: center; gap: 6px; }
+    .qty-btn { width: 28px; height: 28px; padding: 0; font-size: 15px; }
+    .pay-bar {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
 
-  .chips-scroll {
-    display:flex; gap:8px;
-    overflow-x: auto;
-    margin: 0 -16px 4px;
-    padding: 0 16px 4px;
-    scrollbar-width: none;
-  }
-  .chips-scroll::-webkit-scrollbar { display:none; }
+    /* Stats & Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px;
+    }
+    .kpi-label { font-size: 11px; color: var(--muted); }
+    .kpi-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .list-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .low-stock { border-color: var(--accent); }
 
-  .btn {
-    display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    padding: 12px 20px;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 14px;
-    transition: transform 0.15s, opacity 0.15s;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #9d7cff);
-    color: white;
-    box-shadow: 0 4px 16px rgba(124,92,255,0.35);
-  }
-  .btn-primary:disabled { opacity: 0.5; box-shadow: none; }
-  .btn-secondary {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-  .btn-block { width: 100%; }
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .modal h3 { margin: 0 0 12px; font-size: 17px; }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
-  .card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
+    /* Receipt Paper */
+    .receipt-paper {
+      background: #fff;
+      color: #111;
+      font-family: "Courier New", Courier, monospace;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .receipt-center { text-align: center; }
+    .receipt-hr { border-top: 1px dashed #444; margin: 8px 0; }
+    .receipt-line { display: flex; justify-content: space-between; gap: 8px; }
 
-  .field-label {
-    display:block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text2);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .input, .textarea, .select {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    color: var(--text);
-    transition: border-color 0.18s;
-  }
-  .input:focus, .textarea:focus, .select:focus { border-color: var(--accent); }
-  .textarea { resize: none; min-height: 90px; line-height: 1.5; }
-  .select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9ab0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 18px;
-    padding-right: 38px;
-  }
-
-  /* ===== HOME ===== */
-  .search-wrap { margin-bottom: 14px; position: relative; }
-  .search-input {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px 12px 42px;
-    color: var(--text);
-  }
-  .search-input::placeholder { color: var(--text3); }
-  .search-icon {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    width: 18px; height: 18px; color: var(--text3);
-    pointer-events: none;
-  }
-
-  .template-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .template-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: transform 0.15s, border-color 0.15s;
-    cursor: pointer;
-  }
-  .template-card:active { transform: scale(0.97); border-color: var(--accent); }
-  .template-thumb {
-    aspect-ratio: 1;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 36px;
-  }
-  .template-info { padding: 10px 12px 12px; }
-  .template-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
-  .template-meta { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* ===== FEED ===== */
-  .feed-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 12px;
-  }
-  .feed-head { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
-  .feed-avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    display:flex; align-items:center; justify-content:center;
-    font-weight: 700; font-size: 15px; color: white;
-    flex-shrink: 0;
-  }
-  .feed-author { flex:1; min-width:0; }
-  .feed-name { font-weight: 600; font-size: 13.5px; }
-  .feed-time { font-size: 11px; color: var(--text3); }
-  .follow-btn {
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 12px; font-weight: 600;
-    border: 1px solid rgba(124,92,255,0.3);
-  }
-  .follow-btn.following {
-    background: var(--bg3);
-    color: var(--text2);
-    border-color: var(--border);
-  }
-  .feed-preview {
-    border-radius: var(--radius-sm);
-    aspect-ratio: 16/10;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 40px;
-    margin-bottom: 10px;
-    position: relative;
-    overflow: hidden;
-  }
-  .feed-preview-label {
-    position: absolute; top: 10px; left: 10px;
-    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-    background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 999px;
-    font-weight: 700;
-  }
-  .feed-text { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
-  .feed-actions { display:flex; gap: 8px; }
-  .feed-action {
-    flex:1;
-    padding: 8px;
-    border-radius: var(--radius-sm);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    font-size: 12.5px; font-weight: 600;
-    color: var(--text2);
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    transition: all 0.15s;
-  }
-  .feed-action:active { transform: scale(0.96); }
-  .feed-action.liked { color: var(--accent2); border-color: rgba(255,92,138,0.3); background: rgba(255,92,138,0.1); }
-  .feed-action.repeat { color: var(--accent); border-color: rgba(124,92,255,0.3); background: var(--accent-soft); }
-
-  /* ===== CREATE ===== */
-  .mode-tabs { display:flex; gap:8px; margin-bottom: 18px; }
-  .mode-tab {
-    flex:1;
-    padding: 10px 6px;
-    border-radius: var(--radius-sm);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    font-size: 12.5px; font-weight: 600;
-    color: var(--text2);
-    display:flex; flex-direction:column; align-items:center; gap:4px;
-    transition: all 0.18s;
-  }
-  .mode-tab.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .mode-tab span:first-child { font-size: 20px; }
-
-  .create-field { margin-bottom: 16px; }
-  .tip-card {
-    background: rgba(124,92,255,0.08);
-    border: 1px solid rgba(124,92,255,0.25);
-    border-radius: var(--radius-sm);
-    padding: 12px;
-    font-size: 12.5px;
-    color: var(--text2);
-    line-height: 1.55;
-    margin-bottom: 16px;
-  }
-  .tip-card strong { color: var(--accent); }
-
-  .upload-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
-  .upload-slot {
-    aspect-ratio: 1;
-    background: var(--bg3);
-    border: 1.5px dashed var(--border2);
-    border-radius: var(--radius-sm);
-    display:flex; align-items:center; justify-content:center;
-    flex-direction: column; gap: 2px;
-    color: var(--text3);
-    font-size: 20px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .upload-slot:active { border-color: var(--accent); background: var(--accent-soft); }
-  .upload-slot img { width: 100%; height: 100%; object-fit: cover; }
-  .upload-slot .remove {
-    position: absolute; top: 2px; right: 2px;
-    width: 20px; height: 20px;
-    background: rgba(0,0,0,0.7);
-    border-radius: 50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 12px; color: white;
-  }
-  .upload-count { font-size: 11px; color: var(--text3); margin-top: 4px; }
-
-  .toggle-group { display:flex; gap:8px; }
-  .toggle-opt {
-    flex:1;
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    font-size: 12.5px; font-weight: 600;
-    color: var(--text2);
-    text-align: center;
-    transition: all 0.15s;
-  }
-  .toggle-opt.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .generate-bar {
-    position: sticky;
-    bottom: 0;
-    background: linear-gradient(to top, var(--bg) 60%, transparent);
-    padding: 16px 0 4px;
-    margin-top: 8px;
-  }
-  .cost-note {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 10px;
-  }
-  .cost-note .cost { color: var(--accent); font-weight: 700; }
-
-  /* chat */
-  .chat-box {
-    display:flex; flex-direction: column;
-    gap: 10px;
-    margin-bottom: 14px;
-    min-height: 200px;
-  }
-  .msg {
-    max-width: 85%;
-    padding: 10px 14px;
-    border-radius: 16px;
-    font-size: 13.5px;
-    line-height: 1.5;
-    word-break: break-word;
-  }
-  .msg.user {
-    align-self: flex-end;
-    background: var(--accent);
-    color: white;
-    border-bottom-right-radius: 4px;
-  }
-  .msg.assistant {
-    align-self: flex-start;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-bottom-left-radius: 4px;
-  }
-  .msg-cost { font-size: 10px; opacity: 0.6; margin-top: 4px; }
-  .quick-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px; }
-  .quick-chip {
-    padding: 7px 12px;
-    border-radius: 999px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--text2);
-    font-weight: 500;
-  }
-  .quick-chip:active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .chat-input-row { display:flex; gap:8px; }
-  .chat-input-row .input { flex:1; }
-  .send-btn {
-    width: 46px; height: 46px;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--accent), #9d7cff);
-    color: white;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink: 0;
-  }
-  .send-btn:active { transform: scale(0.94); }
-
-  /* ===== HISTORY ===== */
-  .history-item {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 10px;
-  }
-  .history-head { display:flex; align-items:center; gap: 10px; margin-bottom: 10px; }
-  .history-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-  .history-info { flex:1; min-width:0; }
-  .history-title { font-weight: 600; font-size: 13.5px; }
-  .history-sub { font-size: 11.5px; color: var(--text3); margin-top: 2px; }
-  .status-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-  }
-  .status-success { background: rgba(74,222,128,0.15); color: var(--success); }
-  .status-pending { background: rgba(251,191,36,0.15); color: var(--warning); }
-  .status-failed { background: rgba(248,113,113,0.15); color: var(--danger); }
-  .history-actions { display:flex; gap: 8px; }
-  .history-actions .btn { flex:1; padding: 9px; font-size: 12.5px; }
-
-  /* ===== PROFILE ===== */
-  .profile-head { display:flex; align-items:center; gap:14px; margin-bottom: 22px; }
-  .profile-avatar {
-    width: 64px; height: 64px; border-radius: 50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 26px; font-weight: 700; color: white;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    flex-shrink: 0;
-  }
-  .profile-name { font-size: 18px; font-weight: 700; }
-  .profile-username { font-size: 13px; color: var(--text2); }
-
-  .balance-card {
-    background: linear-gradient(135deg, #2a1f5c, #1a1230);
-    border: 1px solid rgba(124,92,255,0.35);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .balance-card-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-  .balance-card-value { font-size: 34px; font-weight: 800; letter-spacing: -1px; color: white; }
-  .balance-card-value span { font-size: 15px; color: var(--text2); font-weight: 500; margin-left: 4px; }
-  .balance-actions { display:flex; gap: 10px; margin-top: 16px; }
-
-  .menu-list { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-  .menu-item {
-    display:flex; align-items:center; gap: 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .menu-item:last-child { border-bottom: none; }
-  .menu-item:active { background: var(--bg3); }
-  .menu-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 17px;
-    flex-shrink: 0;
-  }
-  .menu-label { flex: 1; font-weight: 600; font-size: 14px; }
-  .menu-arrow { color: var(--text3); }
-
-  .ref-box {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  .ref-tier {
-    display:flex; gap: 12px; margin-top: 12px;
-  }
-  .ref-tier-item {
-    flex: 1;
-    background: var(--bg3);
-    border-radius: var(--radius-sm);
-    padding: 12px;
-  }
-  .ref-tier-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 6px; }
-  .ref-tier-val { font-size: 18px; font-weight: 700; color: var(--accent); }
-  .ref-tier-val.alt { color: var(--accent2); }
-  .ref-tier-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .copy-row { display:flex; gap: 8px; margin-top: 12px; }
-  .copy-row .input { flex: 1; font-size: 12px; }
-
-  /* ===== MODAL ===== */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-    display:flex; align-items:flex-end; justify-content:center;
-    animation: fadeIn 0.2s;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal {
-    background: var(--bg2);
-    border-radius: var(--radius) var(--radius) 0 0;
-    width: 100%; max-width: 520px;
-    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-    max-height: 88vh;
-    overflow-y: auto;
-    animation: slideUp 0.25s cubic-bezier(0.16,1,0.3,1);
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 999px; margin: 0 auto 16px; }
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
-
-  .package-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-  .package {
-    background: var(--bg3);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    text-align: center;
-    transition: all 0.15s;
-    cursor: pointer;
-  }
-  .package.selected { border-color: var(--accent); background: var(--accent-soft); }
-  .package-tokens { font-size: 22px; font-weight: 800; color: var(--text); }
-  .package-price { font-size: 12px; color: var(--text2); margin-top: 4px; }
-  .package-bonus { font-size: 10.5px; color: var(--success); margin-top: 4px; font-weight: 700; }
-
-  /* ===== TOAST ===== */
-  .toast {
-    position: fixed;
-    left: 50%; bottom: calc(var(--nav-h) + 20px);
-    transform: translateX(-50%) translateY(20px);
-    background: var(--bg4);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 12px 18px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.25s;
-    z-index: 200;
-    max-width: 85vw;
-    text-align: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.error { border-color: rgba(248,113,113,0.5); }
-  .toast.success { border-color: rgba(74,222,128,0.5); }
-
-  /* Generating overlay */
-  .gen-overlay {
-    position: fixed; inset: 0;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(6px);
-    z-index: 150;
-    display:flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 20px;
-    animation: fadeIn 0.2s;
-  }
-  .spinner {
-    width: 48px; height: 48px;
-    border: 3px solid var(--bg4);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .gen-text { font-size: 14px; color: var(--text2); font-weight: 500; }
-  .gen-sub { font-size: 12px; color: var(--text3); }
-
-  /* Result preview */
-  .result-preview {
-    aspect-ratio: 1;
-    border-radius: var(--radius);
-    display:flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px;
-    font-size: 48px;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .result-preview::after {
-    content: 'DEMO';
-    position: absolute; top: 12px; right: 12px;
-    font-size: 10px; letter-spacing: 1px; font-weight: 700;
-    background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 999px;
-  }
-  .result-caption { text-align:center; font-size: 12px; color: var(--text3); margin-top: 8px; }
-</style>
+    @media print {
+      body * { visibility: hidden; }
+      #receiptPrintable, #receiptPrintable * { visibility: visible; }
+      #receiptPrintable {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        padding: 4mm;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="app">
-  <header id="appHeader">
-    <div class="logo">AI<span>Creator</span></div>
-    <button class="balance-chip" data-action="open-topup">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/>
-      </svg>
-      <span id="balanceValue">0</span>
-    </button>
-  </header>
-  <main id="content"></main>
-  <nav id="bottomNav">
-    <button class="nav-btn" data-tab="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1V9.5z"/>
-      </svg>
-      <span>Home</span>
-    </button>
-    <button class="nav-btn" data-tab="feed">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/>
-      </svg>
-      <span>Feed</span>
-    </button>
-    <button class="nav-btn center" data-tab="create">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      <span>Create</span>
-    </button>
-    <button class="nav-btn" data-tab="history">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-      </svg>
-      <span>History</span>
-    </button>
-    <button class="nav-btn" data-tab="profile">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
-      </svg>
-      <span>Profile</span>
-    </button>
-  </nav>
+<header>
+  <div class="brand">
+    <div class="brand-title" id="headerShopName">RESTORAN & KAFE POS</div>
+    <div class="brand-sub" id="headerSubInfo">Zallar, Kassa, Anbar və Açot</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-outline btn-sm" onclick="openShopModal()">🏪 Obyekt</button>
+    <button class="btn-primary btn-sm" onclick="openAddTableModal()">+ Zal / Kabinet</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- 1. ZALLAR / MASALAR -->
+  <section id="sec-tables" class="section active">
+    <div class="tabs-row" id="zoneTabs"></div>
+    <div class="tables-grid" id="tablesGrid"></div>
+  </section>
+
+  <!-- 2. SİFARİŞ / KASSA EKRANI -->
+  <section id="sec-order" class="section">
+    <div class="order-header">
+      <div>
+        <div style="font-weight:800;font-size:15px" id="activeTableTitle">Masa seçilməyib</div>
+        <div style="font-size:11px;color:var(--muted)" id="activeTableTime">Sifariş əlavə etmək üçün menyudan seçin</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-outline btn-sm" onclick="openMoveModal()">⇄ Köçür</button>
+        <button class="btn-amber btn-sm" onclick="showPreReceipt()">🧾 Hesab (Pre-çek)</button>
+        <button class="btn-outline btn-sm" onclick="switchTab('tables')">← Zallar</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="search-input" id="menuSearch" placeholder="Menyuda axtar..." oninput="renderMenu()" />
+      <button class="btn-blue btn-sm" style="white-space:nowrap" onclick="openAddProductModal()">+ Məhsul</button>
+    </div>
+
+    <div class="tabs-row" id="catTabs"></div>
+    <div class="menu-grid" id="menuGrid"></div>
+
+    <div class="cart-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <strong>Açıq Sifariş Siyahısı</strong>
+        <span style="font-size:12px;color:var(--muted)" id="cartCountLabel">0 məhsul</span>
+      </div>
+      <div id="cartList"></div>
+      <div class="field" style="margin-top:10px">
+        <input class="input" id="orderNoteInput" placeholder="Sifariş qeydi (məs: az duzlu, əlavə kömür...)" onchange="saveOrderNote()" />
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:800;margin-top:8px">
+        <span>YEKUN MƏBLƏĞ:</span>
+        <span style="color:var(--green)" id="cartTotalLabel">0.00 ₼</span>
+      </div>
+      <div class="pay-bar">
+        <button class="btn-green" onclick="closeOrder('Nəğd')">💵 Nəğd Bağla</button>
+        <button class="btn-blue" onclick="closeOrder('Kart')">💳 Kartla Bağla</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. ANBAR -->
+  <section id="sec-stock" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong>Anbar və Komponent Qalıqları</strong>
+      <button class="btn-primary btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
+    </div>
+    <div id="stockList"></div>
+  </section>
+
+  <!-- 4. KASSA / AÇOT -->
+  <section id="sec-reports" class="section">
+    <div class="tabs-row">
+      <button class="chip active" id="p-today" onclick="setPeriod('today')">Bu gün</button>
+      <button class="chip" id="p-prevMonthToToday" onclick="setPeriod('prevMonthToToday')">Keçən aydan bu günə</button>
+      <button class="chip" id="p-thisMonth" onclick="setPeriod('thisMonth')">Bu ay</button>
+      <button class="chip" id="p-last30" onclick="setPeriod('last30')">Son 30 gün</button>
+      <button class="chip" id="p-all" onclick="setPeriod('all')">Bütün tarixlər</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div class="field" style="margin:0">
+        <label>Tarixdən</label>
+        <input type="date" class="input" id="dateFrom" onchange="onCustomDateChange()" />
+      </div>
+      <div class="field" style="margin:0">
+        <label>Tarixədək</label>
+        <input type="date" class="input" id="dateTo" onchange="onCustomDateChange()" />
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Ümumi Alver (Dövriyyə)</div>
+        <div class="kpi-val" style="color:var(--green)" id="kpiTotal">0.00 ₼</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Bağlanmış Çek Sayı</div>
+        <div class="kpi-val" id="kpiCount">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Nəğd Kassa</div>
+        <div class="kpi-val" id="kpiCash">0.00 ₼</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Kart (Terminal)</div>
+        <div class="kpi-val" id="kpiCard">0.00 ₼</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn-primary btn-sm" onclick="copyReportText()">📋 Açotu Kopyala</button>
+      <button class="btn-blue btn-sm" onclick="shareReportTelegram()">✈️ Telegram-a Göndər</button>
+      <button class="btn-outline btn-sm" onclick="exportBackup()">⬇️ Yedək (JSON)</button>
+    </div>
+
+    <h4 style="margin:10px 0 6px">Günlük Xülasə (Tarixə Görə)</h4>
+    <div id="dailySummaryList"></div>
+
+    <h4 style="margin:14px 0 6px">Çeklər Tarixçəsi (Çek vermək üçün toxun)</h4>
+    <div id="receiptsHistoryList"></div>
+  </section>
 </div>
 
-<div id="modalRoot"></div>
-<div id="toast" class="toast"></div>
+<!-- ALT MENYU -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-tables" onclick="switchTab('tables')">
+    <span class="nav-icon">🪑</span><span>Zallar</span>
+  </button>
+  <button class="nav-btn" id="nav-order" onclick="switchTab('order')">
+    <span class="nav-icon">🍽️</span><span>Sifariş</span>
+  </button>
+  <button class="nav-btn" id="nav-stock" onclick="switchTab('stock')">
+    <span class="nav-icon">📦</span><span>Anbar</span>
+  </button>
+  <button class="nav-btn" id="nav-reports" onclick="switchTab('reports')">
+    <span class="nav-icon">📊</span><span>Açot / Kassa</span>
+  </button>
+</nav>
+
+<!-- MODAL: OBYEKT MƏLUMATLARI -->
+<div class="modal-backdrop" id="shopModal">
+  <div class="modal">
+    <h3>🏪 Obyekt Məlumatları</h3>
+    <div class="field"><label>Obyektin Adı</label><input class="input" id="shopNameIn" /></div>
+    <div class="field"><label>Ünvan / Filial</label><input class="input" id="shopAddressIn" /></div>
+    <div class="field"><label>Əlaqə Telefonu</label><input class="input" id="shopPhoneIn" /></div>
+    <div class="field"><label>Çek Sonu Qeydi</label><input class="input" id="shopFooterIn" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn-outline" onclick="closeModal('shopModal')">Bağla</button>
+      <button class="btn-green" onclick="saveShopInfo()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ZAL / KABİNET ARTIR -->
+<div class="modal-backdrop" id="addTableModal">
+  <div class="modal">
+    <h3>+ Yeni Zal / Kabinet Artır</h3>
+    <div class="field">
+      <label>Bölmə</label>
+      <select class="input" id="newTableZone">
+        <option value="Zal">Zal</option>
+        <option value="Kabinet">Kabinet</option>
+        <option value="Al-apar">Al-apar</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Adı (məs: Zal 7, Kabinet 5, VİP 1)</label>
+      <input class="input" id="newTableName" placeholder="Kabinet 5" />
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addTableModal')">Ləğv et</button>
+      <button class="btn-primary" onclick="addNewTable()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MASA KÖÇÜR -->
+<div class="modal-backdrop" id="moveModal">
+  <div class="modal">
+    <h3>Sifarişi Başqa Masaya Köçür</h3>
+    <div class="field">
+      <label>Hədəf Boş Masa / Kabinet</label>
+      <select class="input" id="moveTargetSelect"></select>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('moveModal')">Bağla</button>
+      <button class="btn-primary" onclick="confirmMoveTable()">Köçür</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: YENİ MƏHSUL -->
+<div class="modal-backdrop" id="addProductModal">
+  <div class="modal">
+    <h3>+ Menyuya Yeni Məhsul</h3>
+    <div class="field"><label>Kateqoriya</label><select class="input" id="newProdCat"></select></div>
+    <div class="field"><label>Məhsulun Adı</label><input class="input" id="newProdName" /></div>
+    <div class="field"><label>Qiymət (AZN)</label><input type="number" step="0.1" class="input" id="newProdPrice" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addProductModal')">Bağla</button>
+      <button class="btn-green" onclick="addNewProduct()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ANBAR MALI -->
+<div class="modal-backdrop" id="addStockModal">
+  <div class="modal">
+    <h3>+ Yeni Anbar Məhsulu</h3>
+    <div class="field"><label>Adı</label><input class="input" id="newStockName" /></div>
+    <div class="field"><label>Başlanğıc Say</label><input type="number" class="input" id="newStockQty" value="20" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addStockModal')">Bağla</button>
+      <button class="btn-green" onclick="addNewStock()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ÇEK / QƏBZ -->
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal">
+    <div id="receiptPrintable" class="receipt-paper"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button class="btn-primary" onclick="window.print()">🖨️ Çap Et</button>
+      <button class="btn-green" onclick="downloadReceiptPNG()">🖼️ Şəkil (PNG)</button>
+      <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
+      <button class="btn-outline" onclick="copyReceiptText()">📋 Kopyala</button>
+    </div>
+    <button class="btn-outline" style="width:100%;margin-top:8px" onclick="closeModal('receiptModal')">Bağla</button>
+  </div>
+</div>
 
 <script>
-(function() {
-  'use strict';
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
 
-  /* ============================================================
-     KONFİQURASİYA
-  ============================================================ */
-  const STORAGE_KEY = 'aicreator_state_v1';
-  const API_CONFIG = {
-    baseUrl: '', // Backend ünvanı. Boş olduqda demo rejim.
-    endpoints: {
-      generate: '/api/generate',
-      chat: '/api/chat',
-      topup: '/api/topup',
-      gift: '/api/gift'
-    }
-  };
+  const STORAGE_KEY = "az_restoran_pos_v3";
 
-  const MODELS = {
-    photo: [
-      { id: 'nano-banana-pro', name: 'NanoBanana PRO', mult: 1.2 },
-      { id: 'flux-2', name: 'Flux 2.0', mult: 1.0 },
-      { id: 'midjourney-v7', name: 'Midjourney v7', mult: 1.3 },
-      { id: 'ideogram-3', name: 'Ideogram 3', mult: 0.9 }
-    ],
-    video: [
-      { id: 'seedance-2.0', name: 'Seedance 2.0', mult: 1.0 },
-      { id: 'seedance-2.5', name: 'Seedance 2.5', mult: 1.2 },
-      { id: 'wan-3.0', name: 'Wan 3.0', mult: 1.1 },
-      { id: 'kling-4.0', name: 'Kling 4.0', mult: 1.3 },
-      { id: 'veo-3.1', name: 'Veo 3.1', mult: 1.5 },
-      { id: 'grok', name: 'Grok Video', mult: 0.9 },
-      { id: 'heygen-avatar', name: 'HeyGen Avatar', mult: 1.1 },
-      { id: 'topaz-enhance', name: 'Topaz Enhance', mult: 0.7 }
-    ],
-    audio: [
-      { id: 'suno-v6', name: 'Suno V6', mult: 1.0 },
-      { id: 'udio-2', name: 'Udio 2.0', mult: 1.15 }
-    ]
-  };
+  const DEFAULT_MENU = [
+    // FAST FOOD
+    { id: "ff1", cat: "Fast Food", name: "Şaurma", variants: [{ label: "Sadə", price: 4.0 }, { label: "+ Fri", price: 6.0 }], stockKey: "Fast food" },
+    { id: "ff2", cat: "Fast Food", name: "Dönər", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Dönər" },
+    { id: "ff3", cat: "Fast Food", name: "Hot Dog", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Fast food" },
+    { id: "ff4", cat: "Fast Food", name: "Tost", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Fast food" },
+    { id: "ff5", cat: "Fast Food", name: "Nuggets + Fri", variants: [{ label: "Porsiya", price: 6.0 }], stockKey: "Nuggets" },
+    { id: "ff6", cat: "Fast Food", name: "Toyuq qanadları + Fri", variants: [{ label: "Porsiya", price: 7.0 }], stockKey: "Toyuq qanadları" },
+    { id: "ff7", cat: "Fast Food", name: "Fri", variants: [{ label: "Standart", price: 3.0 }], stockKey: "Kartof fri" },
+    { id: "ff8", cat: "Fast Food", name: "Porsiyon", variants: [{ label: "Standart", price: 6.0 }], stockKey: "Dönər" },
 
-  const TEMPLATES = [
-    { id: 't1', cat: ['all', 'trending', 'photo'], title: 'Neon Portret', emoji: '✨', mode: 'photo',
-      config: { mode: 'photo', model: 'nano-banana-pro', prompt: 'cinematic neon portrait, glowing lights', ratio: '1:1', quality: 'hd' } },
-    { id: 't2', cat: ['all', 'video', 'trending'], title: 'Cinematic Loop', emoji: '🎬', mode: 'video',
-      config: { mode: 'video', model: 'veo-3.1', vmode: 'by-reference', prompt: 'cinematic slow motion loop, dramatic lighting', duration: '5s', quality: 'hd' } },
-    { id: 't3', cat: ['all', 'audio'], title: 'Lo-fi Chill', emoji: '🎵', mode: 'audio',
-      config: { mode: 'audio', model: 'suno-v6', style: 'lofi, chill', prompt: 'relaxing lofi beat with rain sounds', lyricsMode: 'simple' } },
-    { id: 't4', cat: ['all', 'winter'], title: 'Qış Möhürü', emoji: '❄️', mode: 'photo',
-      config: { mode: 'photo', model: 'flux-2', prompt: 'winter wonderland, snow falling, magical atmosphere', ratio: '3:4', quality: 'standard' } },
-    { id: 't5', cat: ['all', 'women', 'trending'], title: 'Elegan Portret', emoji: '👑', mode: 'photo',
-      config: { mode: 'photo', model: 'midjourney-v7', prompt: 'elegant woman portrait, soft lighting, editorial', ratio: '3:4', quality: 'ultra' } },
-    { id: 't6', cat: ['all', 'zodiac'], title: 'Bürc Simvolu', emoji: '♈', mode: 'photo',
-      config: { mode: 'photo', model: 'nano-banana-pro', prompt: 'zodiac sign mystical artwork, gold accents', ratio: '1:1', quality: 'hd' } },
-    { id: 't7', cat: ['all', 'birthday'], title: 'Ad Günü', emoji: '🎂', mode: 'photo',
-      config: { mode: 'photo', model: 'ideogram-3', prompt: 'birthday celebration, colorful balloons, confetti', ratio: '1:1', quality: 'standard' } },
-    { id: 't8', cat: ['all', 'wedding'], title: 'Toy Dəvəti', emoji: '💍', mode: 'photo',
-      config: { mode: 'photo', model: 'flux-2', prompt: 'elegant wedding invitation card, floral design', ratio: '3:4', quality: 'ultra' } },
-    { id: 't9', cat: ['all', 'video'], title: 'Avatar Danışır', emoji: '🗣️', mode: 'video',
-      config: { mode: 'video', model: 'heygen-avatar', vmode: 'by-reference', prompt: 'talking avatar, lip sync', duration: '10s', quality: 'hd' } },
-    { id: 't10', cat: ['all', 'audio', 'trending'], title: 'Epik Soundtrack', emoji: '🎼', mode: 'audio',
-      config: { mode: 'audio', model: 'suno-v6', style: 'epic orchestral', prompt: 'dramatic epic cinematic soundtrack', lyricsMode: 'simple' } },
-    { id: 't11', cat: ['all', 'photo'], title: 'Product Shot', emoji: '📸', mode: 'photo',
-      config: { mode: 'photo', model: 'nano-banana-pro', prompt: 'professional product photography, studio lighting', ratio: '1:1', quality: 'ultra' } },
-    { id: 't12', cat: ['all', 'video', 'trending'], title: 'Morph Transform', emoji: '🌀', mode: 'video',
-      config: { mode: 'video', model: 'kling-4.0', vmode: 'by-frames', prompt: 'smooth morph transition between scenes', duration: '5s', quality: 'hd' } }
+    // ŞORBALAR
+    { id: "sr1", cat: "Şorbalar", name: "Mərci şorbası", variants: [{ label: "1 pors", price: 4.0 }], stockKey: "Şorba" },
+    { id: "sr2", cat: "Şorbalar", name: "Toyuq şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
+    { id: "sr3", cat: "Şorbalar", name: "Göbələk şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
+    { id: "sr4", cat: "Şorbalar", name: "Tomat şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
+
+    // PİZZALAR
+    { id: "pz1", cat: "Pizzalar", name: "Marqarita", variants: [{ label: "Kiçik", price: 8.0 }, { label: "Böyük", price: 12.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz2", cat: "Pizzalar", name: "Vegetarian", variants: [{ label: "Kiçik", price: 8.0 }, { label: "Böyük", price: 12.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz3", cat: "Pizzalar", name: "Mexicano", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz4", cat: "Pizzalar", name: "Sosisli Pizza", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz5", cat: "Pizzalar", name: "Toyuqlu Pizza", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz6", cat: "Pizzalar", name: "Sucuklu Pizza", variants: [{ label: "Kiçik", price: 12.0 }, { label: "Böyük", price: 18.0 }], stockKey: "Pizza xəmiri" },
+    { id: "pz7", cat: "Pizzalar", name: "Qarışıq Pizza", variants: [{ label: "Kiçik", price: 12.0 }, { label: "Böyük", price: 18.0 }], stockKey: "Pizza xəmiri" },
+
+    // LAHMACUN
+    { id: "lh1", cat: "Lahmacun", name: "Sadə Lahmacun", variants: [{ label: "1 ədəd", price: 3.0 }], stockKey: "Lahmacun" },
+    { id: "lh2", cat: "Lahmacun", name: "Acılı Lahmacun", variants: [{ label: "1 ədəd", price: 3.0 }], stockKey: "Lahmacun" },
+    { id: "lh3", cat: "Lahmacun", name: "Pendirli Lahmacun", variants: [{ label: "1 ədəd", price: 4.0 }], stockKey: "Lahmacun" },
+    { id: "lh4", cat: "Lahmacun", name: "Qarışıq Lahmacun", variants: [{ label: "1 ədəd", price: 5.0 }], stockKey: "Lahmacun" },
+
+    // PİDELƏR
+    { id: "pd1", cat: "Pidelər", name: "Pendirli Pide", variants: [{ label: "1 pors", price: 7.0 }], stockKey: "Pide" },
+    { id: "pd2", cat: "Pidelər", name: "Qiyməli Pide", variants: [{ label: "1 pors", price: 8.0 }], stockKey: "Pide" },
+    { id: "pd3", cat: "Pidelər", name: "Qiyməli Pendirli Pide", variants: [{ label: "1 pors", price: 9.0 }], stockKey: "Pide" },
+    { id: "pd4", cat: "Pidelər", name: "Sucuklu Pide", variants: [{ label: "1 pors", price: 10.0 }], stockKey: "Pide" },
+
+    // SALATLAR
+    { id: "sl1", cat: "Salatlar", name: "Çoban Salatı", variants: [{ label: "1 pors", price: 3.0 }], stockKey: "Salat" },
+    { id: "sl2", cat: "Salatlar", name: "Paytaxt Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
+    { id: "sl3", cat: "Salatlar", name: "Mimoza Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
+    { id: "sl4", cat: "Salatlar", name: "Toyuq Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
+
+    // MƏZƏLƏR
+    { id: "mz1", cat: "Məzələr", name: "Araxis", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Araxis" },
+    { id: "mz2", cat: "Məzələr", name: "Qoz", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Çərəz" },
+    { id: "mz3", cat: "Məzələr", name: "Fındıq", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Çərəz" },
+    { id: "mz4", cat: "Məzələr", name: "Ağ tum", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Ağ tum" },
+    { id: "mz5", cat: "Məzələr", name: "Duzlu çubuqlar", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Duzlu çubuqlar" },
+    { id: "mz6", cat: "Məzələr", name: "Düşbərə (qızardılmış)", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Düşbərə" },
+    { id: "mz7", cat: "Məzələr", name: "Limon", variants: [{ label: "Pors", price: 1.0 }], stockKey: "Limon" },
+    { id: "mz8", cat: "Məzələr", name: "Noxud", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Noxud" },
+    { id: "mz9", cat: "Məzələr", name: "Pendir saçaqlı", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Pendir" },
+    { id: "mz10", cat: "Məzələr", name: "Pendir qızardılmış", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Pendir" },
+    { id: "mz11", cat: "Məzələr", name: "Popcorn", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Popcorn" },
+    { id: "mz12", cat: "Məzələr", name: "Pətənə qızardılmış", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Pətənə" },
+    { id: "mz13", cat: "Məzələr", name: "Suxari", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Suxari" },
+    { id: "mz14", cat: "Məzələr", name: "Çips", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Çips" },
+    { id: "mz15", cat: "Məzələr", name: "Çərəz seti", variants: [{ label: "Set", price: 15.0 }], stockKey: "Çərəz seti" },
+    { id: "mz16", cat: "Məzələr", name: "Meyvə seti", variants: [{ label: "Set", price: 15.0 }], stockKey: "Meyvə seti" },
+
+    // ŞİRNİYYATLAR
+    { id: "sn1", cat: "Şirniyyatlar", name: "Mürəbbə", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Mürəbbə" },
+    { id: "sn2", cat: "Şirniyyatlar", name: "Plitka şokolad", variants: [{ label: "Ədəd", price: 4.0 }], stockKey: "Şokolad" },
+    { id: "sn3", cat: "Şirniyyatlar", name: "Snickers", variants: [{ label: "Ədəd", price: 3.0 }], stockKey: "Snickers" },
+    { id: "sn4", cat: "Şirniyyatlar", name: "Rulet", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Rulet" },
+    { id: "sn5", cat: "Şirniyyatlar", name: "Meyvə qurusu", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Çərəz" },
+    { id: "sn6", cat: "Şirniyyatlar", name: "Kişmiş", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Çərəz" },
+
+    // SPİRTLİ İÇKİLƏR
+    { id: "sp1", cat: "Spirtli içkilər", name: "Xırdalan", variants: [{ label: "0.5L", price: 4.0 }], stockKey: "Xırdalan" },
+    { id: "sp2", cat: "Spirtli içkilər", name: "Efes Draft", variants: [{ label: "0.5L", price: 6.0 }], stockKey: "Efes Draft" },
+
+    // İSTİ İÇKİLƏR
+    { id: "ii1", cat: "İsti içkilər", name: "Çay (Çaynik)", variants: [{ label: "Çaynik", price: 3.0 }], stockKey: "Çay" },
+    { id: "ii2", cat: "İsti içkilər", name: "Kofe sadə", variants: [{ label: "Fincan", price: 2.0 }], stockKey: "Kofe" },
+    { id: "ii3", cat: "İsti içkilər", name: "Kofe südlü", variants: [{ label: "Fincan", price: 2.0 }], stockKey: "Kofe" },
+    { id: "ii4", cat: "İsti içkilər", name: "Cappuccino", variants: [{ label: "Fincan", price: 3.0 }], stockKey: "Kofe" },
+
+    // SOYUQ İÇKİLƏR
+    { id: "si1", cat: "Soyuq içkilər", name: "Coca-Cola 0.3", variants: [{ label: "0.3L", price: 1.5 }], stockKey: "Coca-Cola 0.3" },
+    { id: "si2", cat: "Soyuq içkilər", name: "Coca-Cola banka", variants: [{ label: "Banka", price: 2.5 }], stockKey: "Coca-Cola banka" },
+    { id: "si3", cat: "Soyuq içkilər", name: "Coca-Cola 1LT", variants: [{ label: "1L", price: 3.0 }], stockKey: "Coca-Cola 1L" },
+    { id: "si4", cat: "Soyuq içkilər", name: "Sirab 0.5 (Qazlı/Qazsız)", variants: [{ label: "0.5L", price: 1.0 }], stockKey: "Sirab 0.5" },
+    { id: "si5", cat: "Soyuq içkilər", name: "Sirab 1LT (Qazlı/Qazsız)", variants: [{ label: "1L", price: 2.0 }], stockKey: "Sirab 1L" },
+    { id: "si6", cat: "Soyuq içkilər", name: "Meyvə şirəsi 1LT", variants: [{ label: "1L", price: 5.0 }], stockKey: "Meyvə şirəsi 1L" },
+    { id: "si7", cat: "Soyuq içkilər", name: "Fresh Portağal", variants: [{ label: "Stəkan", price: 5.0 }], stockKey: "Portağal" },
+    { id: "si8", cat: "Soyuq içkilər", name: "Ayran", variants: [{ label: "Stəkan", price: 1.0 }], stockKey: "Ayran" },
+    { id: "si9", cat: "Soyuq içkilər", name: "Fuse Tea banka", variants: [{ label: "Banka", price: 2.5 }], stockKey: "Fuse Tea" },
+    { id: "si10", cat: "Soyuq içkilər", name: "Bizon", variants: [{ label: "Ədəd", price: 2.0 }], stockKey: "Bizon" },
+    { id: "si11", cat: "Soyuq içkilər", name: "Red Bull", variants: [{ label: "Ədəd", price: 5.0 }], stockKey: "Red Bull" },
+
+    // QƏLYANLAR
+    { id: "ql1", cat: "Qəlyanlar", name: "Saxsı Qəlyan", variants: [{ label: "Standart", price: 12.0 }], stockKey: "Qəlyan tütünü" },
+    { id: "ql2", cat: "Qəlyanlar", name: "Qreypfrut Qəlyan", variants: [{ label: "Standart", price: 20.0 }], stockKey: "Qreypfrut" },
+    { id: "ql3", cat: "Qəlyanlar", name: "Ananas Qəlyan", variants: [{ label: "Standart", price: 25.0 }], stockKey: "Ananas" },
+
+    // SETLƏR
+    { id: "st1", cat: "Setlər", name: "Exclusive Set", desc: "Çaynik çay, Snickers, Saxsı qəlyan, 2 Saat kabinet", variants: [{ label: "Set", price: 24.0 }], recipe: { "Çay": 1, "Snickers": 1, "Qəlyan tütünü": 1 } },
+    { id: "st2", cat: "Setlər", name: "Çay Seti 1", desc: "Limitsiz çay, Çərəz seti, Şokolad, Mürəbbə, Rulet, 2 Saat kabinet", variants: [{ label: "Set", price: 30.0 }], recipe: { "Çay": 2, "Çərəz seti": 1, "Şokolad": 1, "Mürəbbə": 1, "Rulet": 1 } },
+    { id: "st3", cat: "Setlər", name: "Çay Seti 2", desc: "Limitsiz çay, Çərəz, Şokolad, Mürəbbə, Rulet, Qreypfrut qəlyan, 2 Saat", variants: [{ label: "Set", price: 40.0 }], recipe: { "Çay": 2, "Çərəz seti": 1, "Şokolad": 1, "Mürəbbə": 1, "Rulet": 1, "Qreypfrut": 1 } },
+    { id: "st4", cat: "Setlər", name: "Kiçik Fast Food Seti", desc: "2 Fast food, 2 Fri, 2 Coca-Cola 0.3, 2 Saat kabinet", variants: [{ label: "Set", price: 22.0 }], recipe: { "Fast food": 2, "Kartof fri": 2, "Coca-Cola 0.3": 2 } },
+    { id: "st5", cat: "Setlər", name: "Böyük Fast Food Seti", desc: "4 Fast food, 4 Fri, 1L Cola, Çaynik çay, Snickers, 2 Saat kabinet", variants: [{ label: "Set", price: 30.0 }], recipe: { "Fast food": 4, "Kartof fri": 4, "Coca-Cola 1L": 1, "Çay": 1, "Snickers": 1 } },
+    { id: "st6", cat: "Setlər", name: "Qəlyanlı Fast Food Seti", desc: "4 Fast food, 4 Fri, 1L Cola, Çay, Snickers, Qreypfrut qəlyan, 2 Saat", variants: [{ label: "Set", price: 40.0 }], recipe: { "Fast food": 4, "Kartof fri": 4, "Coca-Cola 1L": 1, "Çay": 1, "Snickers": 1, "Qreypfrut": 1 } },
+    { id: "st7", cat: "Setlər", name: "Pizza Seti", desc: "2 Böyük pizza, 2 Fri, 2L Cola, Saxsı qəlyan, 2 Saat kabinet", variants: [{ label: "Set", price: 50.0 }], recipe: { "Pizza xəmiri": 2, "Kartof fri": 2, "Coca-Cola 1L": 2, "Qəlyan tütünü": 1 } },
+    { id: "st8", cat: "Setlər", name: "Məzə Seti", desc: "Çips, Suxari, Duzlu çubuq, Araxis, Ağ tum, Popcorn, 1L Cola, 2 Saat", variants: [{ label: "Set", price: 24.0 }], recipe: { "Çips": 1, "Suxari": 1, "Duzlu çubuqlar": 1, "Araxis": 1, "Ağ tum": 1, "Popcorn": 1, "Coca-Cola 1L": 1 } },
+    { id: "st9", cat: "Setlər", name: "Jameson Seti", desc: "Jameson 1L, 4 Red Bull, Meyvə seti, 3 Saat kabinet", variants: [{ label: "Set", price: 129.0 }], recipe: { "Jameson 1L": 1, "Red Bull": 4, "Meyvə seti": 1 } },
+
+    // AD GÜNÜ SETLƏRİ
+    { id: "ag1", cat: "Ad Günü Setləri", name: "Ad Günü Seti 1", desc: "6 Fast food, 6 Fri, 1 Nuggets+Fri, 2 Çips, 2 Popcorn, 2 Suxari, 2x1L Cola, 2 Çay, 2 Snickers, 3 Saat", variants: [{ label: "Set", price: 59.0 }], recipe: { "Fast food": 6, "Kartof fri": 6, "Nuggets": 1, "Çips": 2, "Popcorn": 2, "Suxari": 2, "Coca-Cola 1L": 2, "Çay": 2, "Snickers": 2 } },
+    { id: "ag2", cat: "Ad Günü Setləri", name: "Ad Günü Seti 2 (Tort Hədiyyə)", desc: "8 Fast food, 8 Fri, 2 Nuggets+Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 3 Saat + Tort", variants: [{ label: "Set", price: 79.0 }], recipe: { "Fast food": 8, "Kartof fri": 8, "Nuggets": 2, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3 } },
+    { id: "ag3", cat: "Ad Günü Setləri", name: "Ad Günü Seti 3 (Tort Hədiyyə)", desc: "8 Fast food, 8 Fri, 2 Nuggets+Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 2 Qreypfrut qəlyan, 3 Saat + Tort", variants: [{ label: "Set", price: 99.0 }], recipe: { "Fast food": 8, "Kartof fri": 8, "Nuggets": 2, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3, "Qreypfrut": 2 } },
+    { id: "ag4", cat: "Ad Günü Setləri", name: "Ad Günü Seti 4 (Tort Hədiyyə)", desc: "2 Böyük pizza, 8 Fast food, 8 Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 3 Saat + Tort", variants: [{ label: "Set", price: 99.0 }], recipe: { "Pizza xəmiri": 2, "Fast food": 8, "Kartof fri": 8, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3 } },
+    { id: "ag5", cat: "Ad Günü Setləri", name: "Ad Günü Seti 5 (Tort Hədiyyə)", desc: "2 Böyük pizza, 8 Fast food, 8 Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 2 Qreypfrut qəlyan, 3 Saat + Tort", variants: [{ label: "Set", price: 119.0 }], recipe: { "Pizza xəmiri": 2, "Fast food": 8, "Kartof fri": 8, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3, "Qreypfrut": 2 } },
+
+    // ZAL SETLƏRİ
+    { id: "zs1", cat: "Zal Setləri", name: "Zal Seti 1", desc: "2 Fast food, 2 Kartof fri, 2 Coca-Cola 0.3, 2 Saat ZAL", variants: [{ label: "Set", price: 14.0 }], recipe: { "Fast food": 2, "Kartof fri": 2, "Coca-Cola 0.3": 2 } },
+    { id: "zs2", cat: "Zal Setləri", name: "Zal Seti 2", desc: "Saxsı qəlyan, Çaynik çay, Snickers, 2 Saat ZAL", variants: [{ label: "Set", price: 14.0 }], recipe: { "Qəlyan tütünü": 1, "Çay": 1, "Snickers": 1 } },
+    { id: "zs3", cat: "Zal Setləri", name: "Zal Seti 3", desc: "2 Dönər, 2 Ayran, 2 Saat ZAL", variants: [{ label: "Set", price: 9.0 }], recipe: { "Dönər": 2, "Ayran": 2 } },
+    { id: "zs4", cat: "Zal Setləri", name: "Zal Seti 4", desc: "Çips, 2 Coca-Cola 0.3, 1 Saat ZAL", variants: [{ label: "Set", price: 6.0 }], recipe: { "Çips": 1, "Coca-Cola 0.3": 2 } },
+    { id: "zs5", cat: "Zal Setləri", name: "Zal Seti 5", desc: "Çaynik çay, Snickers, 1 Saat ZAL", variants: [{ label: "Set", price: 6.0 }], recipe: { "Çay": 1, "Snickers": 1 } },
+
+    // VAXT (ƏN SONDA)
+    { id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", desc: "Zal / Oyun / Kabinet vaxtı (1 saat)", variants: [{ label: "1 saat", price: 1.0 }] },
+    { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", desc: "Zal / Oyun / Kabinet vaxtı (30 dəqiqə)", variants: [{ label: "Yarım saat", price: 0.5 }] }
   ];
 
-  const INITIAL_FEED = [
-    { id: 'f1', author: 'Aysel M.', authorId: 'u1', mode: 'photo', text: 'Neon portret seriyası ✨',
-      config: { mode: 'photo', model: 'nano-banana-pro', prompt: 'neon portrait, cinematic', ratio: '1:1', quality: 'hd' },
-      likes: 42, liked: false, following: false, time: '2 saat əvvəl', tokens: 15 },
-    { id: 'f2', author: 'Rəşad K.', authorId: 'u2', mode: 'video', text: 'Cinematic loop — Veo 3.1 ilə',
-      config: { mode: 'video', model: 'veo-3.1', vmode: 'by-reference', prompt: 'cinematic slowmo loop', duration: '5s', quality: 'hd' },
-      likes: 88, liked: false, following: false, time: '5 saat əvvəl', tokens: 75 },
-    { id: 'f3', author: 'Nigar H.', authorId: 'u3', mode: 'audio', text: 'Yeni lofi trek 🎧',
-      config: { mode: 'audio', model: 'suno-v6', style: 'lofi', prompt: 'chill lofi beat', lyricsMode: 'simple' },
-      likes: 31, liked: false, following: false, time: '1 gün əvvəl', tokens: 20 },
-    { id: 'f4', author: 'Elvin T.', authorId: 'u4', mode: 'photo', text: 'Product shot — studio işıqlandırma',
-      config: { mode: 'photo', model: 'flux-2', prompt: 'product photography, studio light', ratio: '1:1', quality: 'ultra' },
-      likes: 17, liked: false, following: false, time: '1 gün əvvəl', tokens: 20 }
-  ];
-
-  const TOPUP_PACKAGES = [
-    { id: 'p1', tokens: 500, price: '5 AZN', bonus: '' },
-    { id: 'p2', tokens: 1500, price: '12 AZN', bonus: '+10% bonus' },
-    { id: 'p3', tokens: 4000, price: '28 AZN', bonus: '+20% bonus' },
-    { id: 'p4', tokens: 10000, price: '60 AZN', bonus: '+30% bonus' }
-  ];
-
-  /* ============================================================
-     STATE
-  ============================================================ */
-  const defaultState = {
-    tab: 'home',
-    balance: 1250,
-    user: { id: 'demo', firstName: 'Demo', lastName: 'User', username: 'demo_user', photoUrl: '' },
-    history: [],
-    feed: JSON.parse(JSON.stringify(INITIAL_FEED)),
-    homeCat: 'all',
-    search: '',
-    createMode: 'photo',
-    photo: { model: 'nano-banana-pro', prompt: '', ratio: '1:1', quality: 'standard', refs: [] },
-    video: { model: 'seedance-2.0', vmode: 'by-reference', prompt: '', duration: '5s', quality: 'standard', refs: [] },
-    audio: { model: 'suno-v6', style: '', prompt: '', lyricsMode: 'simple', lyrics: '' },
-    chat: { messages: [{ role: 'assistant', text: 'Salam! Mən AI köməkçinizəm. Post ideyası, prompt izahı və ya tərcümə üçün yazın 👋' }], input: '' },
-    modal: null,
-    selectedPackage: 'p2',
-    referral: { clicks: 0, tier1: 3, tier2: 8, earned: 340 }
+  const DEFAULT_STOCK = {
+    "Fast food": 60, "Dönər": 50, "Kartof fri": 80, "Nuggets": 30, "Toyuq qanadları": 25,
+    "Pizza xəmiri": 40, "Lahmacun": 40, "Pide": 30, "Şorba": 35, "Salat": 35,
+    "Coca-Cola 0.3": 72, "Coca-Cola banka": 48, "Coca-Cola 1L": 40, "Ayran": 50,
+    "Red Bull": 36, "Bizon": 48, "Çay": 100, "Snickers": 50, "Çips": 40,
+    "Popcorn": 40, "Suxari": 40, "Duzlu çubuqlar": 40, "Araxis": 35, "Ağ tum": 35,
+    "Çərəz seti": 25, "Meyvə seti": 20, "Şokolad": 30, "Mürəbbə": 30, "Rulet": 30,
+    "Qəlyan tütünü": 60, "Qreypfrut": 25, "Ananas": 15, "Jameson 1L": 10
   };
 
-  let state = loadState();
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
 
-  /* ============================================================
-     SAFE HELPERS
-  ============================================================ */
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return JSON.parse(JSON.stringify(defaultState));
-      const parsed = JSON.parse(raw);
-      const merged = Object.assign(JSON.parse(JSON.stringify(defaultState)), parsed || {});
-      if (!Array.isArray(merged.history)) merged.history = [];
-      if (!Array.isArray(merged.feed) || !merged.feed.length) merged.feed = JSON.parse(JSON.stringify(INITIAL_FEED));
-      return merged;
-    } catch (e) {
-      return JSON.parse(JSON.stringify(defaultState));
-    }
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return {
+      shop: {
+        name: "RESTORAN & LOUNGE",
+        address: "Bakı şəhəri",
+        phone: "+994 50 000 00 00",
+        footer: "Bizi seçdiyiniz üçün təşəkkür edirik!"
+      },
+      tables: [
+        { id: "t1", zone: "Zal", name: "Zal 1", custom: false },
+        { id: "t2", zone: "Zal", name: "Zal 2", custom: false },
+        { id: "t3", zone: "Zal", name: "Zal 3", custom: false },
+        { id: "t4", zone: "Zal", name: "Zal 4", custom: false },
+        { id: "t5", zone: "Zal", name: "Zal 5", custom: false },
+        { id: "t6", zone: "Zal", name: "Zal 6", custom: false },
+        { id: "k1", zone: "Kabinet", name: "Kabinet 1", custom: false },
+        { id: "k2", zone: "Kabinet", name: "Kabinet 2", custom: false },
+        { id: "k3", zone: "Kabinet", name: "Kabinet 3", custom: false },
+        { id: "k4", zone: "Kabinet", name: "Kabinet 4", custom: false },
+        { id: "a1", zone: "Al-apar", name: "Al-apar 1", custom: false },
+        { id: "a2", zone: "Al-apar", name: "Al-apar 2", custom: false }
+      ],
+      openOrders: {},
+      menu: DEFAULT_MENU,
+      stock: DEFAULT_STOCK,
+      receipts: []
+    };
   }
+
+  let state = loadState();
+  let activeZone = "Hamısı";
+  let activeTableId = null;
+  let activeCategory = "Fast Food";
+  let currentReceiptObj = null;
 
   function saveState() {
-    try {
-      const toSave = {
-        balance: state.balance,
-        user: state.user,
-        history: state.history.slice(0, 100),
-        feed: state.feed,
-        referral: state.referral
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-    } catch (e) { /* ignore quota errors */ }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  function escapeHtml(s) {
-    try {
-      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-      });
-    } catch (e) { return ''; }
+  function money(n) {
+    return Number(n || 0).toFixed(2) + " ₼";
   }
 
-  function uid(prefix) {
-    return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  function renderHeader() {
+    document.getElementById("headerShopName").textContent = state.shop.name || "RESTORAN & KAFE POS";
+    document.getElementById("headerSubInfo").textContent = `${state.shop.address || ""} • ${todayStr()}`;
   }
 
-  function toast(msg, type) {
-    try {
-      const t = document.getElementById('toast');
-      if (!t) return;
-      t.textContent = String(msg || '');
-      t.className = 'toast show' + (type ? ' ' + type : '');
-      if (toast._timer) clearTimeout(toast._timer);
-      toast._timer = setTimeout(function() { t.className = 'toast'; }, 2600);
-    } catch (e) { /* ignore */ }
+  function switchTab(tab) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("sec-" + tab).classList.add("active");
+    document.getElementById("nav-" + tab).classList.add("active");
+    if (tab === "tables") renderTables();
+    if (tab === "order") { renderCategories(); renderMenu(); renderCart(); }
+    if (tab === "stock") renderStock();
+    if (tab === "reports") renderReports();
   }
 
-  function gradientFor(seed) {
-    try {
-      const palettes = [
-        ['#7c5cff', '#ff5c8a'], ['#3b82f6', '#06b6d4'], ['#f59e0b', '#ef4444'],
-        ['#10b981', '#3b82f6'], ['#8b5cf6', '#ec4899'], ['#06b6d4', '#3b82f6']
-      ];
-      let h = 0;
-      const str = String(seed || 'x');
-      for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-      const p = palettes[Math.abs(h) % palettes.length];
-      return 'linear-gradient(135deg, ' + p[0] + ', ' + p[1] + ')';
-    } catch (e) { return 'linear-gradient(135deg,#7c5cff,#ff5c8a)'; }
+  // ZALLAR VƏ MASALAR
+  function renderTables() {
+    const zones = ["Hamısı", ...new Set(state.tables.map(t => t.zone))];
+    const zoneTabs = document.getElementById("zoneTabs");
+    zoneTabs.innerHTML = zones.map(z =>
+      `<button class="chip ${activeZone === z ? "active" : ""}" onclick="activeZone='${z}';renderTables()">${z}</button>`
+    ).join("");
+
+    const grid = document.getElementById("tablesGrid");
+    const list = activeZone === "Hamısı" ? state.tables : state.tables.filter(t => t.zone === activeZone);
+    grid.innerHTML = list.map(t => {
+      const ord = state.openOrders[t.id];
+      const sum = ord ? ord.items.reduce((s, i) => s + i.price * i.qty, 0) : 0;
+      const elapsed = ord ? Math.max(1, Math.floor((Date.now() - ord.openedAt) / 60000)) + " dəq" : "Boşdur";
+      return `
+        <div class="table-card ${ord ? "busy" : ""}" onclick="selectTable('${t.id}')">
+          <div class="table-top">
+            <div class="table-name">${t.name}</div>
+            <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? "Məşğul" : "Boş"}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${t.zone}</div>
+          <div class="table-meta">
+            <div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div>
+            <div class="table-time">${elapsed}</div>
+          </div>
+          ${(!ord && t.custom) ? `<button class="del-table-btn" onclick="event.stopPropagation();deleteTable('${t.id}')">✕</button>` : ""}
+        </div>
+      `;
+    }).join("");
   }
 
-  function modeIcon(mode) {
-    return ({ photo: '🖼️', video: '🎬', audio: '🎵', chat: '💬' })[mode] || '✨';
-  }
-  function modeLabel(mode) {
-    return ({ photo: 'Foto', video: 'Video', audio: 'Audio', chat: 'Çat' })[mode] || '—';
+  function selectTable(id) {
+    activeTableId = id;
+    switchTab("order");
   }
 
-  /* ============================================================
-     TELEGRAM
-  ============================================================ */
-  function initTelegram() {
-    try {
-      const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-      if (!tg) return;
-      if (typeof tg.ready === 'function') tg.ready();
-      if (typeof tg.expand === 'function') tg.expand();
-      try { tg.setBackgroundColor && tg.setBackgroundColor('#0a0a0f'); } catch (e) {}
-      try { tg.setHeaderColor && tg.setHeaderColor('#0a0a0f'); } catch (e) {}
-      const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-      if (u && u.id) {
-        state.user = {
-          id: String(u.id),
-          firstName: u.first_name || 'İstifadəçi',
-          lastName: u.last_name || '',
-          username: u.username || '',
-          photoUrl: u.photo_url || ''
-        };
-        saveState();
-      }
-    } catch (e) {
-      console.warn('Telegram init error:', e);
-    }
+  function openAddTableModal() {
+    document.getElementById("newTableName").value = "";
+    document.getElementById("addTableModal").classList.add("open");
   }
 
-  /* ============================================================
-     PRICING
-  ============================================================ */
-  function calcPhotoCost() {
-    try {
-      const p = state.photo;
-      const model = MODELS.photo.find(function(m) { return m.id === p.model; }) || MODELS.photo[0];
-      const qMult = ({ standard: 1, hd: 1.5, ultra: 2 })[p.quality] || 1;
-      return Math.round(10 * model.mult * qMult);
-    } catch (e) { return 10; }
+  function addNewTable() {
+    const zone = document.getElementById("newTableZone").value;
+    const name = document.getElementById("newTableName").value.trim();
+    if (!name) return alert("Ad daxil edin!");
+    state.tables.push({ id: "t_" + Date.now(), zone, name, custom: true });
+    saveState();
+    closeModal("addTableModal");
+    renderTables();
   }
 
-  function calcVideoCost() {
-    try {
-      const v = state.video;
-      const model = MODELS.video.find(function(m) { return m.id === v.model; }) || MODELS.video[0];
-      const dMult = ({ '5s': 1, '10s': 1.8, '15s': 2.5 })[v.duration] || 1;
-      const qMult = ({ standard: 1, hd: 1.4 })[v.quality] || 1;
-      return Math.round(50 * model.mult * dMult * qMult);
-    } catch (e) { return 50; }
+  function deleteTable(id) {
+    if (state.openOrders[id]) return alert("Məşğul masanı silmək olmaz!");
+    state.tables = state.tables.filter(t => t.id !== id);
+    saveState();
+    renderTables();
   }
 
-  function calcAudioCost() {
-    try {
-      const a = state.audio;
-      const model = MODELS.audio.find(function(m) { return m.id === a.model; }) || MODELS.audio[0];
-      return Math.round(20 * model.mult);
-    } catch (e) { return 20; }
+  // SİFARİŞ VƏ MENYU
+  function renderCategories() {
+    const cats = [...new Set(state.menu.map(m => m.cat))];
+    if (!cats.includes(activeCategory)) activeCategory = cats[0];
+    document.getElementById("catTabs").innerHTML = cats.map(c =>
+      `<button class="chip ${activeCategory === c ? "active" : ""}" onclick="activeCategory='${c}';renderCategories();renderMenu()">${c}</button>`
+    ).join("");
   }
 
-  function calcChatCost() { return 2; }
-
-  function calcCurrentCost() {
-    try {
-      switch (state.createMode) {
-        case 'photo': return calcPhotoCost();
-        case 'video': return calcVideoCost();
-        case 'audio': return calcAudioCost();
-        case 'chat': return calcChatCost();
-        default: return 0;
-      }
-    } catch (e) { return 0; }
-  }
-
-  /* ============================================================
-     API / DEMO
-  ============================================================ */
-  function apiAvailable() {
-    return !!(API_CONFIG.baseUrl && API_CONFIG.baseUrl.length > 0);
-  }
-
-  async function apiCall(endpoint, payload) {
-    if (!apiAvailable()) throw new Error('DEMO_MODE');
-    const url = API_CONFIG.baseUrl.replace(/\/$/, '') + endpoint;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+  function renderMenu() {
+    const q = document.getElementById("menuSearch").value.trim().toLowerCase();
+    const filtered = state.menu.filter(m => {
+      if (q) return m.name.toLowerCase().includes(q) || (m.desc || "").toLowerCase().includes(q);
+      return m.cat === activeCategory;
     });
-    if (!res.ok) throw new Error('Server xətası: ' + res.status);
-    return await res.json();
+    document.getElementById("menuGrid").innerHTML = filtered.map(m => `
+      <div class="menu-item">
+        <div>
+          <div class="menu-name">${m.name}</div>
+          ${m.desc ? `<div class="menu-desc">${m.desc}</div>` : ""}
+        </div>
+        <div class="price-btns">
+          ${m.variants.map((v, idx) => `
+            <button class="price-btn" onclick="addToCart('${m.id}', ${idx})">
+              ${v.label}
+              <span>${money(v.price)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
   }
 
-  function demoDelay(ms) {
-    return new Promise(function(resolve) { setTimeout(resolve, ms); });
-  }
-
-  /* ============================================================
-     GENERATION FLOW
-  ============================================================ */
-  async function runGeneration(payload) {
-    try {
-      if (apiAvailable()) {
-        const r = await apiCall(API_CONFIG.endpoints.generate, payload);
-        return r && r.result ? r.result : { ok: true };
-      }
-      await demoDelay(1400);
-      return {
-        ok: true,
-        demo: true,
-        type: payload.mode,
-        prompt: payload.prompt || '',
-        config: payload,
-        createdAt: Date.now()
-      };
-    } catch (e) {
-      throw e;
+  function addToCart(menuId, variantIdx) {
+    if (!activeTableId) {
+      activeTableId = state.tables[0].id;
     }
-  }
-
-  function showGenOverlay(text) {
-    try {
-      const root = document.getElementById('modalRoot');
-      if (!root) return;
-      root.innerHTML =
-        '<div class="gen-overlay" id="genOverlay">' +
-        '<div class="spinner"></div>' +
-        '<div class="gen-text">' + escapeHtml(text || 'Generasiya edilir...') + '</div>' +
-        '<div class="gen-sub">Bu bir neçə saniyə çəkə bilər</div>' +
-        '</div>';
-    } catch (e) { /* ignore */ }
-  }
-  function hideGenOverlay() {
-    try {
-      const el = document.getElementById('genOverlay');
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    } catch (e) { /* ignore */ }
-  }
-
-  async function generate(mode) {
-    try {
-      if (state._generating) return;
-      let cost = 0;
-      let payload = {};
-      let label = '';
-
-      if (mode === 'photo') {
-        const p = state.photo;
-        if (!p.prompt || !p.prompt.trim()) { toast('Zəhmət olmasa prompt yazın', 'error'); return; }
-        cost = calcPhotoCost();
-        label = 'Foto yaradılır...';
-        payload = { mode: 'photo', model: p.model, prompt: p.prompt.trim(), ratio: p.ratio, quality: p.quality, refsCount: p.refs.length };
-      } else if (mode === 'video') {
-        const v = state.video;
-        if (!v.prompt || !v.prompt.trim()) { toast('Zəhmət olmasa prompt yazın', 'error'); return; }
-        cost = calcVideoCost();
-        label = 'Video yaradılır...';
-        payload = { mode: 'video', model: v.model, vmode: v.vmode, prompt: v.prompt.trim(), duration: v.duration, quality: v.quality, refsCount: v.refs.length };
-      } else if (mode === 'audio') {
-        const a = state.audio;
-        if (!a.prompt || !a.prompt.trim()) { toast('Zəhmət olmasa prompt yazın', 'error'); return; }
-        cost = calcAudioCost();
-        label = 'Audio yaradılır...';
-        payload = { mode: 'audio', model: a.model, style: a.style, prompt: a.prompt.trim(), lyricsMode: a.lyricsMode, lyrics: a.lyricsMode === 'custom' ? a.lyrics : '' };
-      } else {
-        toast('Naməlum rejim', 'error');
-        return;
-      }
-
-      if (state.balance < cost) {
-        toast('Balans kifayət etmir. Zəhmət olmasa balansı artırın.', 'error');
-        openModal('topup');
-        return;
-      }
-
-      state._generating = true;
-      state.balance -= cost;
-      updateBalanceUI();
-      saveState();
-      showGenOverlay(label);
-
-      const histItem = {
-        id: uid('h'),
-        mode: mode,
-        config: payload,
-        tokens: cost,
-        status: 'pending',
-        createdAt: Date.now(),
-        shared: false
-      };
-      state.history.unshift(histItem);
-      saveState();
-
-      try {
-        const result = await runGeneration(payload);
-        histItem.status = 'success';
-        histItem.result = result;
-        saveState();
-        hideGenOverlay();
-        toast('Uğurla yaradıldı! ✅', 'success');
-        render();
-        showResultModal(histItem);
-      } catch (err) {
-        // Refund
-        state.balance += cost;
-        histItem.status = 'failed';
-        histItem.error = String(err && err.message || 'Xəta');
-        saveState();
-        hideGenOverlay();
-        updateBalanceUI();
-        render();
-        toast('Xəta: ' + (err && err.message ? err.message : 'generasiya alınmadı') + '. Tokenlər geri qaytarıldı.', 'error');
-      } finally {
-        state._generating = false;
-      }
-    } catch (e) {
-      state._generating = false;
-      hideGenOverlay();
-      console.error('generate error:', e);
-      toast('Gözlənilməz xəta baş verdi', 'error');
+    const item = state.menu.find(m => m.id === menuId);
+    const variant = item.variants[variantIdx];
+    if (!state.openOrders[activeTableId]) {
+      state.openOrders[activeTableId] = { openedAt: Date.now(), note: "", items: [] };
     }
-  }
-
-  function showResultModal(item) {
-    try {
-      if (!item) return;
-      const root = document.getElementById('modalRoot');
-      if (!root) return;
-      const c = item.config || {};
-      const gradient = gradientFor(item.id);
-      const promptText = c.prompt || '—';
-      root.innerHTML =
-        '<div class="modal-overlay" data-action="close-modal">' +
-          '<div class="modal" onclick="event.stopPropagation()">' +
-            '<div class="modal-handle"></div>' +
-            '<div class="modal-title">Nəticə hazırdır</div>' +
-            '<div class="modal-sub">' + escapeHtml(modeLabel(item.mode)) + ' • ' + item.tokens + ' token</div>' +
-            '<div class="result-preview" style="background:' + gradient + '">' +
-              '<span>' + modeIcon(item.mode) + '</span>' +
-              '<div style="font-size:12px;color:rgba(255,255,255,0.85);padding:0 20px;text-align:center;">' + escapeHtml(promptText.slice(0, 80)) + '</div>' +
-            '</div>' +
-            '<div class="result-caption">' + (apiAvailable() ? 'Backend cavabı' : 'Demo nəticə — real backend qoşulanda burada media görünəcək') + '</div>' +
-            '<div style="display:flex;gap:8px;margin-top:16px;">' +
-              '<button class="btn btn-secondary" style="flex:1;" data-action="close-modal">Bağla</button>' +
-              '<button class="btn btn-primary" style="flex:1;" data-action="share-history" data-id="' + item.id + '">Feed-də paylaş</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-    } catch (e) { console.error(e); }
-  }
-
-  /* ============================================================
-     RENDER: HEADER
-  ============================================================ */
-  function updateBalanceUI() {
-    try {
-      const el = document.getElementById('balanceValue');
-      if (el) el.textContent = String(state.balance || 0);
-    } catch (e) { /* ignore */ }
-  }
-
-  function updateNav() {
-    try {
-      document.querySelectorAll('.nav-btn').forEach(function(btn) {
-        if (btn && btn.dataset && btn.dataset.tab === state.tab) btn.classList.add('active');
-        else if (btn) btn.classList.remove('active');
+    const ord = state.openOrders[activeTableId];
+    const key = menuId + "_" + variantIdx;
+    const existing = ord.items.find(i => i.key === key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      ord.items.push({
+        key,
+        menuId,
+        name: item.variants.length > 1 ? `${item.name} (${variant.label})` : item.name,
+        price: variant.price,
+        qty: 1
       });
-    } catch (e) { /* ignore */ }
+    }
+    saveState();
+    renderCart();
   }
 
-  /* ============================================================
-     RENDER: HOME
-  ============================================================ */
-  function renderTemplateGrid() {
-    try {
-      let tpls = TEMPLATES.slice();
-      if (state.homeCat !== 'all') {
-        tpls = tpls.filter(function(t) { return (t.cat || []).indexOf(state.homeCat) !== -1; });
-      }
-      if (state.search && state.search.trim()) {
-        const q = state.search.toLowerCase().trim();
-        tpls = tpls.filter(function(t) {
-          return (t.title || '').toLowerCase().indexOf(q) !== -1 ||
-                 ((t.config && t.config.prompt) || '').toLowerCase().indexOf(q) !== -1;
+  function changeQty(key, delta) {
+    const ord = state.openOrders[activeTableId];
+    if (!ord) return;
+    const idx = ord.items.findIndex(i => i.key === key);
+    if (idx === -1) return;
+    ord.items[idx].qty += delta;
+    if (ord.items[idx].qty <= 0) ord.items.splice(idx, 1);
+    if (ord.items.length === 0) delete state.openOrders[activeTableId];
+    saveState();
+    renderCart();
+  }
+
+  function saveOrderNote() {
+    if (!activeTableId || !state.openOrders[activeTableId]) return;
+    state.openOrders[activeTableId].note = document.getElementById("orderNoteInput").value;
+    saveState();
+  }
+
+  function renderCart() {
+    const tbl = state.tables.find(t => t.id === activeTableId);
+    document.getElementById("activeTableTitle").textContent = tbl ? `${tbl.name} (${tbl.zone})` : "Masa seçilməyib";
+    const ord = activeTableId ? state.openOrders[activeTableId] : null;
+    document.getElementById("activeTableTime").textContent = ord
+      ? `Açılıb: ${new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" })}`
+      : "Məhsul əlavə etdikdə masa avtomatik açılacaq";
+
+    const listEl = document.getElementById("cartList");
+    if (!ord || ord.items.length === 0) {
+      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:10px 0">Səbət boşdur.</div>`;
+      document.getElementById("cartCountLabel").textContent = "0 məhsul";
+      document.getElementById("cartTotalLabel").textContent = "0.00 ₼";
+      document.getElementById("orderNoteInput").value = "";
+      return;
+    }
+
+    document.getElementById("orderNoteInput").value = ord.note || "";
+    const totalQty = ord.items.reduce((s, i) => s + i.qty, 0);
+    const totalSum = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
+    document.getElementById("cartCountLabel").textContent = `${totalQty} ədəd`;
+    document.getElementById("cartTotalLabel").textContent = money(totalSum);
+
+    listEl.innerHTML = ord.items.map(i => `
+      <div class="cart-row">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${i.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${money(i.price)} × ${i.qty} = <strong>${money(i.price * i.qty)}</strong></div>
+        </div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="changeQty('${i.key}', -1)">−</button>
+          <span style="min-width:18px;text-align:center;font-weight:700">${i.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${i.key}', 1)">+</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function deductStock(items) {
+    items.forEach(ci => {
+      const m = state.menu.find(x => x.id === ci.menuId);
+      if (!m) return;
+      if (m.recipe) {
+        Object.entries(m.recipe).forEach(([k, count]) => {
+          if (state.stock[k] !== undefined) state.stock[k] = Math.max(0, state.stock[k] - count * ci.qty);
         });
+      } else if (m.stockKey && state.stock[m.stockKey] !== undefined) {
+        state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
       }
-      if (!tpls.length) return '<div class="empty">Şablon tapılmadı</div>';
-      return tpls.map(function(t) {
-        const grad = gradientFor(t.id);
-        return '<div class="template-card" data-action="open-template" data-id="' + escapeHtml(t.id) + '">' +
-          '<div class="template-thumb" style="background:' + grad + '">' + (t.emoji || '✨') + '</div>' +
-          '<div class="template-info">' +
-            '<div class="template-title">' + escapeHtml(t.title) + '</div>' +
-            '<div class="template-meta">' + modeLabel(t.mode) + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    } catch (e) {
-      return '<div class="empty">Xəta</div>';
+    });
+  }
+
+  function closeOrder(method) {
+    const ord = activeTableId ? state.openOrders[activeTableId] : null;
+    if (!ord || ord.items.length === 0) return alert("Sifariş boşdur!");
+    const tbl = state.tables.find(t => t.id === activeTableId);
+    const total = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
+
+    const receipt = {
+      id: "ÇEK-" + String(state.receipts.length + 1001),
+      date: todayStr(),
+      time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      tableName: tbl ? tbl.name : "Masa",
+      method,
+      note: ord.note || "",
+      items: JSON.parse(JSON.stringify(ord.items)),
+      total,
+      isPre: false
+    };
+
+    deductStock(ord.items);
+    state.receipts.unshift(receipt);
+    delete state.openOrders[activeTableId];
+    saveState();
+    renderCart();
+    openReceiptModal(receipt);
+  }
+
+  function showPreReceipt() {
+    const ord = activeTableId ? state.openOrders[activeTableId] : null;
+    if (!ord || ord.items.length === 0) return alert("Açıq sifariş yoxdur!");
+    const tbl = state.tables.find(t => t.id === activeTableId);
+    const total = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
+    openReceiptModal({
+      id: "HESAB (PRE-ÇEK)",
+      date: todayStr(),
+      time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      tableName: tbl ? tbl.name : "Masa",
+      method: "Ödənilməyib",
+      note: ord.note || "",
+      items: ord.items,
+      total,
+      isPre: true
+    });
+  }
+
+  // ÇEK GÖSTƏRİŞİ, PNG VƏ PAYLAŞIM
+  function openReceiptModal(r) {
+    currentReceiptObj = r;
+    const html = `
+      <div class="receipt-center">
+        <strong style="font-size:15px">${state.shop.name}</strong><br/>
+        ${state.shop.address ? state.shop.address + "<br/>" : ""}
+        ${state.shop.phone ? "Tel: " + state.shop.phone + "<br/>" : ""}
+      </div>
+      <div class="receipt-hr"></div>
+      <div class="receipt-line"><span>Sənəd:</span><strong>${r.id}</strong></div>
+      <div class="receipt-line"><span>Masa:</span><span>${r.tableName}</span></div>
+      <div class="receipt-line"><span>Tarix:</span><span>${r.date} ${r.time}</span></div>
+      <div class="receipt-line"><span>Ödəniş:</span><span>${r.method}</span></div>
+      <div class="receipt-hr"></div>
+      ${r.items.map(i => `
+        <div class="receipt-line">
+          <span>${i.name} x${i.qty}</span>
+          <span>${(i.price * i.qty).toFixed(2)} ₼</span>
+        </div>
+      `).join("")}
+      ${r.note ? `<div class="receipt-hr"></div><div>Qeyd: ${r.note}</div>` : ""}
+      <div class="receipt-hr"></div>
+      <div class="receipt-line" style="font-size:15px;font-weight:bold">
+        <span>CƏMİ:</span><span>${r.total.toFixed(2)} ₼</span>
+      </div>
+      <div class="receipt-hr"></div>
+      <div class="receipt-center">${state.shop.footer || ""}</div>
+    `;
+    document.getElementById("receiptPrintable").innerHTML = html;
+    document.getElementById("receiptModal").classList.add("open");
+  }
+
+  function formatReceiptPlain(r) {
+    const lines = [
+      `🧾 ${state.shop.name}`,
+      state.shop.address ? `📍 ${state.shop.address}` : "",
+      `Sənəd: ${r.id} | Masa: ${r.tableName}`,
+      `Tarix: ${r.date} ${r.time} | Ödəniş: ${r.method}`,
+      "------------------------",
+      ...r.items.map(i => `${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} ₼`),
+      "------------------------",
+      `YEKUN: ${r.total.toFixed(2)} ₼`,
+      state.shop.footer || ""
+    ].filter(Boolean);
+    return lines.join("\n");
+  }
+
+  function copyReceiptText() {
+    if (!currentReceiptObj) return;
+    navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj));
+    alert("Çek mətni kopyalandı!");
+  }
+
+  function shareReceiptTelegram() {
+    if (!currentReceiptObj) return;
+    const url = "https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj));
+    window.open(url, "_blank");
+  }
+
+  function downloadReceiptPNG() {
+    if (!currentReceiptObj) return;
+    const r = currentReceiptObj;
+    const lines = formatReceiptPlain(r).split("\n");
+    const canvas = document.createElement("canvas");
+    canvas.width = 420;
+    canvas.height = 60 + lines.length * 26;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#111111";
+    ctx.font = "bold 15px Courier New";
+    lines.forEach((ln, idx) => ctx.fillText(ln, 20, 36 + idx * 25));
+    const link = document.createElement("a");
+    link.download = `${r.id}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+
+  // MASA KÖÇÜRMƏ, YENİ MƏHSUL, ANBAR, OBYEKT
+  function openMoveModal() {
+    if (!activeTableId || !state.openOrders[activeTableId]) return alert("Bu masada aktiv sifariş yoxdur!");
+    const free = state.tables.filter(t => t.id !== activeTableId && !state.openOrders[t.id]);
+    if (free.length === 0) return alert("Boş masa yoxdur!");
+    document.getElementById("moveTargetSelect").innerHTML = free.map(t => `<option value="${t.id}">${t.name} (${t.zone})</option>`).join("");
+    document.getElementById("moveModal").classList.add("open");
+  }
+
+  function confirmMoveTable() {
+    const targetId = document.getElementById("moveTargetSelect").value;
+    state.openOrders[targetId] = state.openOrders[activeTableId];
+    delete state.openOrders[activeTableId];
+    activeTableId = targetId;
+    saveState();
+    closeModal("moveModal");
+    renderCart();
+  }
+
+  function openAddProductModal() {
+    const cats = [...new Set(state.menu.map(m => m.cat))];
+    document.getElementById("newProdCat").innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    document.getElementById("newProdName").value = "";
+    document.getElementById("newProdPrice").value = "";
+    document.getElementById("addProductModal").classList.add("open");
+  }
+
+  function addNewProduct() {
+    const cat = document.getElementById("newProdCat").value;
+    const name = document.getElementById("newProdName").value.trim();
+    const price = parseFloat(document.getElementById("newProdPrice").value);
+    if (!name || isNaN(price)) return alert("Ad və qiymət daxil edin!");
+    state.menu.push({ id: "m_" + Date.now(), cat, name, variants: [{ label: "Standart", price }] });
+    saveState();
+    closeModal("addProductModal");
+    activeCategory = cat;
+    renderCategories();
+    renderMenu();
+  }
+
+  function renderStock() {
+    const entries = Object.entries(state.stock);
+    document.getElementById("stockList").innerHTML = entries.map(([name, qty]) => `
+      <div class="list-card ${qty <= 5 ? "low-stock" : ""}">
+        <div>
+          <div style="font-weight:700">${name}</div>
+          <div style="font-size:12px;color:${qty <= 5 ? "#fca5a5" : "var(--muted)"}">Qalıq: <strong>${qty}</strong> ədəd</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-outline btn-sm" onclick="updateStock('${name}', -1)">−1</button>
+          <button class="btn-green btn-sm" onclick="updateStock('${name}', 10)">+10</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function updateStock(name, delta) {
+    state.stock[name] = Math.max(0, (state.stock[name] || 0) + delta);
+    saveState();
+    renderStock();
+  }
+
+  function openAddStockModal() {
+    document.getElementById("newStockName").value = "";
+    document.getElementById("addStockModal").classList.add("open");
+  }
+
+  function addNewStock() {
+    const name = document.getElementById("newStockName").value.trim();
+    const qty = parseInt(document.getElementById("newStockQty").value, 10) || 0;
+    if (!name) return;
+    state.stock[name] = qty;
+    saveState();
+    closeModal("addStockModal");
+    renderStock();
+  }
+
+  function openShopModal() {
+    document.getElementById("shopNameIn").value = state.shop.name || "";
+    document.getElementById("shopAddressIn").value = state.shop.address || "";
+    document.getElementById("shopPhoneIn").value = state.shop.phone || "";
+    document.getElementById("shopFooterIn").value = state.shop.footer || "";
+    document.getElementById("shopModal").classList.add("open");
+  }
+
+  function saveShopInfo() {
+    state.shop.name = document.getElementById("shopNameIn").value.trim() || "RESTORAN & KAFE POS";
+    state.shop.address = document.getElementById("shopAddressIn").value.trim();
+    state.shop.phone = document.getElementById("shopPhoneIn").value.trim();
+    state.shop.footer = document.getElementById("shopFooterIn").value.trim();
+    saveState();
+    renderHeader();
+    closeModal("shopModal");
+  }
+
+  // KASSA / AÇOT VƏ TARİX FİLTRİ
+  function setPeriod(period) {
+    document.querySelectorAll("#sec-reports .chip").forEach(c => c.classList.remove("active"));
+    const btn = document.getElementById("p-" + period);
+    if (btn) btn.classList.add("active");
+
+    const now = new Date();
+    const end = todayStr();
+    let start = end;
+
+    if (period === "prevMonthToToday") {
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      start = prev.getFullYear() + "-" + String(prev.getMonth() + 1).padStart(2, "0") + "-01";
+    } else if (period === "thisMonth") {
+      start = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-01";
+    } else if (period === "last30") {
+      const d30 = new Date(Date.now() - 29 * 86400000);
+      start = d30.getFullYear() + "-" + String(d30.getMonth() + 1).padStart(2, "0") + "-" + String(d30.getDate()).padStart(2, "0");
+    } else if (period === "all") {
+      start = "2000-01-01";
     }
+
+    document.getElementById("dateFrom").value = start;
+    document.getElementById("dateTo").value = end;
+    renderReports();
   }
 
-  function renderHome() {
-    try {
-      const cats = [
-        ['all', 'Hamısı'], ['trending', 'Trend'], ['video', 'Video'], ['photo', 'Foto'],
-        ['audio', 'Audio'], ['winter', 'Qış'], ['women', 'Qadın'], ['zodiac', 'Zodiac'],
-        ['birthday', 'Ad günü'], ['wedding', 'Toy']
-      ];
-      return '<div>' +
-        '<div class="search-wrap">' +
-          '<svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
-            '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>' +
-          '</svg>' +
-          '<input id="searchInput" class="search-input" placeholder="Şablon axtar..." value="' + escapeHtml(state.search) + '" />' +
-        '</div>' +
-        '<div class="chips-scroll">' +
-          cats.map(function(c) {
-            return '<button class="chip' + (state.homeCat === c[0] ? ' active' : '') + '" data-action="set-cat" data-cat="' + c[0] + '">' + escapeHtml(c[1]) + '</button>';
-          }).join('') +
-        '</div>' +
-        '<div class="section-title">Populyar şablonlar</div>' +
-        '<div class="template-grid" id="templateGrid">' + renderTemplateGrid() + '</div>' +
-      '</div>';
-    } catch (e) {
-      return '<div class="empty">Xəta baş verdi</div>';
+  function onCustomDateChange() {
+    document.querySelectorAll("#sec-reports .chip").forEach(c => c.classList.remove("active"));
+    renderReports();
+  }
+
+  function getFilteredReceipts() {
+    const from = document.getElementById("dateFrom").value || todayStr();
+    const to = document.getElementById("dateTo").value || todayStr();
+    return state.receipts.filter(r => r.date >= from && r.date <= to);
+  }
+
+  function renderReports() {
+    if (!document.getElementById("dateFrom").value) {
+      setPeriod("today");
+      return;
     }
+    const list = getFilteredReceipts();
+    const total = list.reduce((s, r) => s + r.total, 0);
+    const cash = list.filter(r => r.method === "Nəğd").reduce((s, r) => s + r.total, 0);
+    const card = list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0);
+
+    document.getElementById("kpiTotal").textContent = money(total);
+    document.getElementById("kpiCount").textContent = list.length;
+    document.getElementById("kpiCash").textContent = money(cash);
+    document.getElementById("kpiCard").textContent = money(card);
+
+    // Günlər üzrə qruplaşdırma
+    const byDay = {};
+    list.forEach(r => {
+      if (!byDay[r.date]) byDay[r.date] = { count: 0, total: 0, cash: 0, card: 0 };
+      byDay[r.date].count += 1;
+      byDay[r.date].total += r.total;
+      if (r.method === "Nəğd") byDay[r.date].cash += r.total;
+      if (r.method === "Kart") byDay[r.date].card += r.total;
+    });
+
+    const days = Object.keys(byDay).sort().reverse();
+    document.getElementById("dailySummaryList").innerHTML = days.length
+      ? days.map(d => `
+          <div class="list-card">
+            <div>
+              <strong>📅 ${d}</strong>
+              <div style="font-size:11px;color:var(--muted)">${byDay[d].count} çek • Nəğd: ${money(byDay[d].cash)} • Kart: ${money(byDay[d].card)}</div>
+            </div>
+            <strong style="color:var(--green)">${money(byDay[d].total)}</strong>
+          </div>
+        `).join("")
+      : `<div style="color:var(--muted);font-size:13px">Seçilən tarixdə satış yoxdur.</div>`;
+
+    document.getElementById("receiptsHistoryList").innerHTML = list.map((r, idx) => `
+      <div class="list-card" style="cursor:pointer" onclick='openReceiptModal(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+        <div>
+          <strong>${r.id} — ${r.tableName}</strong>
+          <div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.method}</div>
+        </div>
+        <strong style="color:var(--green)">${money(r.total)}</strong>
+      </div>
+    `).join("");
   }
 
-  /* ============================================================
-     RENDER: FEED
-  ============================================================ */
-  function renderFeed() {
-    try {
-      if (!state.feed || !state.feed.length) return '<div class="empty">Hələ heç bir paylaşım yoxdur</div>';
-      return state.feed.map(function(p) {
-        const grad = gradientFor(p.id);
-        return '<div class="feed-card">' +
-          '<div class="feed-head">' +
-            '<div class="feed-avatar" style="background:' + grad + '">' + escapeHtml((p.author || 'U').charAt(0).toUpperCase()) + '</div>' +
-            '<div class="feed-author">' +
-              '<div class="feed-name">' + escapeHtml(p.author) + '</div>' +
-              '<div class="feed-time">' + escapeHtml(p.time) + ' • ' + modeLabel(p.mode) + '</div>' +
-            '</div>' +
-            '<button class="follow-btn' + (p.following ? ' following' : '') + '" data-action="toggle-follow" data-id="' + escapeHtml(p.id) + '">' +
-              (p.following ? 'İzlənir' : 'İzlə') +
-            '</button>' +
-          '</div>' +
-          '<div class="feed-preview" style="background:' + grad + '">' +
-            '<span class="feed-preview-label">' + modeLabel(p.mode) + '</span>' +
-            modeIcon(p.mode) +
-          '</div>' +
-          '<div class="feed-text">' + escapeHtml(p.text) + '</div>' +
-          '<div class="feed-actions">' +
-            '<button class="feed-action' + (p.liked ? ' liked' : '') + '" data-action="like" data-id="' + escapeHtml(p.id) + '">' +
-              '❤️ ' + (p.likes || 0) +
-            '</button>' +
-            '<button class="feed-action repeat" data-action="repeat" data-id="' + escapeHtml(p.id) + '">' +
-              '🔁 Repeat (' + (p.tokens || 0) + ' tkn)' +
-            '</button>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    } catch (e) {
-      return '<div class="empty">Xəta</div>';
-    }
+  function buildReportSummaryText() {
+    const from = document.getElementById("dateFrom").value;
+    const to = document.getElementById("dateTo").value;
+    const list = getFilteredReceipts();
+    const total = list.reduce((s, r) => s + r.total, 0);
+    const cash = list.filter(r => r.method === "Nəğd").reduce((s, r) => s + r.total, 0);
+    const card = list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0);
+    return [
+      `📊 ${state.shop.name} — KASSA AÇOTU`,
+      `Dövr: ${from} — ${to}`,
+      `Çek sayı: ${list.length}`,
+      `Nəğd: ${money(cash)}`,
+      `Kart: ${money(card)}`,
+      `ÜMUMİ ALVER: ${money(total)}`
+    ].join("\n");
   }
 
-  /* ============================================================
-     RENDER: CREATE
-  ============================================================ */
-  function renderCreate() {
-    try {
-      let body = '';
-      if (state.createMode === 'photo') body = renderPhotoForm();
-      else if (state.createMode === 'video') body = renderVideoForm();
-      else if (state.createMode === 'audio') body = renderAudioForm();
-      else body = renderChatForm();
-
-      const cost = calcCurrentCost();
-      const insufficient = state.balance < cost;
-      const genBar = state.createMode !== 'chat' ?
-        '<div class="generate-bar">' +
-          '<div class="cost-note">' +
-            (insufficient
-              ? '⚠️ Balans kifayət etmir (<span class="cost">' + cost + '</span> tələb olunur)'
-              : 'Bu generasiya üçün: <span class="cost">' + cost + ' token</span>') +
-          '</div>' +
-          (insufficient
-            ? '<button class="btn btn-primary btn-block" data-action="open-topup">Balansı artır</button>'
-            : '<button class="btn btn-primary btn-block" data-action="generate">Yarat (' + cost + ' token)</button>') +
-        '</div>' : '';
-
-      return '<div>' +
-        '<div class="mode-tabs">' +
-          '<button class="mode-tab' + (state.createMode === 'photo' ? ' active' : '') + '" data-action="set-mode" data-mode="photo"><span>🖼️</span><span>Photo</span></button>' +
-          '<button class="mode-tab' + (state.createMode === 'video' ? ' active' : '') + '" data-action="set-mode" data-mode="video"><span>🎬</span><span>Video</span></button>' +
-          '<button class="mode-tab' + (state.createMode === 'audio' ? ' active' : '') + '" data-action="set-mode" data-mode="audio"><span>🎵</span><span>Audio</span></button>' +
-          '<button class="mode-tab' + (state.createMode === 'chat' ? ' active' : '') + '" data-action="set-mode" data-mode="chat"><span>💬</span><span>Chat</span></button>' +
-        '</div>' +
-        body +
-        genBar +
-      '</div>';
-    } catch (e) {
-      console.error(e);
-      return '<div class="empty">Xəta baş verdi</div>';
-    }
+  function copyReportText() {
+    navigator.clipboard.writeText(buildReportSummaryText());
+    alert("Açot mətni kopyalandı!");
   }
 
-  function renderPhotoForm() {
-    try {
-      const p = state.photo;
-      const refs = p.refs || [];
-      return '<div class="create-field">' +
-          '<label class="field-label">Model</label>' +
-          '<select class="select" data-bind="photo.model">' +
-            MODELS.photo.map(function(m) {
-              return '<option value="' + m.id + '"' + (p.model === m.id ? ' selected' : '') + '>' + escapeHtml(m.name) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">İstinad şəkillər (' + refs.length + '/8)</label>' +
-          '<div class="upload-grid">' +
-            refs.map(function(r, i) {
-              return '<div class="upload-slot">' +
-                '<img src="' + escapeHtml(r.data) + '" alt="" />' +
-                '<button class="remove" data-action="remove-ref" data-target="photo" data-idx="' + i + '">✕</button>' +
-              '</div>';
-            }).join('') +
-            (refs.length < 8 ? '<div class="upload-slot" data-action="add-ref" data-target="photo">+</div>' : '') +
-          '</div>' +
-          '<div class="upload-count">' + (refs.length >= 8 ? 'Maksimum 8 şəkil yükləndi' : 'Əlavə etmək üçün + toxunun') + '</div>' +
-          '<input type="file" accept="image/*" multiple id="fileInput_photo" style="display:none" data-target="photo" />' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Prompt <button class="chip" style="float:right;padding:3px 10px;font-size:11px;" data-action="insert-at">@</button></label>' +
-          '<textarea class="textarea" data-bind="photo.prompt" placeholder="Nə yaratmaq istədiyinizi təsvir edin...">' + escapeHtml(p.prompt) + '</textarea>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Format</label>' +
-          '<div class="toggle-group">' +
-            ['1:1', '3:4', '4:3', '16:9'].map(function(r) {
-              return '<div class="toggle-opt' + (p.ratio === r ? ' active' : '') + '" data-action="set-ratio" data-val="' + r + '">' + r + '</div>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Keyfiyyət</label>' +
-          '<div class="toggle-group">' +
-            [['standard', 'Standard'], ['hd', 'HD'], ['ultra', 'Ultra']].map(function(q) {
-              return '<div class="toggle-opt' + (p.quality === q[0] ? ' active' : '') + '" data-action="set-quality" data-val="' + q[0] + '">' + q[1] + '</div>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        '<div class="tip-card">💡 <strong>İpucu:</strong> Prompt-da subyekti, üslubu və işıqlandırmanı dəqiq yazın. İstinad şəkilləri ilə model simanızı/üslubunuzu qoruyur.</div>';
-    } catch (e) { return '<div class="empty">Xəta</div>'; }
+  function shareReportTelegram() {
+    window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportSummaryText()), "_blank");
   }
 
-  function renderVideoForm() {
-    try {
-      const v = state.video;
-      const refs = v.refs || [];
-      return '<div class="create-field">' +
-          '<label class="field-label">Model</label>' +
-          '<select class="select" data-bind="video.model">' +
-            MODELS.video.map(function(m) {
-              return '<option value="' + m.id + '"' + (v.model === m.id ? ' selected' : '') + '>' + escapeHtml(m.name) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Rejim</label>' +
-          '<div class="toggle-group">' +
-            '<div class="toggle-opt' + (v.vmode === 'by-reference' ? ' active' : '') + '" data-action="set-vmode" data-val="by-reference">By reference</div>' +
-            '<div class="toggle-opt' + (v.vmode === 'by-frames' ? ' active' : '') + '" data-action="set-vmode" data-val="by-frames">By frames</div>' +
-          '</div>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">' + (v.vmode === 'by-frames' ? 'Başlanğıc / son kadr' : 'İstinad şəkillər') + ' (' + refs.length + '/4)</label>' +
-          '<div class="upload-grid">' +
-            refs.map(function(r, i) {
-              return '<div class="upload-slot">' +
-                '<img src="' + escapeHtml(r.data) + '" alt="" />' +
-                '<button class="remove" data-action="remove-ref" data-target="video" data-idx="' + i + '">✕</button>' +
-              '</div>';
-            }).join('') +
-            (refs.length < 4 ? '<div class="upload-slot" data-action="add-ref" data-target="video">+</div>' : '') +
-          '</div>' +
-          '<input type="file" accept="image/*" multiple id="fileInput_video" style="display:none" data-target="video" />' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Prompt</label>' +
-          '<textarea class="textarea" data-bind="video.prompt" placeholder="Video səhnəsini təsvir edin...">' + escapeHtml(v.prompt) + '</textarea>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Uzunluq</label>' +
-          '<div class="toggle-group">' +
-            ['5s', '10s', '15s'].map(function(d) {
-              return '<div class="toggle-opt' + (v.duration === d ? ' active' : '') + '" data-action="set-duration" data-val="' + d + '">' + d + '</div>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Keyfiyyət</label>' +
-          '<div class="toggle-group">' +
-            [['standard', 'Standard'], ['hd', 'HD']].map(function(q) {
-              return '<div class="toggle-opt' + (v.quality === q[0] ? ' active' : '') + '" data-action="set-vquality" data-val="' + q[0] + '">' + q[1] + '</div>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        '<div class="tip-card">💡 <strong>By reference</strong> sima/üslubu qoruyur. <strong>By frames</strong> başlanğıc və son kadrı birləşdirir.</div>';
-    } catch (e) { return '<div class="empty">Xəta</div>'; }
+  function exportBackup() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `pos-backup-${todayStr()}.json`;
+    a.click();
   }
 
-  function renderAudioForm() {
-    try {
-      const a = state.audio;
-      return '<div class="create-field">' +
-          '<label class="field-label">Model</label>' +
-          '<select class="select" data-bind="audio.model">' +
-            MODELS.audio.map(function(m) {
-              return '<option value="' + m.id + '"' + (a.model === m.id ? ' selected' : '') + '>' + escapeHtml(m.name) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Üslub / janr / əhval</label>' +
-          '<input class="input" type="text" data-bind="audio.style" placeholder="lofi, chill, akustik..." value="' + escapeHtml(a.style) + '" />' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Prompt</label>' +
-          '<textarea class="textarea" data-bind="audio.prompt" placeholder="Musiqi barədə təsvir...">' + escapeHtml(a.prompt) + '</textarea>' +
-        '</div>' +
-
-        '<div class="create-field">' +
-          '<label class="field-label">Rejim</label>' +
-          '<div class="toggle-group">' +
-            '<div class="toggle-opt' + (a.lyricsMode === 'simple' ? ' active' : '') + '" data-action="set-lyrics-mode" data-val="simple">Simple</div>' +
-            '<div class="toggle-opt' + (a.lyricsMode === 'custom' ? ' active' : '') + '" data-action="set-lyrics-mode" data-val="custom">Custom lyrics</div>' +
-          '</div>' +
-        '</div>' +
-
-        (a.lyricsMode === 'custom' ?
-          '<div class="create-field">' +
-            '<label class="field-label">Sözlər</label>' +
-            '<textarea class="textarea" data-bind="audio.lyrics" placeholder="Mahnı sözləri..." style="min-height:120px;">' + escapeHtml(a.lyrics) + '</textarea>' +
-          '</div>' : '') +
-
-        '<div class="tip-card">💡 Suno V6 instrumental və vokal trekləri dəstəkləyir. Custom lyrics ilə öz sözlərinizi verin.</div>';
-    } catch (e) { return '<div class="empty">Xəta</div>'; }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
   }
 
-  function renderChatForm() {
-    try {
-      const msgs = (state.chat && state.chat.messages) || [];
-      const quick = ['Post idea', 'Explain prompts', 'Translate', 'Reels hook'];
-      return '<div class="chat-box" id="chatBox">' +
-          msgs.map(function(m) {
-            return '<div class="msg ' + (m.role === 'user' ? 'user' : 'assistant') + '">' +
-              escapeHtml(m.text) +
-              (m.role === 'user' ? '<div class="msg-cost">-2 token</div>' : '') +
-            '</div>';
-          }).join('') +
-        '</div>' +
-        '<div class="quick-chips">' +
-          quick.map(function(q) {
-            return '<button class="quick-chip" data-action="chat-quick" data-text="' + escapeHtml(q) + '">' + escapeHtml(q) + '</button>';
-          }).join('') +
-        '</div>' +
-        '<div class="chat-input-row">' +
-          '<input class="input" id="chatInput" data-bind="chat.input" placeholder="Mesajınızı yazın... (2 token)" value="' + escapeHtml(state.chat.input || '') + '" />' +
-          '<button class="send-btn" data-action="chat-send">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">' +
-              '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>' +
-            '</svg>' +
-          '</button>' +
-        '</div>' +
-        '<div class="cost-note" style="margin-top:12px;">Hər mesaj: <span class="cost">2 token</span></div>';
-    } catch (e) { return '<div class="empty">Xəta</div>'; }
-  }
-
-  /* ============================================================
-     RENDER: HISTORY
-  ============================================================ */
-  function renderHistory() {
-    try {
-      if (!state.history || !state.history.length) {
-        return '<div class="empty">Hələ heç bir yaradılış yoxdur.<br/>Create bölməsindən başlayın ✨</div>';
-      }
-      return state.history.map(function(h) {
-        const statusCls = h.status === 'success' ? 'status-success' : h.status === 'failed' ? 'status-failed' : 'status-pending';
-        const statusLabel = h.status === 'success' ? 'Uğurlu' : h.status === 'failed' ? 'Uğursuz' : 'Gözləyir';
-        const date = new Date(h.createdAt || Date.now());
-        const dateStr = date.toLocaleDateString('az-AZ') + ' ' + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
-        const gradient = gradientFor(h.id);
-        return '<div class="history-item">' +
-          '<div class="history-head">' +
-            '<div class="history-icon" style="background:' + gradient + '">' + modeIcon(h.mode) + '</div>' +
-            '<div class="history-info">' +
-              '<div class="history-title">' + escapeHtml((h.config && h.config.prompt) ? h.config.prompt.slice(0, 45) : modeLabel(h.mode)) + '</div>' +
-              '<div class="history-sub">' + escapeHtml(dateStr) + ' • ' + h.tokens + ' token</div>' +
-            '</div>' +
-            '<div class="status-badge ' + statusCls + '">' + statusLabel + '</div>' +
-          '</div>' +
-          '<div class="history-actions">' +
-            '<button class="btn btn-secondary" data-action="repeat-history" data-id="' + escapeHtml(h.id) + '">🔁 Repeat</button>' +
-            (h.status === 'success' && !h.shared
-              ? '<button class="btn btn-primary" data-action="share-history" data-id="' + escapeHtml(h.id) + '">Paylaş</button>'
-              : (h.shared ? '<button class="btn btn-secondary" disabled>Paylaşılıb</button>' : '')) +
-          '</div>' +
-        '</div>';
-      }).join('');
-    } catch (e) {
-      return '<div class="empty">Xəta</div>';
-    }
-  }
-
-  /* ============================================================
-     RENDER: PROFILE
-  ============================================================ */
-  function renderProfile() {
-    try {
-      const u = state.user || {};
-      const fullName = ((u.firstName || 'Demo') + ' ' + (u.lastName || '')).trim();
-      const refLink = 'https://t.me/your_bot?start=ref_' + (u.id || 'demo');
-      return '<div class="profile-head">' +
-          '<div class="profile-avatar">' + escapeHtml((u.firstName || 'D').charAt(0).toUpperCase()) + '</div>' +
-          '<div>' +
-            '<div class="profile-name">' + escapeHtml(fullName) + '</div>' +
-            '<div class="profile-username">' + (u.username ? '@' + escapeHtml(u.username) : '@demo_user') + '</div>' +
-          '</div>' +
-        '</div>' +
-
-        '<div class="balance-card">' +
-          '<div class="balance-card-label">Mövcud balans</div>' +
-          '<div class="balance-card-value">' + (state.balance || 0) + '<span>token</span></div>' +
-          '<div class="balance-actions">' +
-            '<button class="btn btn-primary" style="flex:1;" data-action="open-topup">Top up</button>' +
-            '<button class="btn btn-secondary" style="flex:1;" data-action="open-gift">🎁 Gift</button>' +
-          '</div>' +
-        '</div>' +
-
-        '<div class="ref-box">' +
-          '<div style="font-weight:700;font-size:15px;margin-bottom:6px;">🔗 Referal proqram</div>' +
-          '<div style="font-size:12.5px;color:var(--text2);margin-bottom:10px;">Dostlarınızı dəvət edin və qazanc əldə edin. Tier 1 = birbaşa dəvət, Tier 2 = dəvətinizin dəvəti.</div>' +
-          '<div class="copy-row">' +
-            '<input class="input" readonly value="' + escapeHtml(refLink) + '" id="refLinkInput" />' +
-            '<button class="btn btn-primary" data-action="copy-ref">Kopyala</button>' +
-          '</div>' +
-          '<div class="ref-tier">' +
-            '<div class="ref-tier-item">' +
-              '<div class="ref-tier-title">Tier 1</div>' +
-              '<div class="ref-tier-val">' + (state.referral.tier1 || 0) + '</div>' +
-              '<div class="ref-tier-sub">birbaşa dəvət</div>' +
-            '</div>' +
-            '<div class="ref-tier-item">' +
-              '<div class="ref-tier-title">Tier 2</div>' +
-              '<div class="ref-tier-val alt">' + (state.referral.tier2 || 0) + '</div>' +
-              '<div class="ref-tier-sub">dolayı dəvət</div>' +
-            '</div>' +
-          '</div>' +
-          '<div style="margin-top:12px;text-align:center;font-size:13px;color:var(--text2);">Qazanılmış: <span style="color:var(--success);font-weight:700;">' + (state.referral.earned || 0) + ' token</span></div>' +
-        '</div>' +
-
-        '<div class="menu-list">' +
-          '<div class="menu-item" data-action="open-topup">' +
-            '<div class="menu-icon" style="background:var(--accent-soft);color:var(--accent);">💳</div>' +
-            '<div class="menu-label">Balansı artır</div>' +
-            '<div class="menu-arrow">›</div>' +
-          '</div>' +
-          '<div class="menu-item" data-action="open-gift">' +
-            '<div class="menu-icon" style="background:rgba(255,92,138,0.15);color:var(--accent2);">🎁</div>' +
-            '<div class="menu-label">Hədiyyə / promo kod</div>' +
-            '<div class="menu-arrow">›</div>' +
-          '</div>' +
-          '<div class="menu-item" data-action="open-ref">' +
-            '<div class="menu-icon" style="background:rgba(74,222,128,0.15);color:var(--success);">🔗</div>' +
-            '<div class="menu-label">Referal link</div>' +
-            '<div class="menu-arrow">›</div>' +
-          '</div>' +
-        '</div>' +
-
-        '<div style="text-align:center;font-size:11px;color:var(--text3);padding:12px;">AI Creator • v1.0 • ' + (apiAvailable() ? 'API rejimi' : 'Demo rejim') + '</div>';
-    } catch (e) {
-      return '<div class="empty">Xəta</div>';
-    }
-  }
-
-  /* ============================================================
-     MAIN RENDER
-  ============================================================ */
-  function render() {
-    try {
-      const c = document.getElementById('content');
-      if (!c) return;
-      let html = '';
-      switch (state.tab) {
-        case 'home': html = renderHome(); break;
-        case 'feed': html = renderFeed(); break;
-        case 'create': html = renderCreate(); break;
-        case 'history': html = renderHistory(); break;
-        case 'profile': html = renderProfile(); break;
-        default: html = renderHome();
-      }
-      c.innerHTML = html;
-      updateNav();
-      updateBalanceUI();
-    } catch (e) {
-      console.error('Render error:', e);
-    }
-  }
-
-  /* ============================================================
-     MODALS
-  ============================================================ */
-  function openModal(name) {
-    try {
-      const root = document.getElementById('modalRoot');
-      if (!root) return;
-      if (name === 'topup') {
-        root.innerHTML = renderTopupModal();
-      } else if (name === 'gift') {
-        root.innerHTML = renderGiftModal();
-      }
-    } catch (e) { console.error(e); }
-  }
-
-  function closeModal() {
-    try {
-      const root = document.getElementById('modalRoot');
-      if (root) root.innerHTML = '';
-    } catch (e) {}
-  }
-
-  function renderTopupModal() {
-    return '<div class="modal-overlay" data-action="close-modal">' +
-      '<div class="modal" onclick="event.stopPropagation()">' +
-        '<div class="modal-handle"></div>' +
-        '<div class="modal-title">Balansı artır</div>' +
-        '<div class="modal-sub">Paket seçin — tokenlər dərhal əlavə olunur (demo)</div>' +
-        '<div class="package-grid">' +
-          TOPUP_PACKAGES.map(function(p) {
-            return '<div class="package' + (state.selectedPackage === p.id ? ' selected' : '') + '" data-action="select-package" data-id="' + p.id + '">' +
-              '<div class="package-tokens">' + p.tokens + '</div>' +
-              '<div class="package-price">' + p.price + '</div>' +
-              (p.bonus ? '<div class="package-bonus">' + p.bonus + '</div>' : '') +
-            '</div>';
-          }).join('') +
-        '</div>' +
-        '<button class="btn btn-primary btn-block" data-action="confirm-topup">Ödəniş et</button>' +
-        '<div style="text-align:center;font-size:11px;color:var(--text3);margin-top:12px;">Real ödəniş backend inteqrasiyası tələb edir</div>' +
-      '</div>' +
-    '</div>';
-  }
-
-  function renderGiftModal() {
-    return '<div class="modal-overlay" data-action="close-modal">' +
-      '<div class="modal" onclick="event.stopPropagation()">' +
-        '<div class="modal-handle"></div>' +
-        '<div class="modal-title">🎁 Hədiyyə / Promo</div>' +
-        '<div class="modal-sub">Promo kodu daxil edin və ya dostunuza token hədiyyə edin</div>' +
-        '<div class="create-field">' +
-          '<label class="field-label">Promo kod</label>' +
-          '<input class="input" id="promoInput" placeholder="PROMO2025" />' +
-        '</div>' +
-        '<button class="btn btn-primary btn-block" data-action="redeem-promo">Kodu tətbiq et</button>' +
-        '<div style="height:16px;"></div>' +
-        '<div class="create-field">' +
-          '<label class="field-label">Hədiyyə məbləği (token)</label>' +
-          '<input class="input" id="giftAmount" type="number" placeholder="100" min="1" />' +
-        '</div>' +
-        '<div class="create-field">' +
-          '<label class="field-label">Alıcı @username</label>' +
-          '<input class="input" id="giftUser" placeholder="@username" />' +
-        '</div>' +
-        '<button class="btn btn-secondary btn-block" data-action="send-gift">Hədiyyə et</button>' +
-      '</div>' +
-    '</div>';
-  }
-
-  /* ============================================================
-     HANDLERS: CLICK DELEGATION
-  ============================================================ */
-  function handleContentClick(e) {
-    try {
-      const target = e.target.closest('[data-action]');
-      if (!target) return;
-      const action = target.dataset.action;
-
-      switch (action) {
-        case 'set-cat':
-          state.homeCat = target.dataset.cat || 'all';
-          render();
-          break;
-
-        case 'open-template': {
-          const id = target.dataset.id;
-          const tpl = TEMPLATES.find(function(t) { return t.id === id; });
-          if (!tpl) return;
-          applyTemplate(tpl);
-          break;
-        }
-
-        case 'set-mode':
-          state.createMode = target.dataset.mode || 'photo';
-          render();
-          break;
-
-        case 'add-ref': {
-          const t = target.dataset.target;
-          const inp = document.getElementById('fileInput_' + t);
-          if (inp) inp.click();
-          break;
-        }
-
-        case 'remove-ref': {
-          const t = target.dataset.target;
-          const idx = parseInt(target.dataset.idx, 10);
-          if (state[t] && Array.isArray(state[t].refs) && idx >= 0 && idx < state[t].refs.length) {
-            state[t].refs.splice(idx, 1);
-            render();
-          }
-          break;
-        }
-
-        case 'set-ratio':
-          state.photo.ratio = target.dataset.val || '1:1';
-          render();
-          break;
-
-        case 'set-quality':
-          state.photo.quality = target.dataset.val || 'standard';
-          render();
-          break;
-
-        case 'set-vmode':
-          state.video.vmode = target.dataset.val || 'by-reference';
-          render();
-          break;
-
-        case 'set-duration':
-          state.video.duration = target.dataset.val || '5s';
-          render();
-          break;
-
-        case 'set-vquality':
-          state.video.quality = target.dataset.val || 'standard';
-          render();
-          break;
-
-        case 'set-lyrics-mode':
-          state.audio.lyricsMode = target.dataset.val || 'simple';
-          render();
-          break;
-
-        case 'insert-at': {
-          const ta = document.querySelector('[data-bind="photo.prompt"]');
-          if (ta) { ta.value += ' @'; ta.focus(); state.photo.prompt = ta.value; }
-          break;
-        }
-
-        case 'generate':
-          generate(state.createMode);
-          break;
-
-        case 'like': {
-          const id = target.dataset.id;
-          const p = state.feed.find(function(x) { return x.id === id; });
-          if (p) {
-            p.liked = !p.liked;
-            p.likes = (p.likes || 0) + (p.liked ? 1 : -1);
-            if (p.likes < 0) p.likes = 0;
-            saveState();
-            render();
-          }
-          break;
-        }
-
-        case 'toggle-follow': {
-          const id = target.dataset.id;
-          const p = state.feed.find(function(x) { return x.id === id; });
-          if (p) {
-            p.following = !p.following;
-            saveState();
-            render();
-          }
-          break;
-        }
-
-        case 'repeat':
-        case 'repeat-history': {
-          const id = target.dataset.id;
-          let cfg = null;
-          if (action === 'repeat') {
-            const p = state.feed.find(function(x) { return x.id === id; });
-            if (p && p.config) cfg = p.config;
-          } else {
-            const h = state.history.find(function(x) { return x.id === id; });
-            if (h && h.config) cfg = h.config;
-          }
-          if (cfg) repeatConfig(cfg);
-          break;
-        }
-
-        case 'share-history': {
-          const id = target.dataset.id;
-          const h = state.history.find(function(x) { return x.id === id; });
-          if (!h) return;
-          shareToFeed(h);
-          break;
-        }
-
-        case 'chat-quick': {
-          const text = target.dataset.text || '';
-          const ci = document.getElementById('chatInput');
-          if (ci) { ci.value = text; state.chat.input = text; ci.focus(); }
-          break;
-        }
-
-        case 'chat-send':
-          sendChat();
-          break;
-
-        case 'open-topup':
-          openModal('topup');
-          break;
-
-        case 'open-gift':
-          openModal('gift');
-          break;
-
-        case 'open-ref': {
-          toast('Referal link aşağıdadır — kopyalamaq üçün toxunun');
-          break;
-        }
-
-        case 'close-modal':
-          closeModal();
-          break;
-
-        case 'select-package':
-          state.selectedPackage = target.dataset.id;
-          openModal('topup');
-          break;
-
-        case 'confirm-topup': {
-          const pkg = TOPUP_PACKAGES.find(function(p) { return p.id === state.selectedPackage; });
-          if (!pkg) return;
-          state.balance += pkg.tokens;
-          saveState();
-          updateBalanceUI();
-          closeModal();
-          toast(pkg.tokens + ' token əlavə olundu ✅', 'success');
-          render();
-          break;
-        }
-
-        case 'redeem-promo': {
-          const inp = document.getElementById('promoInput');
-          const code = inp ? inp.value.trim().toUpperCase() : '';
-          if (!code) { toast('Promo kod daxil edin', 'error'); return; }
-          if (code === 'PROMO2025') {
-            state.balance += 100;
-            saveState();
-            updateBalanceUI();
-            closeModal();
-            toast('+100 token promo kod tətbiq olundu ✅', 'success');
-            render();
-          } else {
-            toast('Yanlış promo kod', 'error');
-          }
-          break;
-        }
-
-        case 'send-gift': {
-          const amtEl = document.getElementById('giftAmount');
-          const userEl = document.getElementById('giftUser');
-          const amt = amtEl ? parseInt(amtEl.value, 10) : 0;
-          const usr = userEl ? userEl.value.trim() : '';
-          if (!amt || amt <= 0) { toast('Məbləğ düzgün deyil', 'error'); return; }
-          if (!usr) { toast('Alıcı @username daxil edin', 'error'); return; }
-          if (state.balance < amt) { toast('Balans kifayət etmir', 'error'); return; }
-          state.balance -= amt;
-          saveState();
-          updateBalanceUI();
-          closeModal();
-          toast(amt + ' token ' + usr + ' istifadəçisinə göndərildi (demo)', 'success');
-          render();
-          break;
-        }
-
-        case 'copy-ref': {
-          try {
-            const inp = document.getElementById('refLinkInput');
-            if (inp) {
-              inp.select();
-              document.execCommand && document.execCommand('copy');
-              toast('Referal link kopyalandı ✅', 'success');
-            }
-          } catch (err) {
-            toast('Kopyalama alınmadı', 'error');
-          }
-          break;
-        }
-
-        default:
-          break;
-      }
-    } catch (err) {
-      console.error('Click handler error:', err);
-    }
-  }
-
-  function handleContentInput(e) {
-    try {
-      const el = e.target;
-      if (!el) return;
-      if (el.id === 'searchInput') {
-        state.search = el.value || '';
-        const grid = document.getElementById('templateGrid');
-        if (grid) grid.innerHTML = renderTemplateGrid();
-        return;
-      }
-      const bind = el.dataset && el.dataset.bind;
-      if (!bind) return;
-      if (bind === 'photo.prompt') state.photo.prompt = el.value;
-      else if (bind === 'video.prompt') state.video.prompt = el.value;
-      else if (bind === 'audio.prompt') state.audio.prompt = el.value;
-      else if (bind === 'audio.lyrics') state.audio.lyrics = el.value;
-      else if (bind === 'audio.style') state.audio.style = el.value;
-      else if (bind === 'chat.input') state.chat.input = el.value;
-    } catch (err) { /* ignore */ }
-  }
-
-  function handleContentChange(e) {
-    try {
-      const el = e.target;
-      if (!el) return;
-      const bind = el.dataset && el.dataset.bind;
-
-      if (bind) {
-        const val = el.value;
-        if (bind === 'photo.model') { state.photo.model = val; render(); }
-        else if (bind === 'video.model') { state.video.model = val; render(); }
-        else if (bind === 'audio.model') { state.audio.model = val; render(); }
-        return;
-      }
-
-      if (el.type === 'file' && el.dataset && el.dataset.target) {
-        handleFileUpload(el.files, el.dataset.target);
-        el.value = '';
-      }
-    } catch (err) { console.error(err); }
-  }
-
-  function handleFileUpload(files, target) {
-    try {
-      if (!files || !files.length) return;
-      const st = state[target];
-      if (!st) return;
-      if (!Array.isArray(st.refs)) st.refs = [];
-      const max = target === 'photo' ? 8 : 4;
-      const arr = Array.prototype.slice.call(files);
-      const room = max - st.refs.length;
-      if (room <= 0) { toast('Maksimum limitə çatmısınız', 'error'); return; }
-      const toAdd = arr.slice(0, room);
-      toAdd.forEach(function(file) {
-        try {
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            try {
-              st.refs.push({ name: file.name || 'img', data: ev.target.result });
-              render();
-            } catch (err) { console.error(err); }
-          };
-          reader.onerror = function() { toast('Fayl oxunmadı', 'error'); };
-          reader.readAsDataURL(file);
-        } catch (err) { console.error(err); }
-      });
-    } catch (e) { console.error(e); }
-  }
-
-  /* ============================================================
-     BUSINESS LOGIC HELPERS
-  ============================================================ */
-  function applyTemplate(tpl) {
-    try {
-      if (!tpl || !tpl.config) return;
-      const cfg = tpl.config;
-      if (cfg.mode === 'photo') {
-        state.createMode = 'photo';
-        Object.assign(state.photo, {
-          model: cfg.model || state.photo.model,
-          prompt: cfg.prompt || '',
-          ratio: cfg.ratio || '1:1',
-          quality: cfg.quality || 'standard',
-          refs: []
-        });
-      } else if (cfg.mode === 'video') {
-        state.createMode = 'video';
-        Object.assign(state.video, {
-          model: cfg.model || state.video.model,
-          vmode: cfg.vmode || 'by-reference',
-          prompt: cfg.prompt || '',
-          duration: cfg.duration || '5s',
-          quality: cfg.quality || 'standard',
-          refs: []
-        });
-      } else if (cfg.mode === 'audio') {
-        state.createMode = 'audio';
-        Object.assign(state.audio, {
-          model: cfg.model || state.audio.model,
-          style: cfg.style || '',
-          prompt: cfg.prompt || '',
-          lyricsMode: cfg.lyricsMode || 'simple',
-          lyrics: ''
-        });
-      }
-      state.tab = 'create';
-      render();
-      toast('Şablon yükləndi — parametrləri yoxlayın');
-    } catch (e) { console.error(e); }
-  }
-
-  function repeatConfig(cfg) {
-    try {
-      if (!cfg) return;
-      if (cfg.mode === 'photo') {
-        state.createMode = 'photo';
-        state.photo.model = cfg.model || state.photo.model;
-        state.photo.prompt = cfg.prompt || '';
-        state.photo.ratio = cfg.ratio || '1:1';
-        state.photo.quality = cfg.quality || 'standard';
-        state.photo.refs = [];
-      } else if (cfg.mode === 'video') {
-        state.createMode = 'video';
-        state.video.model = cfg.model || state.video.model;
-        state.video.vmode = cfg.vmode || 'by-reference';
-        state.video.prompt = cfg.prompt || '';
-        state.video.duration = cfg.duration || '5s';
-        state.video.quality = cfg.quality || 'standard';
-        state.video.refs = [];
-      } else if (cfg.mode === 'audio') {
-        state.createMode = 'audio';
-        state.audio.model = cfg.model || state.audio.model;
-        state.audio.style = cfg.style || '';
-        state.audio.prompt = cfg.prompt || '';
-        state.audio.lyricsMode = cfg.lyricsMode || 'simple';
-        state.audio.lyrics = '';
-      }
-      state.tab = 'create';
-      render();
-      toast('Parametrlər yükləndi — öz materialınızla təkrarlayın 🔁');
-    } catch (e) { console.error(e); }
-  }
-
-  function shareToFeed(h) {
-    try {
-      if (!h) return;
-      if (h.shared) { toast('Artıq paylaşılıb'); return; }
-      const post = {
-        id: uid('f'),
-        author: ((state.user.firstName || 'Demo') + ' ' + (state.user.lastName || '')).trim() || 'İstifadəçi',
-        authorId: state.user.id || 'demo',
-        mode: h.mode,
-        text: (h.config && h.config.prompt) ? h.config.prompt.slice(0, 80) : modeLabel(h.mode),
-        config: h.config,
-        likes: 0,
-        liked: false,
-        following: false,
-        time: 'indi',
-        tokens: h.tokens || 0
-      };
-      state.feed.unshift(post);
-      h.shared = true;
-      saveState();
-      closeModal();
-      toast('Feed-də paylaşıldı ✅', 'success');
-      state.tab = 'feed';
-      render();
-    } catch (e) { console.error(e); }
-  }
-
-  async function sendChat() {
-    try {
-      if (state._chatSending) return;
-      const txt = (state.chat.input || '').trim();
-      if (!txt) return;
-      const cost = calcChatCost();
-      if (state.balance < cost) {
-        toast('Balans kifayət etmir', 'error');
-        openModal('topup');
-        return;
-      }
-      state._chatSending = true;
-      state.balance -= cost;
-      state.chat.messages.push({ role: 'user', text: txt });
-      state.chat.input = '';
-      updateBalanceUI();
-      saveState();
-      render();
-
-      try {
-        let reply;
-        if (apiAvailable()) {
-          const r = await apiCall(API_CONFIG.endpoints.chat, { message: txt });
-          reply = (r && r.reply) ? r.reply : 'Cavab alınmadı';
-        } else {
-          await demoDelay(900);
-          reply = demoChatReply(txt);
-        }
-        state.chat.messages.push({ role: 'assistant', text: reply });
-        saveState();
-        render();
-        // scroll to bottom
-        const box = document.getElementById('chatBox');
-        if (box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      } catch (err) {
-        // refund
-        state.balance += cost;
-        updateBalanceUI();
-        saveState();
-        toast('Xəta: ' + (err && err.message || 'cavab alınmadı') + '. Tokenlər geri qaytarıldı.', 'error');
-        render();
-      } finally {
-        state._chatSending = false;
-      }
-    } catch (e) {
-      state._chatSending = false;
-      console.error(e);
-    }
-  }
-
-  function demoChatReply(txt) {
-    try {
-      const lower = txt.toLowerCase();
-      if (lower.indexOf('post') !== -1 || lower.indexOf('idea') !== -1) {
-        return 'Post ideyası: "3 səhifəlik məhsul səyahəti — səhər, günorta, axşam" seriyası. Hər səhifə üçün eyni vizual üslubda olmaqla fərqli işıqlandırma istifadə edin. CTA: "Sizin hekayəniz hansıdır?"';
-      }
-      if (lower.indexOf('prompt') !== -1 || lower.indexOf('explain') !== -1) {
-        return 'Prompt strukturu: [Subyekt] + [Üslub] + [İşıqlandırma] + [Detallar] + [Format]. Məsələn: "young woman, editorial portrait, soft golden hour light, freckles detail, 85mm lens, 3:4 format".';
-      }
-      if (lower.indexOf('translate') !== -1 || lower.indexOf('terc') !== -1) {
-        return 'Zəhmət olmasa tərcümə etmək istədiyiniz mətni yazın — mən onu Azərbaycan/İngilis/Rus dilləri arasında tərcümə edəcəyəm.';
-      }
-      if (lower.indexOf('reels') !== -1 || lower.indexOf('hook') !== -1) {
-        return 'Reels hook nümunələri: 1) "Bunu kimə göstərməli olduğunuzu bilirsiniz..." 2) "3 saniyəlik səbir — sonda şok." 3) "Bu texnikanı 90% insan bilmir." İlk 2 saniyədə hərəkət/həcm dəyişikliyi istifadə edin.';
-      }
-      return 'Sualınızı aldım. Demo rejimdəyəm — real backend qoşulanda tam intellektual cavab verəcəyəm. İndi sizə strukturlaşdırılmış praktik məsləhət verə bilərəm: prompt-unuzu daha konkretləşdirin, üslub+format+keyfiyyət seçimlərini yoxlayın.';
-    } catch (e) { return 'Demo cavab.'; }
-  }
-
-  /* ============================================================
-     NAV CLICK
-  ============================================================ */
-  function bindNav() {
-    try {
-      document.querySelectorAll('.nav-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          try {
-            const tab = btn.dataset && btn.dataset.tab;
-            if (!tab) return;
-            state.tab = tab;
-            render();
-            const c = document.getElementById('content');
-            if (c) c.scrollTop = 0;
-          } catch (e) { console.error(e); }
-        });
-      });
-    } catch (e) { console.error(e); }
-  }
-
-  /* ============================================================
-     INIT
-  ============================================================ */
-  function init() {
-    try {
-      initTelegram();
-      updateBalanceUI();
-      bindNav();
-
-      const content = document.getElementById('content');
-      if (content) {
-        content.addEventListener('click', handleContentClick);
-        content.addEventListener('input', handleContentInput);
-        content.addEventListener('change', handleContentChange);
-      }
-
-      const modalRoot = document.getElementById('modalRoot');
-      if (modalRoot) {
-        modalRoot.addEventListener('click', function(e) {
-          try {
-            const t = e.target.closest('[data-action]');
-            if (!t) return;
-            const action = t.dataset.action;
-            if (action === 'close-modal') closeModal();
-            else if (action === 'select-package') {
-              state.selectedPackage = t.dataset.id;
-              openModal('topup');
-            } else if (action === 'confirm-topup') {
-              const pkg = TOPUP_PACKAGES.find(function(p) { return p.id === state.selectedPackage; });
-              if (pkg) {
-                state.balance += pkg.tokens;
-                saveState();
-                updateBalanceUI();
-                closeModal();
-                toast(pkg.tokens + ' token əlavə olundu ✅', 'success');
-                render();
-              }
-            } else if (action === 'redeem-promo') {
-              const inp = document.getElementById('promoInput');
-              const code = inp ? inp.value.trim().toUpperCase() : '';
-              if (code === 'PROMO2025') {
-                state.balance += 100;
-                saveState();
-                updateBalanceUI();
-                closeModal();
-                toast('+100 token promo kod tətbiq olundu ✅', 'success');
-                render();
-              } else {
-                toast('Yanlış promo kod (bax: PROMO2025)', 'error');
-              }
-            } else if (action === 'send-gift') {
-              const amtEl = document.getElementById('giftAmount');
-              const userEl = document.getElementById('giftUser');
-              const amt = amtEl ? parseInt(amtEl.value, 10) : 0;
-              const usr = userEl ? userEl.value.trim() : '';
-              if (!amt || amt <= 0) { toast('Məbləğ düzgün deyil', 'error'); return; }
-              if (!usr) { toast('Alıcı @username daxil edin', 'error'); return; }
-              if (state.balance < amt) { toast('Balans kifayət etmir', 'error'); return; }
-              state.balance -= amt;
-              saveState();
-              updateBalanceUI();
-              closeModal();
-              toast(amt + ' token ' + usr + ' istifadəçisinə göndərildi (demo)', 'success');
-              render();
-            } else if (action === 'share-history') {
-              const id = t.dataset.id;
-              const h = state.history.find(function(x) { return x.id === id; });
-              if (h) shareToFeed(h);
-            }
-          } catch (err) { console.error(err); }
-        });
-      }
-
-      // Balance chip opens topup
-      const balChip = document.querySelector('[data-action="open-topup"]');
-      if (balChip) {
-        balChip.addEventListener('click', function() { openModal('topup'); });
-      }
-
-      render();
-    } catch (e) {
-      console.error('Init error:', e);
-      try {
-        const c = document.getElementById('content');
-        if (c) c.innerHTML = '<div class="empty">Tətbiq yüklənərkən xəta baş verdi. Səhifəni yeniləyin.</div>';
-      } catch (err) {}
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+  // Başlanğıc
+  renderHeader();
+  renderTables();
 </script>
 </body>
 </html>
