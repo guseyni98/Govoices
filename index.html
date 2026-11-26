@@ -122,7 +122,9 @@
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
     }
+    .menu-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .menu-name { font-size: 13px; font-weight: 700; }
+    .edit-prod-btn { padding: 3px 7px; font-size: 11px; background: var(--card2); border: 1px solid var(--border); color: var(--gold); }
     .price-btns { display: flex; flex-wrap: wrap; gap: 6px; }
     .price-btn {
       flex: 1; background: var(--card2); border: 1px solid var(--border);
@@ -146,6 +148,7 @@
       padding: 11px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
     }
     .low-stock { border-color: var(--accent); }
+    .sold-badge { font-size: 11px; color: var(--gold); font-weight: 700; margin-top: 2px; }
 
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 60;
@@ -160,80 +163,29 @@
     .field { margin-bottom: 10px; }
     .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
-    /* PREMIUM ÇEK DİZAYNI */
+    /* NÜMUNƏ QƏBZ ÜSLUBUNDA PREMİUM ÇEK */
     .premium-receipt {
-      background: linear-gradient(180deg, #12161e 0%, #19202c 100%);
-      color: #f8fafc;
-      border: 1px solid rgba(245, 158, 11, 0.45);
-      border-radius: 14px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      background: #f8fafc;
+      color: #0f172a;
+      border: 2px solid #0f172a;
+      border-radius: 10px;
+      padding: 16px 14px;
+      font-family: "Courier New", Courier, monospace;
     }
-    .prem-head {
-      text-align: center;
-      padding-bottom: 10px;
-      border-bottom: 1px dashed rgba(255,255,255,0.2);
-    }
-    .prem-brand {
-      font-size: 17px;
-      font-weight: 900;
-      letter-spacing: 0.4px;
-      color: #fbbf24;
-    }
-    .prem-addr {
-      font-size: 11px;
-      color: #cbd5e1;
-      margin-top: 3px;
-    }
-    .prem-meta {
-      margin: 10px 0;
-      font-size: 12px;
-      display: grid;
-      gap: 4px;
-    }
-    .prem-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      font-size: 12.5px;
-      padding: 4px 0;
-    }
-    .prem-items {
-      border-top: 1px dashed rgba(255,255,255,0.2);
-      border-bottom: 1px dashed rgba(255,255,255,0.2);
-      padding: 8px 0;
-      margin: 8px 0;
-    }
-    .prem-total {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 17px;
-      font-weight: 900;
-      color: #4ade80;
-      padding-top: 6px;
-    }
-    .prem-foot {
-      text-align: center;
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px dashed rgba(255,255,255,0.15);
-    }
-
-    @media print {
-      @page { margin: 0; }
-      body * { visibility: hidden; }
-      #receiptPrintable, #receiptPrintable * { visibility: visible; }
-      #receiptPrintable {
-        position: fixed; left: 0; top: 0; width: 100%; max-width: 78mm;
-        margin: 0 auto; padding: 6px; font-size: 12px;
-        color: #000 !important; background: #fff !important; border: none !important; box-shadow: none !important;
-      }
-    }
+    .prem-head { text-align: center; }
+    .prem-brand { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; }
+    .prem-sub { font-size: 12px; font-weight: 800; margin-top: 4px; letter-spacing: 0.6px; }
+    .prem-addr { font-size: 11px; color: #334155; margin-top: 3px; font-family: Arial, sans-serif; }
+    .prem-meta { margin: 10px 0 6px; font-size: 12px; }
+    .prem-grid2 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+    .prem-hr { border-top: 1px dashed #0f172a; margin: 8px 0; }
+    .prem-cols { display: grid; grid-template-columns: 1fr 56px 76px; font-weight: 800; font-size: 12px; align-items: center; }
+    .prem-item { display: grid; grid-template-columns: 1fr 56px 76px; font-size: 12px; padding: 4px 0; align-items: start; gap: 4px; }
+    .col-mid { text-align: center; }
+    .col-right { text-align: right; }
+    .prem-sum-line { display: flex; justify-content: space-between; font-size: 12.5px; margin: 4px 0; }
+    .prem-grand { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; margin-top: 6px; }
+    .prem-foot { text-align: center; font-size: 12px; margin-top: 12px; font-family: Arial, sans-serif; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -359,7 +311,7 @@
 
     <section id="sec-stock" class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <strong>Anbar Qalıqları</strong>
+        <strong>Anbar Qalıqları və Satılanlar</strong>
         <button class="btn-primary btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
       </div>
       <div id="stockList"></div>
@@ -414,6 +366,13 @@
     <div class="field"><label>Obyektin Adı</label><input class="input" id="shopNameIn" /></div>
     <div class="field"><label>Ünvan</label><input class="input" id="shopAddressIn" /></div>
     <div class="field"><label>Telefon</label><input class="input" id="shopPhoneIn" /></div>
+    <div class="field">
+      <label>Servis Haqqı (10%)</label>
+      <select class="input" id="shopServiceIn">
+        <option value="0">0% (Servis haqqı yoxdur)</option>
+        <option value="10">10% Servis haqqı</option>
+      </select>
+    </div>
     <div class="field"><label>Çek Sonu Qeydi</label><input class="input" id="shopFooterIn" /></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-outline" onclick="closeModal('shopModal')">Bağla</button>
@@ -472,6 +431,27 @@
   </div>
 </div>
 
+<!-- MƏHSUL REDAKTƏ MODALI -->
+<div class="modal-backdrop" id="editProductModal">
+  <div class="modal">
+    <h3>✏️ Məhsulu Redaktə Et</h3>
+    <input type="hidden" id="editProdId" />
+    <div class="field">
+      <label>Kateqoriya</label>
+      <input class="input" id="editProdCat" />
+    </div>
+    <div class="field">
+      <label>Məhsulun Adı</label>
+      <input class="input" id="editProdName" />
+    </div>
+    <div id="editVariantsBox"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn-outline" onclick="closeModal('editProductModal')">Bağla</button>
+      <button class="btn-green" onclick="saveEditedProduct()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="addStockModal">
   <div class="modal">
     <h3>+ Yeni Anbar Malı</h3>
@@ -489,7 +469,7 @@
     <div id="receiptPrintable" class="premium-receipt"></div>
     <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center;background:#0f1318;padding:10px;border-radius:10px;border:1px solid var(--border)">
       <div style="font-size:11px;color:var(--gold);margin-bottom:6px">
-        Şəkli qalereyaya salmaq üçün üzərinə basılı saxla:
+        Şəkli saxlamaq üçün üzərinə basılı saxlayın:
       </div>
       <img id="pngPreviewImg" style="max-width:100%;border-radius:8px;display:block;margin:0 auto" />
       <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">
@@ -557,6 +537,7 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
   function money(n) { return Number(n || 0).toFixed(2) + " ₼"; }
+  function num2(n) { return Number(n || 0).toFixed(2).replace(".", ","); }
 
   function setAuthMode(mode) {
     document.getElementById("loginBox").style.display = mode === "login" ? "block" : "none";
@@ -646,6 +627,8 @@
       document.getElementById("setupScreen").style.display = "block";
     } else {
       state = JSON.parse(saved);
+      if (!state.soldCounts) state.soldCounts = {};
+      if (state.shop && state.shop.servicePercent === undefined) state.shop.servicePercent = 0;
       showMainApp();
     }
   }
@@ -663,13 +646,14 @@
     if (tables.length === 0) tables.push({ id: "z_1", zone: "Zal", name: "Zal 1", custom: true });
 
     state = {
-      shop: { name: shopName, address, phone: "", footer: "Bizi seçdiyiniz üçün təşəkkür edirik!" },
+      shop: { name: shopName, address, phone: "", servicePercent: 0, footer: "Sizi restoranımızda yenidən gözləyirik" },
       tables, openOrders: {},
       menu: menuMode === "empty"
         ? [{ id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", variants: [{ label: "1 saat", price: 1.0 }] },
            { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", variants: [{ label: "Yarım saat", price: 0.5 }] }]
         : DEFAULT_MENU,
       stock: menuMode === "empty" ? {} : { ...DEFAULT_STOCK },
+      soldCounts: {},
       receipts: []
     };
     saveState(); document.getElementById("setupScreen").style.display = "none"; showMainApp();
@@ -744,12 +728,55 @@
     const filtered = state.menu.filter(m => q ? m.name.toLowerCase().includes(q) : m.cat === activeCategory);
     document.getElementById("menuGrid").innerHTML = filtered.map(m => `
       <div class="menu-item">
-        <div class="menu-name">${m.name}</div>
+        <div class="menu-top">
+          <div class="menu-name">${m.name}</div>
+          <button class="edit-prod-btn" onclick="openEditProductModal('${m.id}')">✏️ Redaktə</button>
+        </div>
         <div class="price-btns">
           ${m.variants.map((v, idx) => `<button class="price-btn" onclick="addToCart('${m.id}', ${idx})">${v.label}<span>${money(v.price)}</span></button>`).join("")}
         </div>
       </div>
     `).join("");
+  }
+
+  function openEditProductModal(prodId) {
+    const prod = state.menu.find(m => m.id === prodId);
+    if (!prod) return;
+    document.getElementById("editProdId").value = prod.id;
+    document.getElementById("editProdCat").value = prod.cat;
+    document.getElementById("editProdName").value = prod.name;
+    document.getElementById("editVariantsBox").innerHTML = prod.variants.map((v, idx) => `
+      <div class="field">
+        <label>Variant: ${v.label} — Qiymət (AZN)</label>
+        <input type="number" step="0.05" class="input edit-var-price" data-idx="${idx}" value="${v.price}" />
+      </div>
+    `).join("");
+    document.getElementById("editProductModal").classList.add("open");
+  }
+
+  function saveEditedProduct() {
+    const prodId = document.getElementById("editProdId").value;
+    const prod = state.menu.find(m => m.id === prodId);
+    if (!prod) return;
+    const newCat = document.getElementById("editProdCat").value.trim();
+    const newName = document.getElementById("editProdName").value.trim();
+    if (!newCat || !newName) return alert("Kateqoriya və ad boş ola bilməz!");
+
+    const priceInputs = document.querySelectorAll(".edit-var-price");
+    for (const inp of priceInputs) {
+      const val = parseFloat(inp.value);
+      if (isNaN(val) || val < 0) return alert("Düzgün qiymət daxil edin!");
+      const idx = parseInt(inp.getAttribute("data-idx"), 10);
+      prod.variants[idx].price = val;
+    }
+
+    prod.cat = newCat;
+    prod.name = newName;
+    activeCategory = newCat;
+    saveState();
+    closeModal("editProductModal");
+    renderCategories();
+    renderMenu();
   }
 
   function addToCart(menuId, variantIdx) {
@@ -782,6 +809,14 @@
     saveState();
   }
 
+  function calcTotals(items) {
+    const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const svcPct = Number(state.shop.servicePercent || 0);
+    const serviceAmt = svcPct > 0 ? +(subtotal * (svcPct / 100)).toFixed(2) : 0;
+    const total = +(subtotal + serviceAmt).toFixed(2);
+    return { subtotal, svcPct, serviceAmt, total };
+  }
+
   function renderCart() {
     const tbl = state.tables.find(t => t.id === activeTableId);
     document.getElementById("activeTableTitle").textContent = tbl ? `${tbl.name} (${tbl.zone})` : "Masa seçilməyib";
@@ -796,7 +831,8 @@
     }
     document.getElementById("orderNoteInput").value = ord.note || "";
     document.getElementById("cartCountLabel").textContent = `${ord.items.reduce((s, i) => s + i.qty, 0)} ədəd`;
-    document.getElementById("cartTotalLabel").textContent = money(ord.items.reduce((s, i) => s + i.price * i.qty, 0));
+    const t = calcTotals(ord.items);
+    document.getElementById("cartTotalLabel").textContent = money(t.total);
     listEl.innerHTML = ord.items.map(i => `
       <div class="cart-row">
         <div><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${money(i.price)} × ${i.qty}</div></div>
@@ -813,89 +849,149 @@
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
     if (!ord || ord.items.length === 0) return alert("Sifariş boşdur!");
     const tbl = state.tables.find(t => t.id === activeTableId);
-    const total = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
+    const t = calcTotals(ord.items);
+    const u = users[currentEmail];
     const receipt = {
       id: "ÇEK-" + String(state.receipts.length + 1001),
+      orderNo: String(69878 + state.receipts.length),
       date: todayStr(),
+      openedTime: new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
       time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      zoneName: tbl ? tbl.zone : "Zal",
       tableName: tbl ? tbl.name : "Masa",
-      method, note: ord.note || "", items: JSON.parse(JSON.stringify(ord.items)), total
+      waiter: u ? `${u.firstName} ${u.lastName}` : "Kassir",
+      method, note: ord.note || "",
+      items: JSON.parse(JSON.stringify(ord.items)),
+      subtotal: t.subtotal,
+      svcPct: t.svcPct,
+      serviceAmt: t.serviceAmt,
+      total: t.total
     };
+
+    if (!state.soldCounts) state.soldCounts = {};
     ord.items.forEach(ci => {
       const m = state.menu.find(x => x.id === ci.menuId);
-      if (m && m.stockKey && state.stock[m.stockKey] !== undefined) state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
+      if (m && m.stockKey) {
+        state.soldCounts[m.stockKey] = (state.soldCounts[m.stockKey] || 0) + ci.qty;
+        if (state.stock[m.stockKey] !== undefined) {
+          state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
+        }
+      }
     });
+
     state.receipts.unshift(receipt);
     delete state.openOrders[activeTableId];
-    saveState(); renderCart(); openReceiptModal(receipt);
+    saveState(); renderCart(); openReceiptModal(receipt, false);
   }
 
   function showPreReceipt() {
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
     if (!ord || ord.items.length === 0) return alert("Açıq sifariş yoxdur!");
     const tbl = state.tables.find(t => t.id === activeTableId);
+    const t = calcTotals(ord.items);
+    const u = users[currentEmail];
     openReceiptModal({
-      id: "HESAB (PRE-ÇEK)", date: todayStr(),
+      id: "QONAQ HESABI",
+      orderNo: String(69878 + state.receipts.length),
+      date: todayStr(),
+      openedTime: new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
       time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
-      tableName: tbl ? tbl.name : "Masa", method: "Ödənilməyib",
-      note: ord.note || "", items: ord.items,
-      total: ord.items.reduce((s, i) => s + i.price * i.qty, 0)
-    });
+      zoneName: tbl ? tbl.zone : "Zal",
+      tableName: tbl ? tbl.name : "Masa",
+      waiter: u ? `${u.firstName} ${u.lastName}` : "Kassir",
+      method: "Ödənilməyib",
+      note: ord.note || "",
+      items: ord.items,
+      subtotal: t.subtotal,
+      svcPct: t.svcPct,
+      serviceAmt: t.serviceAmt,
+      total: t.total
+    }, true);
   }
 
-  function openReceiptModal(r) {
-    currentReceiptObj = r;
-    lastPngDataUrl = "";
-    document.getElementById("pngPreviewBox").style.display = "none";
-    document.getElementById("receiptPrintable").innerHTML = `
+  function buildReceiptHtml(r, isPre) {
+    const svcLine = r.svcPct > 0
+      ? `<div class="prem-sum-line"><span>Servis "${r.svcPct}%":</span><span>+${num2(r.serviceAmt)}</span></div>`
+      : "";
+    return `
       <div class="prem-head">
         <div class="prem-brand">${state.shop.name}</div>
-        ${state.shop.address ? `<div class="prem-addr">📍 ${state.shop.address}</div>` : ""}
-        ${state.shop.phone ? `<div class="prem-addr">📞 ${state.shop.phone}</div>` : ""}
+        <div class="prem-sub">${isPre ? "QONAQ HESABI" : r.id}</div>
+        ${state.shop.address ? `<div class="prem-addr">${state.shop.address}</div>` : ""}
       </div>
       <div class="prem-meta">
-        <div class="prem-row"><span>Sənəd:</span><strong>${r.id}</strong></div>
-        <div class="prem-row"><span>Masa:</span><strong>${r.tableName}</strong></div>
-        <div class="prem-row"><span>Tarix / Saat:</span><span>${r.date} • ${r.time}</span></div>
-        <div class="prem-row"><span>Ödəniş üsulu:</span><span>${r.method}</span></div>
+        <div class="prem-grid2"><span>Zal: ${r.zoneName || "Zal"}</span><span>Masa: ${r.tableName}</span></div>
+        <div class="prem-grid2"><span>Açılıb: ${r.date} ${r.openedTime || r.time}</span><span>Sifariş № ${r.orderNo || ""}</span></div>
+        <div class="prem-grid2"><span>Ofisiant: ${r.waiter || ""}</span><span>${r.method}</span></div>
       </div>
-      <div class="prem-items">
-        ${r.items.map(i => `
-          <div class="prem-row">
-            <span>${i.name} <strong>×${i.qty}</strong></span>
-            <strong>${(i.price * i.qty).toFixed(2)} ₼</strong>
-          </div>
-        `).join("")}
-        ${r.note ? `<div style="margin-top:6px;font-size:11px;color:#fbbf24">Qeyd: ${r.note}</div>` : ""}
-      </div>
-      <div class="prem-total">
-        <span>YEKUN:</span>
-        <span>${r.total.toFixed(2)} ₼</span>
-      </div>
-      <div class="prem-foot">${state.shop.footer || "Təşəkkür edirik!"}</div>
+      <div class="prem-hr"></div>
+      <div class="prem-cols"><span>Adı</span><span class="col-mid">Miqdar</span><span class="col-right">Məbləğ</span></div>
+      <div class="prem-hr"></div>
+      ${r.items.map(i => `
+        <div class="prem-item">
+          <span>${i.name}</span>
+          <span class="col-mid">${i.qty}</span>
+          <span class="col-right">${num2(i.price * i.qty)}</span>
+        </div>
+      `).join("")}
+      ${r.note ? `<div style="font-size:11px;margin-top:4px">Qeyd: ${r.note}</div>` : ""}
+      <div class="prem-hr"></div>
+      <div class="prem-sum-line"><span>Tam məbləğ:</span><span>${num2(r.subtotal ?? r.total)}</span></div>
+      ${svcLine}
+      <div class="prem-sum-line"><span>Yekun:</span><span>${num2(r.total)}</span></div>
+      <div class="prem-grand"><span>YEKUN ÖDƏNİŞ:</span><span>${num2(r.total)} ₼</span></div>
+      <div class="prem-foot">${state.shop.footer || "Sizi restoranımızda yenidən gözləyirik"}</div>
     `;
+  }
+
+  function openReceiptModal(r, isPre = false) {
+    currentReceiptObj = { ...r, isPre };
+    lastPngDataUrl = "";
+    document.getElementById("pngPreviewBox").style.display = "none";
+    document.getElementById("receiptPrintable").innerHTML = buildReceiptHtml(r, isPre);
     document.getElementById("receiptModal").classList.add("open");
   }
 
   function triggerPrint() {
-    try {
-      window.print();
-    } catch (e) {
+    if (!currentReceiptObj) return;
+    const html = buildReceiptHtml(currentReceiptObj, !!currentReceiptObj.isPre);
+    const w = window.open("", "_blank", "width=400,height=640");
+    if (w) {
+      w.document.write(`
+        <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Çek</title>
+        <style>
+          body{margin:0;padding:10px;font-family:"Courier New",monospace;color:#000;background:#fff;max-width:78mm}
+          .prem-head{text-align:center}.prem-brand{font-size:18px;font-weight:900}.prem-sub{font-size:12px;font-weight:800;margin-top:3px}
+          .prem-addr{font-size:11px;margin-top:2px}.prem-meta{margin:8px 0;font-size:12px}
+          .prem-grid2{display:flex;justify-content:space-between;margin-bottom:2px}
+          .prem-hr{border-top:1px dashed #000;margin:6px 0}
+          .prem-cols,.prem-item{display:grid;grid-template-columns:1fr 50px 70px;font-size:12px;padding:2px 0}
+          .col-mid{text-align:center}.col-right{text-align:right}
+          .prem-sum-line,.prem-grand{display:flex;justify-content:space-between;font-size:12px;margin:3px 0}
+          .prem-grand{font-size:14px;font-weight:900;margin-top:6px}
+          .prem-foot{text-align:center;font-size:11px;margin-top:10px}
+        </style></head><body>${html}<script>setTimeout(()=>{window.print();},250);<\/script></body></html>
+      `);
+      w.document.close();
+    } else {
       generateReceiptPNG();
-      alert("Çap pəncərəsi açılmasa, yaranan PNG şəkli ilə çap və ya paylaşım edə bilərsiniz.");
+      alert("Yeni pəncərə bloklandı — PNG şəkil yaradıldı, üzərinə basılı saxlayıb çap/yüklə edə bilərsiniz.");
     }
   }
 
   function formatReceiptPlain(r) {
     return [
-      `✦ ${state.shop.name} ✦`,
-      state.shop.address ? `📍 ${state.shop.address}` : "",
-      `Sənəd: ${r.id} | Masa: ${r.tableName}`,
-      `Tarix: ${r.date} ${r.time} | Ödəniş: ${r.method}`,
+      `${state.shop.name}`,
+      r.isPre ? "QONAQ HESABI" : r.id,
+      r.shop?.address || state.shop.address || "",
+      `Zal: ${r.zoneName || "Zal"} | Masa: ${r.tableName}`,
+      `Açılıb: ${r.date} ${r.openedTime || r.time} | № ${r.orderNo || ""}`,
       "--------------------------------",
-      ...r.items.map(i => `${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} ₼`),
+      ...r.items.map(i => `${i.name}  x${i.qty}  ${num2(i.price * i.qty)}`),
       "--------------------------------",
-      `YEKUN: ${r.total.toFixed(2)} ₼`,
+      `Tam məbləğ: ${num2(r.subtotal ?? r.total)}`,
+      ...(r.svcPct > 0 ? [`Servis "${r.svcPct}%": +${num2(r.serviceAmt)}`] : []),
+      `YEKUN ÖDƏNİŞ: ${num2(r.total)} ₼`,
       state.shop.footer || ""
     ].filter(Boolean).join("\n");
   }
@@ -906,60 +1002,88 @@
   function generateReceiptPNG() {
     if (!currentReceiptObj) return;
     const r = currentReceiptObj;
-    const w = 460;
-    const itemRows = r.items.length;
-    const h = 230 + itemRows * 30;
+    const w = 440;
+    const h = 290 + r.items.length * 28;
     const canvas = document.createElement("canvas");
     canvas.width = w * 2;
     canvas.height = h * 2;
     const ctx = canvas.getContext("2d");
     ctx.scale(2, 2);
 
-    ctx.fillStyle = "#12161e";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = "#f59e0b";
+    ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 2;
-    ctx.strokeRect(12, 12, w - 24, h - 24);
+    ctx.strokeRect(10, 10, w - 20, h - 20);
 
-    ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillStyle = "#0f172a";
     ctx.textAlign = "center";
-    ctx.fillText(state.shop.name || "POS", w / 2, 44);
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText(state.shop.name || "POS", w / 2, 38);
 
-    ctx.fillStyle = "#cbd5e1";
-    ctx.font = "12px Arial, sans-serif";
-    if (state.shop.address) ctx.fillText(state.shop.address, w / 2, 64);
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(r.isPre ? "QONAQ HESABI" : r.id, w / 2, 56);
+
+    ctx.font = "11px Arial, sans-serif";
+    if (state.shop.address) ctx.fillText(state.shop.address, w / 2, 73);
 
     ctx.textAlign = "left";
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "13px Arial, sans-serif";
-    ctx.fillText(`Sənəd: ${r.id}`, 26, 94);
-    ctx.fillText(`Masa: ${r.tableName}`, 26, 114);
-    ctx.fillText(`Tarix: ${r.date} ${r.time}`, 26, 134);
-    ctx.fillText(`Ödəniş: ${r.method}`, 26, 154);
+    ctx.font = "12px Arial, sans-serif";
+    ctx.fillText(`Zal: ${r.zoneName || "Zal"}`, 22, 98);
+    ctx.textAlign = "right";
+    ctx.fillText(`Masa: ${r.tableName}`, w - 22, 98);
 
-    let y = 182;
+    ctx.textAlign = "left";
+    ctx.fillText(`Açılıb: ${r.date} ${r.openedTime || r.time}`, 22, 116);
+    ctx.textAlign = "right";
+    ctx.fillText(`Sifariş № ${r.orderNo || ""}`, w - 22, 116);
+
+    let y = 144;
+    ctx.textAlign = "left";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText("Adı", 22, y);
+    ctx.textAlign = "center";
+    ctx.fillText("Miqdar", w - 115, y);
+    ctx.textAlign = "right";
+    ctx.fillText("Məbləğ", w - 22, y);
+
+    y += 22;
+    ctx.font = "12px Arial, sans-serif";
     r.items.forEach(i => {
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillText(`${i.name} x${i.qty}`, 26, y);
-      ctx.textAlign = "right";
-      ctx.fillText(`${(i.price * i.qty).toFixed(2)} ₼`, w - 26, y);
       ctx.textAlign = "left";
-      y += 28;
+      ctx.fillText(i.name, 22, y);
+      ctx.textAlign = "center";
+      ctx.fillText(String(i.qty), w - 115, y);
+      ctx.textAlign = "right";
+      ctx.fillText(num2(i.price * i.qty), w - 22, y);
+      y += 26;
     });
 
-    y += 8;
-    ctx.fillStyle = "#4ade80";
-    ctx.font = "bold 18px Arial, sans-serif";
-    ctx.fillText("YEKUN:", 26, y);
+    y += 10;
+    ctx.textAlign = "left";
+    ctx.fillText("Tam məbləğ:", 22, y);
     ctx.textAlign = "right";
-    ctx.fillText(`${r.total.toFixed(2)} ₼`, w - 26, y);
-    ctx.textAlign = "center";
+    ctx.fillText(num2(r.subtotal ?? r.total), w - 22, y);
 
-    ctx.fillStyle = "#94a3b8";
+    if (r.svcPct > 0) {
+      y += 20;
+      ctx.textAlign = "left";
+      ctx.fillText(`Servis "${r.svcPct}%":`, 22, y);
+      ctx.textAlign = "right";
+      ctx.fillText(`+${num2(r.serviceAmt)}`, w - 22, y);
+    }
+
+    y += 24;
+    ctx.textAlign = "left";
+    ctx.font = "bold 15px Arial, sans-serif";
+    ctx.fillText("YEKUN ÖDƏNİŞ:", 22, y);
+    ctx.textAlign = "right";
+    ctx.fillText(`${num2(r.total)} ₼`, w - 22, y);
+
+    ctx.textAlign = "center";
     ctx.font = "12px Arial, sans-serif";
-    ctx.fillText(state.shop.footer || "Təşəkkür edirik!", w / 2, h - 24);
+    ctx.fillText(state.shop.footer || "Sizi restoranımızda yenidən gözləyirik", w / 2, h - 22);
 
     lastPngDataUrl = canvas.toDataURL("image/png");
     const box = document.getElementById("pngPreviewBox");
@@ -977,18 +1101,13 @@
   }
 
   async function sharePngFile() {
-    if (!lastPngDataUrl || !navigator.share) {
-      openPngInBrowser();
-      return;
-    }
+    if (!lastPngDataUrl || !navigator.share) { openPngInBrowser(); return; }
     try {
       const res = await fetch(lastPngDataUrl);
       const blob = await res.blob();
       const file = new File([blob], `${currentReceiptObj?.id || "cek"}.png`, { type: "image/png" });
       await navigator.share({ files: [file], title: currentReceiptObj?.id || "Çek" });
-    } catch (e) {
-      openPngInBrowser();
-    }
+    } catch (e) { openPngInBrowser(); }
   }
 
   function openMoveModal() {
@@ -1040,15 +1159,23 @@
   }
 
   function renderStock() {
-    document.getElementById("stockList").innerHTML = Object.entries(state.stock).map(([name, qty]) => `
-      <div class="list-card ${qty <= 5 ? "low-stock" : ""}">
-        <div><strong>${name}</strong><div style="font-size:12px;color:var(--muted)">Qalıq: ${qty}</div></div>
-        <div style="display:flex;gap:6px">
-          <button class="btn-outline btn-sm" onclick="updateStock('${name}', -1)">−1</button>
-          <button class="btn-green btn-sm" onclick="updateStock('${name}', 10)">+10</button>
+    if (!state.soldCounts) state.soldCounts = {};
+    document.getElementById("stockList").innerHTML = Object.entries(state.stock).map(([name, qty]) => {
+      const sold = state.soldCounts[name] || 0;
+      return `
+        <div class="list-card ${qty <= 5 ? "low-stock" : ""}">
+          <div>
+            <strong>${name}</strong>
+            <div style="font-size:12px;color:var(--muted)">Qalıq: <strong>${qty}</strong></div>
+            <div class="sold-badge">Satılıb: ${sold} ədəd</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-outline btn-sm" onclick="updateStock('${name}', -1)">−1</button>
+            <button class="btn-green btn-sm" onclick="updateStock('${name}', 10)">+10</button>
+          </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   function updateStock(name, delta) {
@@ -1062,6 +1189,8 @@
     const qty = parseInt(document.getElementById("newStockQty").value, 10) || 0;
     if (!name) return;
     state.stock[name] = qty;
+    if (!state.soldCounts) state.soldCounts = {};
+    if (state.soldCounts[name] === undefined) state.soldCounts[name] = 0;
     saveState(); closeModal("addStockModal"); renderStock();
   }
 
@@ -1069,6 +1198,7 @@
     document.getElementById("shopNameIn").value = state.shop.name || "";
     document.getElementById("shopAddressIn").value = state.shop.address || "";
     document.getElementById("shopPhoneIn").value = state.shop.phone || "";
+    document.getElementById("shopServiceIn").value = String(state.shop.servicePercent || 0);
     document.getElementById("shopFooterIn").value = state.shop.footer || "";
     document.getElementById("shopModal").classList.add("open");
   }
@@ -1077,6 +1207,7 @@
     state.shop.name = document.getElementById("shopNameIn").value.trim() || "POS";
     state.shop.address = document.getElementById("shopAddressIn").value.trim();
     state.shop.phone = document.getElementById("shopPhoneIn").value.trim();
+    state.shop.servicePercent = parseInt(document.getElementById("shopServiceIn").value, 10) || 0;
     state.shop.footer = document.getElementById("shopFooterIn").value.trim();
     saveState(); renderHeader(); closeModal("shopModal");
   }
@@ -1133,7 +1264,7 @@
     const from = document.getElementById("dateFrom").value;
     const to = document.getElementById("dateTo").value;
     const list = state.receipts.filter(r => r.date >= from && r.date <= to);
-    if (list[idx]) openReceiptModal(list[idx]);
+    if (list[idx]) openReceiptModal(list[idx], false);
   }
 
   function buildReportText() {
