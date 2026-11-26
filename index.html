@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Kassa POS — Restoran, Lounge & Moyka</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root {
       --bg: #0c0f14;
@@ -82,6 +81,23 @@
     .auth-wrap { max-width: 440px; margin: 20px auto; padding: 14px; }
     .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+
+    .screen-code-box {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .screen-code-digits {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--gold);
+      margin-top: 4px;
+      user-select: all;
+    }
 
     .container { padding: 8px 14px 14px; max-width: 960px; margin: 0 auto; }
     .section { display: none; }
@@ -285,7 +301,7 @@
 </head>
 <body>
 
-<!-- GİRİŞ / QEYDİYYAT / TƏSDİQ -->
+<!-- GİRİŞ / QEYDİYYAT / EKRAN-İÇİ TƏSDİQ -->
 <div id="authScreen" class="auth-wrap">
   <div class="auth-card">
     <h2 style="margin:0 0 4px">💼 Kassa POS</h2>
@@ -308,14 +324,17 @@
       <div class="field"><label>Ad</label><input class="input" id="regFirst" placeholder="Adınız" /></div>
       <div class="field"><label>Soyad</label><input class="input" id="regLast" placeholder="Soyadınız" /></div>
       <div class="field"><label>Obyektin Adı</label><input class="input" id="regShop" placeholder="Məs: PremierLeague" /></div>
-      <div class="field"><label>E-poçt (Gmail / Hotmail / iCloud)</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com" /></div>
+      <div class="field"><label>E-poçt</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com" /></div>
       <div class="field"><label>Parol (Çek silmək üçün lazım olacaq)</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
-      <button class="btn-primary" id="regSubmitBtn" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod göndər</button>
+      <button class="btn-primary" id="regSubmitBtn" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod al</button>
     </div>
 
     <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--gold);margin-bottom:8px" id="verifyInfoText"></div>
-      <div class="field"><label>6 Rəqəmli Təsdiq Kodu</label><input class="input" id="verifyCodeIn" inputmode="numeric" placeholder="123456" /></div>
+      <div class="screen-code-box">
+        <div style="font-size:12px;color:#fde68a" id="verifyInfoText">Cihaz təsdiq kodu:</div>
+        <div class="screen-code-digits" id="screenGeneratedCode">------</div>
+      </div>
+      <div class="field"><label>Ekrandakı 6 Rəqəmli Kodu Daxil Edin</label><input class="input" id="verifyCodeIn" inputmode="numeric" placeholder="123456" /></div>
       <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
     </div>
 
@@ -658,13 +677,9 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  const EMAILJS_PUBLIC_KEY = "fytvLlTCcjoAJB0Ol";
-  const EMAILJS_SERVICE_ID = "service_og139ah";
-  const EMAILJS_TEMPLATE_ID = "template_cjrc6vs";
-  if (window.emailjs) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-
   const USERS_KEY = "gh_pos_users_v1";
   const SESSION_KEY = "gh_pos_session_v1";
+  const DEVICE_KEY = "gh_pos_trusted_devices_v1";
 
   const DEFAULT_MENU_REST = [
     { id: "ff1", cat: "Fast Food", name: "Şaurma", variants: [{ label: "Sadə", price: 4.0 }, { label: "+ Fri", price: 6.0 }], stockKey: "Fast food" },
@@ -738,6 +753,7 @@
   }
 
   let users = JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
+  let trustedDevices = JSON.parse(localStorage.getItem(DEVICE_KEY) || "{}");
   let currentEmail = localStorage.getItem(SESSION_KEY) || "";
   let pendingVerifyEmail = "";
   let rootState = null;
@@ -753,6 +769,7 @@
   let jiggleMode = false;
 
   function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  function saveTrustedDevices() { localStorage.setItem(DEVICE_KEY, JSON.stringify(trustedDevices)); }
   function dataKey(email) { return "gh_pos_dual_v1_" + email; }
   function todayStr() {
     const d = new Date();
@@ -771,26 +788,22 @@
     document.getElementById("authMsg").textContent = "";
   }
 
-  async function sendVerificationMail(u) {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: u.email,
-      email: u.email,
-      to_name: `${u.firstName || "İstifadəçi"} ${u.lastName || ""}`.trim(),
-      shop_name: u.shopName || "Kassa POS",
-      passcode: u.code,
-      code: u.code,
-      time: "15 dəqiqə"
-    });
+  function showOnScreenCode(email, code, labelText) {
+    pendingVerifyEmail = email;
+    document.getElementById("verifyBox").style.display = "block";
+    document.getElementById("verifyInfoText").textContent = labelText || "Yeni cihaz təsdiq kodu (ekranda göstərilir):";
+    document.getElementById("screenGeneratedCode").textContent = code;
+    document.getElementById("verifyCodeIn").value = "";
+    document.getElementById("verifyCodeIn").focus();
   }
 
-  async function doRegister() {
+  function doRegister() {
     const firstName = document.getElementById("regFirst").value.trim();
     const lastName = document.getElementById("regLast").value.trim();
     const shopName = document.getElementById("regShop").value.trim();
     const email = document.getElementById("regEmail").value.trim().toLowerCase();
     const password = document.getElementById("regPassword").value;
     const msg = document.getElementById("authMsg");
-    const btn = document.getElementById("regSubmitBtn");
 
     if (!firstName || !lastName || !shopName || !email || !password) {
       msg.style.color = "#fca5a5"; msg.textContent = "Bütün xanaları doldurun!"; return;
@@ -802,21 +815,10 @@
     const code = String(Math.floor(100000 + Math.random() * 900000));
     users[email] = { firstName, lastName, shopName, email, password, code, verified: false };
     saveUsers();
-    pendingVerifyEmail = email;
 
-    btn.disabled = true; btn.textContent = "Kod göndərilir...";
-    try {
-      await sendVerificationMail(users[email]);
-      document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = `${email} ünvanına 6 rəqəmli təsdiq kodu göndərildi:`;
-      msg.style.color = "#86efac"; msg.textContent = "Təsdiq kodu göndərildi!";
-    } catch (err) {
-      document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = `E-poçt göndərilmədi. Müvəqqəti kod: ${code}`;
-      msg.style.color = "#fca5a5"; msg.textContent = "EmailJS xətası.";
-    } finally {
-      btn.disabled = false; btn.textContent = "Qeydiyyatdan keç və Kod göndər";
-    }
+    msg.style.color = "#86efac";
+    msg.textContent = "Təsdiq kodu ekranda yaradıldı. Aşağıdakı kodu daxil edib təsdiqləyin.";
+    showOnScreenCode(email, code, "Qeydiyyatı tamamlamaq üçün ekrandakı 6 rəqəmli kodu yazın:");
   }
 
   function doVerify() {
@@ -824,23 +826,27 @@
     const u = users[pendingVerifyEmail];
     const msg = document.getElementById("authMsg");
     if (!u || u.code !== code) { msg.style.color = "#fca5a5"; msg.textContent = "Kod yanlışdır!"; return; }
-    u.verified = true; saveUsers();
-    currentEmail = u.email; localStorage.setItem(SESSION_KEY, currentEmail);
+    u.verified = true;
+    trustedDevices[u.email] = true;
+    saveUsers();
+    saveTrustedDevices();
+    currentEmail = u.email;
+    localStorage.setItem(SESSION_KEY, currentEmail);
     enterAfterAuth();
   }
 
-  async function doLogin() {
+  function doLogin() {
     const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
     const msg = document.getElementById("authMsg");
-    const btn = document.getElementById("loginSubmitBtn");
 
     if (!email || !email.includes("@") || !password) {
       msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və parolu daxil edin!"; return;
     }
 
     const u = users[email];
-    if (u && u.verified) {
+    // Bu cihaz əvvəllər təsdiqlənibsə (məsələn, telefon), birbaşa daxil olur
+    if (u && u.verified && trustedDevices[email]) {
       if (u.password !== password) {
         msg.style.color = "#fca5a5"; msg.textContent = "Parol yanlışdır!"; return;
       }
@@ -850,6 +856,7 @@
       return;
     }
 
+    // Yeni cihazdan / brauzerdən (məsələn, kompüterdən) girəndə Gmail yerinə birbaşa ekranda kod çıxır
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const displayName = email.split("@")[0];
     users[email] = {
@@ -862,21 +869,10 @@
       verified: false
     };
     saveUsers();
-    pendingVerifyEmail = email;
 
-    btn.disabled = true; btn.textContent = "Təsdiq kodu göndərilir...";
-    try {
-      await sendVerificationMail(users[email]);
-      document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = `Yeni cihaz təsdiqi: ${email} ünvanına 6 rəqəmli kod göndərildi:`;
-      msg.style.color = "#86efac"; msg.textContent = "E-poçtunuza gələn 6 rəqəmli kodu daxil edin.";
-    } catch (err) {
-      document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = `E-poçt xətası. Təsdiq kodu: ${code}`;
-      msg.style.color = "#fca5a5"; msg.textContent = "Yuxarıdakı kodu daxil edib təsdiqləyin.";
-    } finally {
-      btn.disabled = false; btn.textContent = "Daxil ol";
-    }
+    msg.style.color = "#86efac";
+    msg.textContent = "Yeni cihaz aşkarlandı — təsdiq kodu ekranda göstərildi.";
+    showOnScreenCode(email, code, `${email} hesabı üçün ekran-içi təsdiq kodu:`);
   }
 
   function doLogout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
@@ -1833,7 +1829,7 @@
   function shareReportTelegram() { window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportText()), "_blank"); }
   function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-  if (currentEmail && users[currentEmail] && users[currentEmail].verified) {
+  if (currentEmail && users[currentEmail] && users[currentEmail].verified && trustedDevices[currentEmail]) {
     enterAfterAuth();
   }
 </script>
