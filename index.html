@@ -278,7 +278,7 @@
         border: none !important; border-radius: 0 !important;
         width: 100% !important; padding: 4px !important;
       }
-      #receiptModal button, #pngPreviewBox { display: none !important; }
+      #receiptModal button { display: none !important; }
     }
   </style>
 </head>
@@ -1366,6 +1366,81 @@
 
   function triggerPrint() {
     if (!currentReceiptObj) return;
+    const r = currentReceiptObj;
+    const receiptHtml = buildReceiptHtml(r, r.isPre);
+
+    const printWin = window.open("", "_blank", "width=420,height=680");
+    if (printWin && printWin.document) {
+      printWin.document.open();
+      printWin.document.write(`<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${r.id || "Çek"}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #ffffff;
+      color: #000000;
+      font-family: "Courier New", Courier, monospace;
+    }
+    .premium-receipt {
+      width: 100%;
+      max-width: 80mm;
+      margin: 0 auto;
+      color: #000000;
+    }
+    .prem-head { text-align: center; }
+    .prem-brand { font-size: 18px; font-weight: 900; letter-spacing: 1px; }
+    .prem-sub { font-size: 12px; font-weight: 800; margin-top: 4px; }
+    .prem-addr { font-size: 11px; margin-top: 3px; font-family: Arial, sans-serif; }
+    .prem-meta { margin: 10px 0 6px; font-size: 12px; }
+    .prem-grid2 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+    .prem-hr { border-top: 1px dashed #000000; margin: 8px 0; }
+    .prem-cols, .prem-item {
+      display: grid;
+      grid-template-columns: 1fr 52px 72px;
+      font-size: 12px;
+      gap: 4px;
+    }
+    .prem-cols { font-weight: 800; }
+    .prem-item { padding: 3px 0; }
+    .col-mid { text-align: center; }
+    .col-right { text-align: right; }
+    .prem-sum-line { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0; }
+    .prem-grand {
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+      font-weight: 900;
+      margin-top: 6px;
+      border-top: 1px solid #000;
+      padding-top: 6px;
+    }
+    .prem-foot { text-align: center; font-size: 11px; margin-top: 12px; font-family: Arial, sans-serif; }
+    @page { margin: 4mm; }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="premium-receipt">${receiptHtml}</div>
+  <script>
+    window.onload = function () {
+      setTimeout(function () {
+        window.print();
+      }, 200);
+    };
+  <\/script>
+</body>
+</html>`);
+      printWin.document.close();
+      return;
+    }
+
     window.print();
   }
 
