@@ -120,9 +120,11 @@
       background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 13px; position: relative; display: flex; flex-direction: column; justify-content: space-between;
       min-height: 108px; cursor: pointer;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
     .table-card.busy { border-color: var(--gold); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
     body.theme-carwash .table-card.busy { border-color: #38bdf8; background: linear-gradient(180deg, rgba(14, 165, 233, 0.2), var(--card)); }
+    .table-card.pressing { transform: scale(0.96); border-color: #fff; }
     .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .table-name { font-size: 15px; font-weight: 800; }
     .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
@@ -136,9 +138,16 @@
     .table-meta { margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
     .table-sum { font-size: 16px; font-weight: 800; }
     .table-time { font-size: 11px; color: var(--muted); }
-    .del-table-btn {
-      position: absolute; bottom: 8px; right: 8px; padding: 3px 7px; font-size: 11px;
-      background: rgba(239, 68, 68, 0.18); color: #fca5a5;
+
+    .zone-hint {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
     }
 
     .order-header {
@@ -202,9 +211,9 @@
     .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
     .premium-receipt {
-      background: #f8fafc;
-      color: #0f172a;
-      border: 2px solid #0f172a;
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
       border-radius: 10px;
       padding: 16px 14px;
       font-family: "Courier New", Courier, monospace;
@@ -212,10 +221,10 @@
     .prem-head { text-align: center; }
     .prem-brand { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; }
     .prem-sub { font-size: 12px; font-weight: 800; margin-top: 4px; letter-spacing: 0.6px; }
-    .prem-addr { font-size: 11px; color: #334155; margin-top: 3px; font-family: Arial, sans-serif; }
+    .prem-addr { font-size: 11px; color: #222; margin-top: 3px; font-family: Arial, sans-serif; }
     .prem-meta { margin: 10px 0 6px; font-size: 12px; }
     .prem-grid2 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
-    .prem-hr { border-top: 1px dashed #0f172a; margin: 8px 0; }
+    .prem-hr { border-top: 1px dashed #000000; margin: 8px 0; }
     .prem-cols { display: grid; grid-template-columns: 1fr 56px 76px; font-weight: 800; font-size: 12px; align-items: center; }
     .prem-item { display: grid; grid-template-columns: 1fr 56px 76px; font-size: 12px; padding: 4px 0; align-items: start; gap: 4px; }
     .col-mid { text-align: center; }
@@ -223,6 +232,26 @@
     .prem-sum-line { display: flex; justify-content: space-between; font-size: 12.5px; margin: 4px 0; }
     .prem-grand { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; margin-top: 6px; }
     .prem-foot { text-align: center; font-size: 12px; margin-top: 12px; font-family: Arial, sans-serif; font-weight: 600; }
+
+    /* TELEFONUN ÇAP PƏNCƏRƏSİNDƏ YALNIZ ÇEKİN GÖRÜNMƏSİ ÜÇÜN */
+    @media print {
+      @page { margin: 6mm; }
+      body * { visibility: hidden; }
+      #receiptModal, #receiptModal * { visibility: visible; }
+      #receiptModal {
+        position: fixed; inset: 0; background: #fff !important;
+        display: block !important; padding: 0 !important;
+      }
+      .modal {
+        max-width: 100% !important; max-height: none !important;
+        background: #fff !important; border: none !important; padding: 0 !important;
+      }
+      .premium-receipt {
+        border: none !important; border-radius: 0 !important;
+        width: 100% !important; padding: 4px !important;
+      }
+      #receiptModal button, #pngPreviewBox { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -292,6 +321,9 @@
     <section id="sec-tables" class="section active">
       <div class="tabs-row" id="zoneTabs"></div>
       <div class="tables-grid" id="tablesGrid"></div>
+      <div class="zone-hint" id="zoneLongPressHint">
+        💡 Qeyd: Zal, kabinet və ya boksu redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.
+      </div>
     </section>
 
     <section id="sec-order" class="section">
@@ -416,7 +448,33 @@
   </nav>
 </div>
 
-<!-- MODALLAR -->
+<!-- BASILI SAXLAYANDA AÇILAN ZAL / KABİNET / BOKS MENYUSU -->
+<div class="modal-backdrop" id="zoneActionModal">
+  <div class="modal">
+    <h3 id="zoneActionTitle">Seçim</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="zoneActionSub"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-amber" onclick="openEditZoneFromMenu()">✏️ Adını / Bölməsini Redaktə Et</button>
+      <button class="btn-danger" onclick="deleteZoneFromMenu()">🗑️ Sil</button>
+      <button class="btn-outline" onclick="closeModal('zoneActionModal')">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZAL / KABİNET / BOKS REDAKTƏ MODALI -->
+<div class="modal-backdrop" id="editZoneModal">
+  <div class="modal">
+    <h3>✏️ Redaktə Et</h3>
+    <input type="hidden" id="editZoneId" />
+    <div class="field"><label>Bölmə</label><select class="input" id="editZoneType"></select></div>
+    <div class="field"><label>Adı</label><input class="input" id="editZoneName" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('editZoneModal')">Bağla</button>
+      <button class="btn-green" onclick="saveEditedZone()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="shopModal">
   <div class="modal">
     <h3>🏪 Obyekt Məlumatları</h3>
@@ -513,7 +571,6 @@
   </div>
 </div>
 
-<!-- ÇEK SİLMƏK ÜÇÜN PAROL TƏSDİQ MODALI -->
 <div class="modal-backdrop" id="deleteReceiptModal">
   <div class="modal">
     <h3>🔒 Çeki Silmək Üçün Parolu Yazın</h3>
@@ -535,7 +592,7 @@
     <div id="receiptPrintable" class="premium-receipt"></div>
     <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center;background:#0f1318;padding:10px;border-radius:10px;border:1px solid var(--border)">
       <div style="font-size:11px;color:var(--gold);margin-bottom:6px">
-        Çap etmək və ya qalereyaya salmaq üçün şəklin üzərinə basılı saxlayın:
+        Çap şəkli hazırdır (üzərinə basılı saxlayıb saxlaya və ya paylaşa bilərsiniz):
       </div>
       <img id="pngPreviewImg" style="max-width:100%;border-radius:8px;display:block;margin:0 auto" />
       <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">
@@ -543,7 +600,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <button class="btn-primary" onclick="triggerPrint()">🖨️ Çap Et (58/80mm)</button>
+      <button class="btn-primary" onclick="triggerPrint()">🖨️ Çap Et</button>
       <button class="btn-green" onclick="generateReceiptPNG()">🖼️ Şəkil (PNG)</button>
       <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
       <button class="btn-outline" onclick="copyReceiptText()">📋 Kopyala</button>
@@ -646,6 +703,9 @@
   let currentReceiptObj = null;
   let lastPngDataUrl = "";
   let pendingDeleteReceiptId = null;
+  let selectedZoneActionId = null;
+  let longPressTimer = null;
+  let longPressTriggered = false;
 
   function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
   function dataKey(email) { return "gh_pos_dual_v1_" + email; }
@@ -790,6 +850,7 @@
       document.getElementById("carWashOrderPanel").style.display = "block";
       document.getElementById("washersReportSection").style.display = "block";
       document.getElementById("shopServiceWrap").style.display = "none";
+      document.getElementById("zoneLongPressHint").innerHTML = "💡 Qeyd: Boksu və ya növbəni redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.";
     } else {
       document.body.classList.remove("theme-carwash");
       rBtn.className = "mode-btn active-rest";
@@ -806,6 +867,7 @@
       document.getElementById("carWashOrderPanel").style.display = "none";
       document.getElementById("washersReportSection").style.display = "none";
       document.getElementById("shopServiceWrap").style.display = "block";
+      document.getElementById("zoneLongPressHint").innerHTML = "💡 Qeyd: Zal və ya kabineti redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.";
     }
   }
 
@@ -833,6 +895,80 @@
     if (tab === "reports") renderReports();
   }
 
+  function startCardPress(el, tableId) {
+    longPressTriggered = false;
+    clearTimeout(longPressTimer);
+    el.classList.add("pressing");
+    longPressTimer = setTimeout(() => {
+      longPressTriggered = true;
+      el.classList.remove("pressing");
+      openZoneActionMenu(tableId);
+    }, 520);
+  }
+
+  function cancelCardPress(el) {
+    clearTimeout(longPressTimer);
+    if (el) el.classList.remove("pressing");
+  }
+
+  function handleCardClick(tableId) {
+    if (longPressTriggered) {
+      longPressTriggered = false;
+      return;
+    }
+    activeTableId = tableId;
+    switchTab("order");
+  }
+
+  function openZoneActionMenu(tableId) {
+    const tbl = cur().tables.find(t => t.id === tableId);
+    if (!tbl) return;
+    selectedZoneActionId = tableId;
+    document.getElementById("zoneActionTitle").textContent = tbl.name;
+    document.getElementById("zoneActionSub").textContent = `Bölmə: ${tbl.zone} — Nə etmək istəyirsiniz?`;
+    document.getElementById("zoneActionModal").classList.add("open");
+  }
+
+  function openEditZoneFromMenu() {
+    const tbl = cur().tables.find(t => t.id === selectedZoneActionId);
+    if (!tbl) return;
+    closeModal("zoneActionModal");
+    document.getElementById("editZoneId").value = tbl.id;
+    document.getElementById("editZoneName").value = tbl.name;
+    const sel = document.getElementById("editZoneType");
+    sel.innerHTML = isWash()
+      ? `<option value="Boks">Boks</option><option value="Növbə">Növbə</option>`
+      : `<option value="Zal">Zal</option><option value="Kabinet">Kabinet</option><option value="Lounge">Lounge</option>`;
+    sel.value = tbl.zone;
+    document.getElementById("editZoneModal").classList.add("open");
+  }
+
+  function saveEditedZone() {
+    const b = cur();
+    const tbl = b.tables.find(t => t.id === document.getElementById("editZoneId").value);
+    if (!tbl) return;
+    const newName = document.getElementById("editZoneName").value.trim();
+    const newZone = document.getElementById("editZoneType").value;
+    if (!newName) return alert("Ad boş ola bilməz!");
+    tbl.name = newName;
+    tbl.zone = newZone;
+    saveState();
+    closeModal("editZoneModal");
+    renderTables();
+  }
+
+  function deleteZoneFromMenu() {
+    const b = cur();
+    const id = selectedZoneActionId;
+    if (!id) return;
+    if (b.openOrders[id]) return alert("Məşğul yeri silmək olmaz!");
+    b.tables = b.tables.filter(t => t.id !== id);
+    if (activeTableId === id) activeTableId = null;
+    saveState();
+    closeModal("zoneActionModal");
+    renderTables();
+  }
+
   function renderTables() {
     const b = cur();
     const zones = ["Hamısı", ...new Set(b.tables.map(t => t.zone))];
@@ -847,7 +983,13 @@
       const plateHtml = (isWash() && ord && ord.carPlate) ? `<div class="plate-pill">${ord.carPlate}</div>` : "";
       const washerInfo = (isWash() && ord && ord.washer1) ? `<div style="font-size:11px;color:#7dd3fc;margin-top:3px">👷 ${ord.washer1}${ord.washer2 ? " + " + ord.washer2 : ""}</div>` : "";
       return `
-        <div class="table-card ${ord ? "busy" : ""}" onclick="activeTableId='${t.id}';switchTab('order')">
+        <div class="table-card ${ord ? "busy" : ""}"
+          onpointerdown="startCardPress(this, '${t.id}')"
+          onpointerup="cancelCardPress(this)"
+          onpointerleave="cancelCardPress(this)"
+          onpointercancel="cancelCardPress(this)"
+          oncontextmenu="event.preventDefault(); openZoneActionMenu('${t.id}'); return false;"
+          onclick="handleCardClick('${t.id}')">
           <div class="table-top">
             <div class="table-name">${t.name}</div>
             <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? (isWash() ? "Yuyulur" : "Məşğul") : "Boş"}</span>
@@ -856,7 +998,6 @@
           ${plateHtml}
           ${washerInfo}
           <div class="table-meta"><div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div><div class="table-time">${elapsed}</div></div>
-          ${(!ord && t.custom) ? `<button class="del-table-btn" onclick="event.stopPropagation();deleteTable('${t.id}')">✕</button>` : ""}
         </div>
       `;
     }).join("");
@@ -881,13 +1022,6 @@
     if (!name) return;
     cur().tables.push({ id: "t_" + Date.now(), zone, name, custom: true });
     saveState(); closeModal("addTableModal"); renderTables();
-  }
-
-  function deleteTable(id) {
-    const b = cur();
-    if (b.openOrders[id]) return alert("Məşğul yeri silmək olmaz!");
-    b.tables = b.tables.filter(t => t.id !== id);
-    saveState(); renderTables();
   }
 
   function renderCategories() {
@@ -1181,21 +1315,9 @@
     document.getElementById("receiptModal").classList.add("open");
   }
 
-  async function triggerPrint() {
+  function triggerPrint() {
     if (!currentReceiptObj) return;
-    generateReceiptPNG();
-    try {
-      if (navigator.share && lastPngDataUrl) {
-        const res = await fetch(lastPngDataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `${currentReceiptObj.id || "cek"}.png`, { type: "image/png" });
-        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: currentReceiptObj.id || "Çek" });
-          return;
-        }
-      }
-    } catch (e) {}
-    try { window.print(); } catch (e) {}
+    window.print();
   }
 
   function formatReceiptPlain(r) {
