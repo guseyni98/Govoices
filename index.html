@@ -3,153 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Restoran & Kafe POS — Telegram Mini App</title>
+  <title>Restoran & Kafe POS</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --card: #1f2630;
-      --elevated: #28313e;
-      --border: #2f3947;
+      --bg: #0f1318;
+      --card: #171d26;
+      --card2: #1f2733;
+      --border: #2b3545;
       --text: #f3f5f8;
       --muted: #9aa6b8;
       --accent: #e53935;
-      --gold: #f59e0b;
       --green: #22c55e;
+      --amber: #f59e0b;
       --blue: #3b82f6;
       --radius: 14px;
     }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(circle at 12% 8%, rgba(245, 158, 11, 0.1), transparent 36%),
-        radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.08), transparent 38%),
-        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
       color: var(--text);
       padding-bottom: 84px;
-      min-height: 100vh;
     }
-
     header {
       position: sticky;
       top: 0;
       z-index: 30;
-      background: rgba(22, 27, 34, 0.96);
+      background: rgba(15, 19, 24, 0.96);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
-      padding: 11px 14px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .brand-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, var(--gold), #b45309);
-      color: #0b0e14;
-      font-weight: 900;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-    }
-
-    .brand-info {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .brand-title {
-      font-size: 15px;
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .brand-sub {
-      font-size: 11px;
-      color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 7px;
-      flex-shrink: 0;
-    }
+    .brand { min-width: 0; }
+    .brand-title { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-sub { font-size: 11px; color: var(--muted); }
+    .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
     button {
       border: none;
       border-radius: 10px;
       padding: 9px 12px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       color: var(--text);
-      background: var(--elevated);
-      transition: transform 0.08s ease, opacity 0.15s ease;
+      background: var(--card2);
     }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
+    button:active { transform: scale(0.97); }
     .btn-primary { background: var(--accent); color: #fff; }
-    .btn-gold { background: var(--gold); color: #111; }
     .btn-green { background: var(--green); color: #062110; }
     .btn-blue { background: var(--blue); color: #fff; }
+    .btn-amber { background: var(--amber); color: #1d1202; }
     .btn-outline { background: transparent; border: 1px solid var(--border); }
     .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
-    .container {
-      padding: 12px 14px;
-      max-width: 980px;
-      margin: 0 auto;
+    .auth-wrap {
+      max-width: 440px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
+    .container { padding: 12px 14px; max-width: 960px; margin: 0 auto; }
     .section { display: none; }
     .section.active { display: block; }
 
-    /* Aşağı Naviqasiya */
     .bottom-nav {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       z-index: 40;
-      background: rgba(22, 27, 34, 0.98);
-      backdrop-filter: blur(10px);
+      background: #131820;
       border-top: 1px solid var(--border);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-      gap: 5px;
+      gap: 4px;
     }
-
     .nav-btn {
       background: transparent;
       color: var(--muted);
@@ -161,25 +107,18 @@
       font-size: 11px;
       border-radius: 10px;
     }
-
-    .nav-btn.active {
-      background: rgba(245, 158, 11, 0.16);
-      color: var(--gold);
-    }
-
+    .nav-btn.active { background: rgba(229, 57, 53, 0.16); color: #fff; }
     .nav-icon { font-size: 17px; }
 
-    /* Kateqoriya və Zona düymələri */
     .tabs-row {
       display: flex;
-      gap: 7px;
+      gap: 8px;
       overflow-x: auto;
       padding-bottom: 8px;
       margin-bottom: 10px;
       scrollbar-width: none;
     }
     .tabs-row::-webkit-scrollbar { display: none; }
-
     .chip {
       white-space: nowrap;
       padding: 8px 13px;
@@ -190,24 +129,14 @@
       font-size: 12px;
       font-weight: 700;
     }
+    .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    .chip.active {
-      background: var(--gold);
-      border-color: var(--gold);
-      color: #111;
-    }
-
-    /* Masalar Grid */
     .tables-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
-
-    @media (min-width: 640px) {
-      .tables-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
+    @media (min-width: 640px) { .tables-grid { grid-template-columns: repeat(3, 1fr); } }
     .table-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -217,429 +146,298 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 104px;
+      min-height: 100px;
       cursor: pointer;
     }
-
     .table-card.busy {
-      border-color: var(--gold);
-      background: linear-gradient(180deg, rgba(245, 158, 11, 0.15), var(--card));
+      border-color: var(--amber);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card));
     }
-
-    .table-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 6px;
-    }
-
+    .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .table-name { font-size: 15px; font-weight: 800; }
-
-    .badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 999px;
-    }
-
+    .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
     .badge-free { background: rgba(34, 197, 94, 0.16); color: var(--green); }
-    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--gold); }
-
-    .table-meta {
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
-    .table-sum { font-size: 16px; font-weight: 800; color: #fff; }
+    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--amber); }
+    .table-meta { margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .table-sum { font-size: 16px; font-weight: 800; }
     .table-time { font-size: 11px; color: var(--muted); }
-
     .del-table-btn {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      padding: 3px 7px;
-      font-size: 11px;
-      background: rgba(239, 68, 68, 0.18);
-      color: #fca5a5;
+      position: absolute; bottom: 8px; right: 8px;
+      padding: 3px 7px; font-size: 11px;
+      background: rgba(239, 68, 68, 0.18); color: #fca5a5;
     }
 
-    /* Sifariş və Menyu */
     .order-header {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px; margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
     }
-
-    .search-input, .input {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 14px;
-      outline: none;
+    .input, select {
+      width: 100%; background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
     }
-
-    .search-input:focus, .input:focus {
-      border-color: var(--gold);
-    }
-
     .menu-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 14px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px;
     }
-
-    @media (min-width: 640px) {
-      .menu-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
+    @media (min-width: 640px) { .menu-grid { grid-template-columns: repeat(3, 1fr); } }
     .menu-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
     }
-
-    .menu-name { font-size: 13px; font-weight: 700; line-height: 1.3; }
-    .menu-desc { font-size: 11px; color: var(--muted); line-height: 1.35; }
+    .menu-name { font-size: 13px; font-weight: 700; }
+    .menu-desc { font-size: 11px; color: var(--muted); }
     .price-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-
     .price-btn {
-      flex: 1;
-      background: var(--elevated);
-      border: 1px solid var(--border);
-      padding: 7px 8px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
+      flex: 1; background: var(--card2); border: 1px solid var(--border);
+      padding: 7px 8px; font-size: 12px; font-weight: 700; text-align: center;
     }
+    .price-btn span { color: var(--green); display: block; font-size: 13px; }
 
-    .price-btn span {
-      color: var(--green);
-      display: block;
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    /* Səbət */
     .cart-box {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
     }
-
     .cart-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
     }
     .cart-row:last-child { border-bottom: none; }
-
     .qty-controls { display: flex; align-items: center; gap: 6px; }
     .qty-btn { width: 28px; height: 28px; padding: 0; font-size: 15px; }
+    .pay-bar { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    .pay-bar {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    /* KPI və Siyahı Kartları */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin: 10px 0;
-    }
-
-    .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px;
-    }
-
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 11px; }
     .kpi-label { font-size: 11px; color: var(--muted); }
     .kpi-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
-
     .list-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
     }
-
     .low-stock { border-color: var(--accent); }
 
-    /* Modal */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.78);
-      z-index: 60;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 60;
+      display: none; align-items: center; justify-content: center; padding: 14px;
     }
     .modal-backdrop.open { display: flex; }
-
     .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 440px;
-      max-height: 92vh;
-      overflow-y: auto;
-      padding: 16px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 16px;
     }
-
     .modal h3 { margin: 0 0 12px; font-size: 17px; }
     .field { margin-bottom: 10px; }
     .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
-    /* Çek / Qəbz Kağızı */
     .receipt-paper {
-      background: #ffffff;
-      color: #111111;
-      font-family: Arial, "Segoe UI", sans-serif;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      line-height: 1.45;
-      border: 1px solid #d4d4d8;
+      background: #fff; color: #111; font-family: Arial, sans-serif;
+      padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.45;
     }
     .receipt-center { text-align: center; }
-    .receipt-hr { border-top: 1px dashed #52525b; margin: 8px 0; }
-    .receipt-line { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
+    .receipt-hr { border-top: 1px dashed #444; margin: 8px 0; }
+    .receipt-line { display: flex; justify-content: space-between; gap: 8px; }
 
-    /* 58mm / 80mm Termal Çek Printer Çap Formatı */
     @media print {
-      @page {
-        size: 80mm auto;
-        margin: 0;
-      }
-      body {
-        background: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-      body * {
-        visibility: hidden;
-      }
-      #receiptPrintable, #receiptPrintable * {
-        visibility: visible !important;
-      }
+      @page { margin: 0; }
+      body * { visibility: hidden; }
+      #receiptPrintable, #receiptPrintable * { visibility: visible; }
       #receiptPrintable {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        max-width: 78mm;
-        margin: 0 auto;
-        padding: 6px;
-        font-size: 12px;
-        line-height: 1.38;
-        color: #000000 !important;
-        background: #ffffff !important;
-        border: none !important;
-        border-radius: 0 !important;
-      }
-      #pngPreviewBox {
-        display: none !important;
+        position: fixed; left: 0; top: 0; width: 100%; max-width: 78mm;
+        margin: 0 auto; padding: 6px; font-size: 12px; color: #000 !important; background: #fff !important;
       }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <div class="brand-logo" id="headerShopLogo">R</div>
-    <div class="brand-info">
-      <div class="brand-title" id="headerShopName">RESTORAN & KAFE POS</div>
-      <div class="brand-sub" id="headerSubInfo">Zallar, Kassa, Anbar və Açot</div>
+<!-- GİRİŞ / QEYDİYYAT / TƏSDİQ EKRANI -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <h2 style="margin:0 0 4px">🍽️ Restoran & Kafe POS</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Hesab yaradın, e-poçtunuzu təsdiqləyin və obyektinizi qurun
     </div>
+
+    <div class="auth-tabs">
+      <button class="btn-primary" id="tabLoginBtn" onclick="setAuthMode('login')">Giriş</button>
+      <button class="btn-outline" id="tabRegBtn" onclick="setAuthMode('register')">Qeydiyyat</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginBox">
+      <div class="field"><label>E-poçt (Gmail, Hotmail, iCloud...)</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" /></div>
+      <div class="field"><label>Parol</label><input class="input" id="loginPassword" type="password" placeholder="••••••••" /></div>
+      <button class="btn-green" style="width:100%" onclick="doLogin()">Daxil ol</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerBox" style="display:none">
+      <div class="field"><label>Ad</label><input class="input" id="regFirst" placeholder="Adınız" /></div>
+      <div class="field"><label>Soyad</label><input class="input" id="regLast" placeholder="Soyadınız" /></div>
+      <div class="field"><label>Obyektin Adı</label><input class="input" id="regShop" placeholder="Məs: Dostlar Kafe" /></div>
+      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com / ad@hotmail.com / ad@icloud.com" /></div>
+      <div class="field"><label>Parol</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
+      <button class="btn-primary" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod göndər</button>
+    </div>
+
+    <!-- VERIFY CODE BOX -->
+    <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--amber);margin-bottom:8px" id="verifyInfoText">E-poçta 6 rəqəmli təsdiq kodu göndərildi:</div>
+      <div class="field"><label>Təsdiq Kodu</label><input class="input" id="verifyCodeIn" placeholder="123456" /></div>
+      <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
+    </div>
+
+    <div id="authMsg" style="margin-top:10px;font-size:12px;color:#fca5a5"></div>
   </div>
-  <div class="header-actions">
-    <button class="btn-outline btn-sm" onclick="openShopModal()">🏪 Obyekt</button>
-    <button class="btn-gold btn-sm" onclick="openAddTableModal()">+ Zal / Kabinet</button>
-  </div>
-</header>
-
-<div class="container">
-  <!-- 1. ZALLAR / MASALAR -->
-  <section id="sec-tables" class="section active">
-    <div class="tabs-row" id="zoneTabs"></div>
-    <div class="tables-grid" id="tablesGrid"></div>
-  </section>
-
-  <!-- 2. SİFARİŞ / KASSA EKRANI -->
-  <section id="sec-order" class="section">
-    <div class="order-header">
-      <div>
-        <div style="font-weight:800;font-size:15px" id="activeTableTitle">Masa seçilməyib</div>
-        <div style="font-size:11px;color:var(--muted)" id="activeTableTime">Sifariş əlavə etmək üçün menyudan seçin</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn-outline btn-sm" onclick="openMoveModal()">⇄ Köçür</button>
-        <button class="btn-gold btn-sm" onclick="showPreReceipt()">🧾 Hesab (Pre-çek)</button>
-        <button class="btn-outline btn-sm" onclick="switchTab('tables')">← Zallar</button>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <input class="search-input" id="menuSearch" placeholder="Menyuda axtar (pizza, set, qəlyan, vaxt...)" oninput="renderMenu()" />
-      <button class="btn-blue btn-sm" style="white-space:nowrap" onclick="openAddProductModal()">+ Məhsul</button>
-    </div>
-
-    <div class="tabs-row" id="catTabs"></div>
-    <div class="menu-grid" id="menuGrid"></div>
-
-    <div class="cart-box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <strong>Açıq Sifariş Siyahısı</strong>
-        <span style="font-size:12px;color:var(--muted)" id="cartCountLabel">0 məhsul</span>
-      </div>
-      <div id="cartList"></div>
-      <div class="field" style="margin-top:10px">
-        <input class="input" id="orderNoteInput" placeholder="Sifariş qeydi (məs: az duzlu, əlavə kömür...)" onchange="saveOrderNote()" />
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:800;margin-top:8px">
-        <span>YEKUN MƏBLƏĞ:</span>
-        <span style="color:var(--green)" id="cartTotalLabel">0.00 ₼</span>
-      </div>
-      <div class="pay-bar">
-        <button class="btn-green" onclick="closeOrder('Nəğd')">💵 Nəğd Bağla</button>
-        <button class="btn-blue" onclick="closeOrder('Kart')">💳 Kartla Bağla</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. ANBAR -->
-  <section id="sec-stock" class="section">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <strong>Anbar və Komponent Qalıqları</strong>
-      <button class="btn-gold btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
-    </div>
-    <div id="stockList"></div>
-  </section>
-
-  <!-- 4. KASSA / AÇOT -->
-  <section id="sec-reports" class="section">
-    <div class="tabs-row">
-      <button class="chip active" id="p-today" onclick="setPeriod('today')">Bu gün</button>
-      <button class="chip" id="p-prevMonthToToday" onclick="setPeriod('prevMonthToToday')">Keçən aydan bu günə</button>
-      <button class="chip" id="p-thisMonth" onclick="setPeriod('thisMonth')">Bu ay</button>
-      <button class="chip" id="p-last30" onclick="setPeriod('last30')">Son 30 gün</button>
-      <button class="chip" id="p-all" onclick="setPeriod('all')">Bütün tarixlər</button>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <div class="field" style="margin:0">
-        <label>Tarixdən</label>
-        <input type="date" class="input" id="dateFrom" onchange="onCustomDateChange()" />
-      </div>
-      <div class="field" style="margin:0">
-        <label>Tarixədək</label>
-        <input type="date" class="input" id="dateTo" onchange="onCustomDateChange()" />
-      </div>
-    </div>
-
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Ümumi Alver (Dövriyyə)</div>
-        <div class="kpi-val" style="color:var(--green)" id="kpiTotal">0.00 ₼</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Bağlanmış Çek Sayı</div>
-        <div class="kpi-val" id="kpiCount">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Nəğd Kassa</div>
-        <div class="kpi-val" id="kpiCash">0.00 ₼</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Kart (Terminal)</div>
-        <div class="kpi-val" id="kpiCard">0.00 ₼</div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <button class="btn-gold btn-sm" onclick="copyReportText()">📋 Açotu Kopyala</button>
-      <button class="btn-blue btn-sm" onclick="shareReportTelegram()">✈️ Telegram-a Göndər</button>
-      <button class="btn-outline btn-sm" onclick="exportBackup()">⬇️ Yedək (JSON)</button>
-    </div>
-
-    <h4 style="margin:10px 0 6px">Günlük Xülasə (Tarixə Görə)</h4>
-    <div id="dailySummaryList"></div>
-
-    <h4 style="margin:14px 0 6px">Çeklər Tarixçəsi (Çek vermək üçün toxun)</h4>
-    <div id="receiptsHistoryList"></div>
-  </section>
 </div>
 
-<!-- ALT MENYU -->
-<nav class="bottom-nav">
-  <button class="nav-btn active" id="nav-tables" onclick="switchTab('tables')">
-    <span class="nav-icon">🪑</span><span>Zallar</span>
-  </button>
-  <button class="nav-btn" id="nav-order" onclick="switchTab('order')">
-    <span class="nav-icon">🍽️</span><span>Sifariş</span>
-  </button>
-  <button class="nav-btn" id="nav-stock" onclick="switchTab('stock')">
-    <span class="nav-icon">📦</span><span>Anbar</span>
-  </button>
-  <button class="nav-btn" id="nav-reports" onclick="switchTab('reports')">
-    <span class="nav-icon">📊</span><span>Açot / Kassa</span>
-  </button>
-</nav>
+<!-- İLK QURAŞDIRMA (OBYEKTİNİ QUR) -->
+<div id="setupScreen" class="auth-wrap" style="display:none">
+  <div class="auth-card">
+    <h2 style="margin:0 0 6px">🏪 Obyektinizi Qurun</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Zallar, kabinetlər və menyu seçiminizi edin
+    </div>
+    <div class="field"><label>Obyektin Adı</label><input class="input" id="setupShopName" /></div>
+    <div class="field"><label>Ünvan</label><input class="input" id="setupAddress" placeholder="Bakı şəhəri" /></div>
+    <div class="field"><label>Zal Sayı</label><input type="number" min="0" max="50" class="input" id="setupZals" value="4" /></div>
+    <div class="field"><label>Kabinet Sayı</label><input type="number" min="0" max="50" class="input" id="setupCabinets" value="2" /></div>
+    <div class="field">
+      <label>Menyu Seçimi</label>
+      <select class="input" id="setupMenuMode">
+        <option value="default">Hazır Restoran/Kafe Menyusu + Vaxt (1 saat 1₼, Yarım saat 0.50₼)</option>
+        <option value="empty">Tam Boş Menyu (Özüm məhsullar əlavə edəcəyəm)</option>
+      </select>
+    </div>
+    <button class="btn-green" style="width:100%" onclick="finishSetup()">Obyekti Yarat və Başla</button>
+  </div>
+</div>
 
-<!-- MODAL: OBYEKT MƏLUMATLARI -->
+<!-- ƏSAS POS TƏTBİQİ -->
+<div id="appScreen" style="display:none">
+  <header>
+    <div class="brand">
+      <div class="brand-title" id="headerShopName">RESTORAN & KAFE POS</div>
+      <div class="brand-sub" id="headerSubInfo"></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline btn-sm" onclick="openShopModal()">🏪 Obyekt</button>
+      <button class="btn-primary btn-sm" onclick="openAddTableModal()">+ Zal / Kabinet</button>
+      <button class="btn-outline btn-sm" onclick="doLogout()">Çıxış</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <section id="sec-tables" class="section active">
+      <div class="tabs-row" id="zoneTabs"></div>
+      <div class="tables-grid" id="tablesGrid"></div>
+    </section>
+
+    <section id="sec-order" class="section">
+      <div class="order-header">
+        <div>
+          <div style="font-weight:800;font-size:15px" id="activeTableTitle">Masa seçilməyib</div>
+          <div style="font-size:11px;color:var(--muted)" id="activeTableTime"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-outline btn-sm" onclick="openMoveModal()">⇄ Köçür</button>
+          <button class="btn-amber btn-sm" onclick="showPreReceipt()">🧾 Hesab (Pre-çek)</button>
+          <button class="btn-outline btn-sm" onclick="switchTab('tables')">← Zallar</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input class="input" id="menuSearch" placeholder="Menyuda axtar..." oninput="renderMenu()" />
+        <button class="btn-blue btn-sm" style="white-space:nowrap" onclick="openAddProductModal()">+ Məhsul</button>
+      </div>
+
+      <div class="tabs-row" id="catTabs"></div>
+      <div class="menu-grid" id="menuGrid"></div>
+
+      <div class="cart-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong>Açıq Sifariş Siyahısı</strong>
+          <span style="font-size:12px;color:var(--muted)" id="cartCountLabel">0 məhsul</span>
+        </div>
+        <div id="cartList"></div>
+        <div class="field" style="margin-top:10px">
+          <input class="input" id="orderNoteInput" placeholder="Sifariş qeydi..." onchange="saveOrderNote()" />
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:800;margin-top:8px">
+          <span>YEKUN MƏBLƏĞ:</span>
+          <span style="color:var(--green)" id="cartTotalLabel">0.00 ₼</span>
+        </div>
+        <div class="pay-bar">
+          <button class="btn-green" onclick="closeOrder('Nəğd')">💵 Nəğd Bağla</button>
+          <button class="btn-blue" onclick="closeOrder('Kart')">💳 Kartla Bağla</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-stock" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong>Anbar və Komponent Qalıqları</strong>
+        <button class="btn-primary btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
+      </div>
+      <div id="stockList"></div>
+    </section>
+
+    <section id="sec-reports" class="section">
+      <div class="tabs-row">
+        <button class="chip active" id="p-today" onclick="setPeriod('today')">Bu gün</button>
+        <button class="chip" id="p-prevMonthToToday" onclick="setPeriod('prevMonthToToday')">Keçən aydan bu günə</button>
+        <button class="chip" id="p-thisMonth" onclick="setPeriod('thisMonth')">Bu ay</button>
+        <button class="chip" id="p-last30" onclick="setPeriod('last30')">Son 30 gün</button>
+        <button class="chip" id="p-all" onclick="setPeriod('all')">Bütün tarixlər</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="field" style="margin:0"><label>Tarixdən</label><input type="date" class="input" id="dateFrom" onchange="onCustomDateChange()" /></div>
+        <div class="field" style="margin:0"><label>Tarixədək</label><input type="date" class="input" id="dateTo" onchange="onCustomDateChange()" /></div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Ümumi Alver</div><div class="kpi-val" style="color:var(--green)" id="kpiTotal">0.00 ₼</div></div>
+        <div class="kpi-card"><div class="kpi-label">Bağlanmış Çek</div><div class="kpi-val" id="kpiCount">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Nəğd</div><div class="kpi-val" id="kpiCash">0.00 ₼</div></div>
+        <div class="kpi-card"><div class="kpi-label">Kart</div><div class="kpi-val" id="kpiCard">0.00 ₼</div></div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn-primary btn-sm" onclick="copyReportText()">📋 Açotu Kopyala</button>
+        <button class="btn-blue btn-sm" onclick="shareReportTelegram()">✈️ Telegram-a Göndər</button>
+      </div>
+
+      <h4 style="margin:10px 0 6px">Günlük Xülasə</h4>
+      <div id="dailySummaryList"></div>
+
+      <h4 style="margin:14px 0 6px">Çeklər Tarixçəsi</h4>
+      <div id="receiptsHistoryList"></div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-tables" onclick="switchTab('tables')"><span class="nav-icon">🪑</span><span>Zallar</span></button>
+    <button class="nav-btn" id="nav-order" onclick="switchTab('order')"><span class="nav-icon">🍽️</span><span>Sifariş</span></button>
+    <button class="nav-btn" id="nav-stock" onclick="switchTab('stock')"><span class="nav-icon">📦</span><span>Anbar</span></button>
+    <button class="nav-btn" id="nav-reports" onclick="switchTab('reports')"><span class="nav-icon">📊</span><span>Açot</span></button>
+  </nav>
+</div>
+
+<!-- MODALLAR -->
 <div class="modal-backdrop" id="shopModal">
   <div class="modal">
     <h3>🏪 Obyekt Məlumatları</h3>
     <div class="field"><label>Obyektin Adı</label><input class="input" id="shopNameIn" /></div>
-    <div class="field"><label>Ünvan / Filial</label><input class="input" id="shopAddressIn" /></div>
-    <div class="field"><label>Əlaqə Telefonu</label><input class="input" id="shopPhoneIn" /></div>
-    <div class="field"><label>VÖEN / Qeyd (istəyə bağlı)</label><input class="input" id="shopTaxIn" /></div>
+    <div class="field"><label>Ünvan</label><input class="input" id="shopAddressIn" /></div>
+    <div class="field"><label>Telefon</label><input class="input" id="shopPhoneIn" /></div>
     <div class="field"><label>Çek Sonu Qeydi</label><input class="input" id="shopFooterIn" /></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-outline" onclick="closeModal('shopModal')">Bağla</button>
       <button class="btn-green" onclick="saveShopInfo()">Yadda Saxla</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: ZAL / KABİNET ARTIR -->
 <div class="modal-backdrop" id="addTableModal">
   <div class="modal">
     <h3>+ Yeni Zal / Kabinet Artır</h3>
@@ -651,38 +449,30 @@
         <option value="Al-apar">Al-apar</option>
       </select>
     </div>
-    <div class="field">
-      <label>Adı (məs: Zal 7, Kabinet 5, VİP 1)</label>
-      <input class="input" id="newTableName" placeholder="Kabinet 5" />
-    </div>
+    <div class="field"><label>Adı</label><input class="input" id="newTableName" placeholder="Məs: Zal 5 və ya Kabinet 3" /></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-outline" onclick="closeModal('addTableModal')">Ləğv et</button>
-      <button class="btn-gold" onclick="addNewTable()">Əlavə et</button>
+      <button class="btn-outline" onclick="closeModal('addTableModal')">Bağla</button>
+      <button class="btn-primary" onclick="addNewTable()">Əlavə et</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: MASA KÖÇÜR -->
 <div class="modal-backdrop" id="moveModal">
   <div class="modal">
-    <h3>Sifarişi Başqa Masaya Köçür</h3>
-    <div class="field">
-      <label>Hədəf Boş Masa / Kabinet</label>
-      <select class="input" id="moveTargetSelect"></select>
-    </div>
+    <h3>Sifarişi Köçür</h3>
+    <div class="field"><label>Boş Masa</label><select class="input" id="moveTargetSelect"></select></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-outline" onclick="closeModal('moveModal')">Bağla</button>
-      <button class="btn-gold" onclick="confirmMoveTable()">Köçür</button>
+      <button class="btn-primary" onclick="confirmMoveTable()">Köçür</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: YENİ MƏHSUL -->
 <div class="modal-backdrop" id="addProductModal">
   <div class="modal">
-    <h3>+ Menyuya Yeni Məhsul</h3>
+    <h3>+ Yeni Məhsul</h3>
     <div class="field"><label>Kateqoriya</label><select class="input" id="newProdCat"></select></div>
-    <div class="field"><label>Məhsulun Adı</label><input class="input" id="newProdName" /></div>
+    <div class="field"><label>Adı</label><input class="input" id="newProdName" /></div>
     <div class="field"><label>Qiymət (AZN)</label><input type="number" step="0.1" class="input" id="newProdPrice" /></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-outline" onclick="closeModal('addProductModal')">Bağla</button>
@@ -691,10 +481,9 @@
   </div>
 </div>
 
-<!-- MODAL: ANBAR MALI -->
 <div class="modal-backdrop" id="addStockModal">
   <div class="modal">
-    <h3>+ Yeni Anbar Məhsulu</h3>
+    <h3>+ Yeni Anbar Malı</h3>
     <div class="field"><label>Adı</label><input class="input" id="newStockName" /></div>
     <div class="field"><label>Başlanğıc Say</label><input type="number" class="input" id="newStockQty" value="20" /></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -704,12 +493,11 @@
   </div>
 </div>
 
-<!-- MODAL: ÇEK / QƏBZ (Termal Çap + Şəkil PNG + Telegram + Kopyala) -->
 <div class="modal-backdrop" id="receiptModal">
   <div class="modal">
     <div id="receiptPrintable" class="receipt-paper"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <button class="btn-gold" onclick="window.print()">🖨️ Çap Et (58/80mm)</button>
+      <button class="btn-primary" onclick="window.print()">🖨️ Çap Et (58/80mm)</button>
       <button class="btn-green" onclick="downloadReceiptPNG()">🖼️ Şəkil (PNG)</button>
       <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
       <button class="btn-outline" onclick="copyReceiptText()">📋 Kopyala</button>
@@ -720,209 +508,179 @@
 
 <script>
   const tg = window.Telegram && window.Telegram.WebApp;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-  }
+  if (tg) { tg.ready(); tg.expand(); }
 
-  const STORAGE_KEY = "az_restoran_pos_v4";
+  const API_BASE = "";
+  let AUTH_TOKEN = localStorage.getItem("pos_token") || "";
+  let CURRENT_USER = JSON.parse(localStorage.getItem("pos_user") || "null");
+  let pendingEmail = "";
 
   const DEFAULT_MENU = [
-    // FAST FOOD
     { id: "ff1", cat: "Fast Food", name: "Şaurma", variants: [{ label: "Sadə", price: 4.0 }, { label: "+ Fri", price: 6.0 }], stockKey: "Fast food" },
     { id: "ff2", cat: "Fast Food", name: "Dönər", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Dönər" },
-    { id: "ff3", cat: "Fast Food", name: "Hot Dog", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Fast food" },
-    { id: "ff4", cat: "Fast Food", name: "Tost", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Fast food" },
-    { id: "ff5", cat: "Fast Food", name: "Nuggets + Fri", variants: [{ label: "Porsiya", price: 6.0 }], stockKey: "Nuggets" },
-    { id: "ff6", cat: "Fast Food", name: "Toyuq qanadları + Fri", variants: [{ label: "Porsiya", price: 7.0 }], stockKey: "Toyuq qanadları" },
     { id: "ff7", cat: "Fast Food", name: "Fri", variants: [{ label: "Standart", price: 3.0 }], stockKey: "Kartof fri" },
-    { id: "ff8", cat: "Fast Food", name: "Porsiyon", variants: [{ label: "Standart", price: 6.0 }], stockKey: "Dönər" },
-
-    // ŞORBALAR
     { id: "sr1", cat: "Şorbalar", name: "Mərci şorbası", variants: [{ label: "1 pors", price: 4.0 }], stockKey: "Şorba" },
-    { id: "sr2", cat: "Şorbalar", name: "Toyuq şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
-    { id: "sr3", cat: "Şorbalar", name: "Göbələk şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
-    { id: "sr4", cat: "Şorbalar", name: "Tomat şorbası", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Şorba" },
-
-    // PİZZALAR
     { id: "pz1", cat: "Pizzalar", name: "Marqarita", variants: [{ label: "Kiçik", price: 8.0 }, { label: "Böyük", price: 12.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz2", cat: "Pizzalar", name: "Vegetarian", variants: [{ label: "Kiçik", price: 8.0 }, { label: "Böyük", price: 12.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz3", cat: "Pizzalar", name: "Mexicano", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz4", cat: "Pizzalar", name: "Sosisli Pizza", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz5", cat: "Pizzalar", name: "Toyuqlu Pizza", variants: [{ label: "Kiçik", price: 10.0 }, { label: "Böyük", price: 15.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz6", cat: "Pizzalar", name: "Sucuklu Pizza", variants: [{ label: "Kiçik", price: 12.0 }, { label: "Böyük", price: 18.0 }], stockKey: "Pizza xəmiri" },
-    { id: "pz7", cat: "Pizzalar", name: "Qarışıq Pizza", variants: [{ label: "Kiçik", price: 12.0 }, { label: "Böyük", price: 18.0 }], stockKey: "Pizza xəmiri" },
-
-    // LAHMACUN
-    { id: "lh1", cat: "Lahmacun", name: "Sadə Lahmacun", variants: [{ label: "1 ədəd", price: 3.0 }], stockKey: "Lahmacun" },
-    { id: "lh2", cat: "Lahmacun", name: "Acılı Lahmacun", variants: [{ label: "1 ədəd", price: 3.0 }], stockKey: "Lahmacun" },
-    { id: "lh3", cat: "Lahmacun", name: "Pendirli Lahmacun", variants: [{ label: "1 ədəd", price: 4.0 }], stockKey: "Lahmacun" },
-    { id: "lh4", cat: "Lahmacun", name: "Qarışıq Lahmacun", variants: [{ label: "1 ədəd", price: 5.0 }], stockKey: "Lahmacun" },
-
-    // PİDELƏR
-    { id: "pd1", cat: "Pidelər", name: "Pendirli Pide", variants: [{ label: "1 pors", price: 7.0 }], stockKey: "Pide" },
-    { id: "pd2", cat: "Pidelər", name: "Qiyməli Pide", variants: [{ label: "1 pors", price: 8.0 }], stockKey: "Pide" },
-    { id: "pd3", cat: "Pidelər", name: "Qiyməli Pendirli Pide", variants: [{ label: "1 pors", price: 9.0 }], stockKey: "Pide" },
-    { id: "pd4", cat: "Pidelər", name: "Sucuklu Pide", variants: [{ label: "1 pors", price: 10.0 }], stockKey: "Pide" },
-
-    // SALATLAR
-    { id: "sl1", cat: "Salatlar", name: "Çoban Salatı", variants: [{ label: "1 pors", price: 3.0 }], stockKey: "Salat" },
-    { id: "sl2", cat: "Salatlar", name: "Paytaxt Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
-    { id: "sl3", cat: "Salatlar", name: "Mimoza Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
-    { id: "sl4", cat: "Salatlar", name: "Toyuq Salatı", variants: [{ label: "1 pors", price: 5.0 }], stockKey: "Salat" },
-
-    // MƏZƏLƏR
-    { id: "mz1", cat: "Məzələr", name: "Araxis", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Araxis" },
-    { id: "mz2", cat: "Məzələr", name: "Qoz", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Çərəz" },
-    { id: "mz3", cat: "Məzələr", name: "Fındıq", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Çərəz" },
-    { id: "mz4", cat: "Məzələr", name: "Ağ tum", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Ağ tum" },
-    { id: "mz5", cat: "Məzələr", name: "Duzlu çubuqlar", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Duzlu çubuqlar" },
-    { id: "mz6", cat: "Məzələr", name: "Düşbərə (qızardılmış)", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Düşbərə" },
-    { id: "mz7", cat: "Məzələr", name: "Limon", variants: [{ label: "Pors", price: 1.0 }], stockKey: "Limon" },
-    { id: "mz8", cat: "Məzələr", name: "Noxud", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Noxud" },
-    { id: "mz9", cat: "Məzələr", name: "Pendir saçaqlı", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Pendir" },
-    { id: "mz10", cat: "Məzələr", name: "Pendir qızardılmış", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Pendir" },
-    { id: "mz11", cat: "Məzələr", name: "Popcorn", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Popcorn" },
-    { id: "mz12", cat: "Məzələr", name: "Pətənə qızardılmış", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Pətənə" },
-    { id: "mz13", cat: "Məzələr", name: "Suxari", variants: [{ label: "Pors", price: 2.5 }], stockKey: "Suxari" },
-    { id: "mz14", cat: "Məzələr", name: "Çips", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Çips" },
-    { id: "mz15", cat: "Məzələr", name: "Çərəz seti", variants: [{ label: "Set", price: 15.0 }], stockKey: "Çərəz seti" },
-    { id: "mz16", cat: "Məzələr", name: "Meyvə seti", variants: [{ label: "Set", price: 15.0 }], stockKey: "Meyvə seti" },
-
-    // ŞİRNİYYATLAR
-    { id: "sn1", cat: "Şirniyyatlar", name: "Mürəbbə", variants: [{ label: "Pors", price: 5.0 }], stockKey: "Mürəbbə" },
-    { id: "sn2", cat: "Şirniyyatlar", name: "Plitka şokolad", variants: [{ label: "Ədəd", price: 4.0 }], stockKey: "Şokolad" },
-    { id: "sn3", cat: "Şirniyyatlar", name: "Snickers", variants: [{ label: "Ədəd", price: 3.0 }], stockKey: "Snickers" },
-    { id: "sn4", cat: "Şirniyyatlar", name: "Rulet", variants: [{ label: "Pors", price: 3.0 }], stockKey: "Rulet" },
-    { id: "sn5", cat: "Şirniyyatlar", name: "Meyvə qurusu", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Çərəz" },
-    { id: "sn6", cat: "Şirniyyatlar", name: "Kişmiş", variants: [{ label: "Pors", price: 4.0 }], stockKey: "Çərəz" },
-
-    // SPİRTLİ İÇKİLƏR
-    { id: "sp1", cat: "Spirtli içkilər", name: "Xırdalan", variants: [{ label: "0.5L", price: 4.0 }], stockKey: "Xırdalan" },
-    { id: "sp2", cat: "Spirtli içkilər", name: "Efes Draft", variants: [{ label: "0.5L", price: 6.0 }], stockKey: "Efes Draft" },
-
-    // İSTİ İÇKİLƏR
     { id: "ii1", cat: "İsti içkilər", name: "Çay (Çaynik)", variants: [{ label: "Çaynik", price: 3.0 }], stockKey: "Çay" },
-    { id: "ii2", cat: "İsti içkilər", name: "Kofe sadə", variants: [{ label: "Fincan", price: 2.0 }], stockKey: "Kofe" },
-    { id: "ii3", cat: "İsti içkilər", name: "Kofe südlü", variants: [{ label: "Fincan", price: 2.0 }], stockKey: "Kofe" },
-    { id: "ii4", cat: "İsti içkilər", name: "Cappuccino", variants: [{ label: "Fincan", price: 3.0 }], stockKey: "Kofe" },
-
-    // SOYUQ İÇKİLƏR
     { id: "si1", cat: "Soyuq içkilər", name: "Coca-Cola 0.3", variants: [{ label: "0.3L", price: 1.5 }], stockKey: "Coca-Cola 0.3" },
-    { id: "si2", cat: "Soyuq içkilər", name: "Coca-Cola banka", variants: [{ label: "Banka", price: 2.5 }], stockKey: "Coca-Cola banka" },
-    { id: "si3", cat: "Soyuq içkilər", name: "Coca-Cola 1LT", variants: [{ label: "1L", price: 3.0 }], stockKey: "Coca-Cola 1L" },
-    { id: "si4", cat: "Soyuq içkilər", name: "Sirab 0.5 (Qazlı/Qazsız)", variants: [{ label: "0.5L", price: 1.0 }], stockKey: "Sirab 0.5" },
-    { id: "si5", cat: "Soyuq içkilər", name: "Sirab 1LT (Qazlı/Qazsız)", variants: [{ label: "1L", price: 2.0 }], stockKey: "Sirab 1L" },
-    { id: "si6", cat: "Soyuq içkilər", name: "Meyvə şirəsi 1LT", variants: [{ label: "1L", price: 5.0 }], stockKey: "Meyvə şirəsi 1L" },
-    { id: "si7", cat: "Soyuq içkilər", name: "Fresh Portağal", variants: [{ label: "Stəkan", price: 5.0 }], stockKey: "Portağal" },
-    { id: "si8", cat: "Soyuq içkilər", name: "Ayran", variants: [{ label: "Stəkan", price: 1.0 }], stockKey: "Ayran" },
-    { id: "si9", cat: "Soyuq içkilər", name: "Fuse Tea banka", variants: [{ label: "Banka", price: 2.5 }], stockKey: "Fuse Tea" },
-    { id: "si10", cat: "Soyuq içkilər", name: "Bizon", variants: [{ label: "Ədəd", price: 2.0 }], stockKey: "Bizon" },
-    { id: "si11", cat: "Soyuq içkilər", name: "Red Bull", variants: [{ label: "Ədəd", price: 5.0 }], stockKey: "Red Bull" },
-
-    // QƏLYANLAR
     { id: "ql1", cat: "Qəlyanlar", name: "Saxsı Qəlyan", variants: [{ label: "Standart", price: 12.0 }], stockKey: "Qəlyan tütünü" },
-    { id: "ql2", cat: "Qəlyanlar", name: "Qreypfrut Qəlyan", variants: [{ label: "Standart", price: 20.0 }], stockKey: "Qreypfrut" },
-    { id: "ql3", cat: "Qəlyanlar", name: "Ananas Qəlyan", variants: [{ label: "Standart", price: 25.0 }], stockKey: "Ananas" },
-
-    // SETLƏR
-    { id: "st1", cat: "Setlər", name: "Exclusive Set", desc: "Çaynik çay, Snickers, Saxsı qəlyan, 2 Saat kabinet", variants: [{ label: "Set", price: 24.0 }], recipe: { "Çay": 1, "Snickers": 1, "Qəlyan tütünü": 1 } },
-    { id: "st2", cat: "Setlər", name: "Çay Seti 1", desc: "Limitsiz çay, Çərəz seti, Şokolad, Mürəbbə, Rulet, 2 Saat kabinet", variants: [{ label: "Set", price: 30.0 }], recipe: { "Çay": 2, "Çərəz seti": 1, "Şokolad": 1, "Mürəbbə": 1, "Rulet": 1 } },
-    { id: "st3", cat: "Setlər", name: "Çay Seti 2", desc: "Limitsiz çay, Çərəz, Şokolad, Mürəbbə, Rulet, Qreypfrut qəlyan, 2 Saat", variants: [{ label: "Set", price: 40.0 }], recipe: { "Çay": 2, "Çərəz seti": 1, "Şokolad": 1, "Mürəbbə": 1, "Rulet": 1, "Qreypfrut": 1 } },
-    { id: "st4", cat: "Setlər", name: "Kiçik Fast Food Seti", desc: "2 Fast food, 2 Fri, 2 Coca-Cola 0.3, 2 Saat kabinet", variants: [{ label: "Set", price: 22.0 }], recipe: { "Fast food": 2, "Kartof fri": 2, "Coca-Cola 0.3": 2 } },
-    { id: "st5", cat: "Setlər", name: "Böyük Fast Food Seti", desc: "4 Fast food, 4 Fri, 1L Cola, Çaynik çay, Snickers, 2 Saat kabinet", variants: [{ label: "Set", price: 30.0 }], recipe: { "Fast food": 4, "Kartof fri": 4, "Coca-Cola 1L": 1, "Çay": 1, "Snickers": 1 } },
-    { id: "st6", cat: "Setlər", name: "Qəlyanlı Fast Food Seti", desc: "4 Fast food, 4 Fri, 1L Cola, Çay, Snickers, Qreypfrut qəlyan, 2 Saat", variants: [{ label: "Set", price: 40.0 }], recipe: { "Fast food": 4, "Kartof fri": 4, "Coca-Cola 1L": 1, "Çay": 1, "Snickers": 1, "Qreypfrut": 1 } },
-    { id: "st7", cat: "Setlər", name: "Pizza Seti", desc: "2 Böyük pizza, 2 Fri, 2L Cola, Saxsı qəlyan, 2 Saat kabinet", variants: [{ label: "Set", price: 50.0 }], recipe: { "Pizza xəmiri": 2, "Kartof fri": 2, "Coca-Cola 1L": 2, "Qəlyan tütünü": 1 } },
-    { id: "st8", cat: "Setlər", name: "Məzə Seti", desc: "Çips, Suxari, Duzlu çubuq, Araxis, Ağ tum, Popcorn, 1L Cola, 2 Saat", variants: [{ label: "Set", price: 24.0 }], recipe: { "Çips": 1, "Suxari": 1, "Duzlu çubuqlar": 1, "Araxis": 1, "Ağ tum": 1, "Popcorn": 1, "Coca-Cola 1L": 1 } },
-    { id: "st9", cat: "Setlər", name: "Jameson Seti", desc: "Jameson 1L, 4 Red Bull, Meyvə seti, 3 Saat kabinet", variants: [{ label: "Set", price: 129.0 }], recipe: { "Jameson 1L": 1, "Red Bull": 4, "Meyvə seti": 1 } },
-
-    // AD GÜNÜ SETLƏRİ
-    { id: "ag1", cat: "Ad Günü Setləri", name: "Ad Günü Seti 1", desc: "6 Fast food, 6 Fri, 1 Nuggets+Fri, 2 Çips, 2 Popcorn, 2 Suxari, 2x1L Cola, 2 Çay, 2 Snickers, 3 Saat", variants: [{ label: "Set", price: 59.0 }], recipe: { "Fast food": 6, "Kartof fri": 6, "Nuggets": 1, "Çips": 2, "Popcorn": 2, "Suxari": 2, "Coca-Cola 1L": 2, "Çay": 2, "Snickers": 2 } },
-    { id: "ag2", cat: "Ad Günü Setləri", name: "Ad Günü Seti 2 (Tort Hədiyyə)", desc: "8 Fast food, 8 Fri, 2 Nuggets+Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 3 Saat + Tort", variants: [{ label: "Set", price: 79.0 }], recipe: { "Fast food": 8, "Kartof fri": 8, "Nuggets": 2, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3 } },
-    { id: "ag3", cat: "Ad Günü Setləri", name: "Ad Günü Seti 3 (Tort Hədiyyə)", desc: "8 Fast food, 8 Fri, 2 Nuggets+Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 2 Qreypfrut qəlyan, 3 Saat + Tort", variants: [{ label: "Set", price: 99.0 }], recipe: { "Fast food": 8, "Kartof fri": 8, "Nuggets": 2, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3, "Qreypfrut": 2 } },
-    { id: "ag4", cat: "Ad Günü Setləri", name: "Ad Günü Seti 4 (Tort Hədiyyə)", desc: "2 Böyük pizza, 8 Fast food, 8 Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 3 Saat + Tort", variants: [{ label: "Set", price: 99.0 }], recipe: { "Pizza xəmiri": 2, "Fast food": 8, "Kartof fri": 8, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3 } },
-    { id: "ag5", cat: "Ad Günü Setləri", name: "Ad Günü Seti 5 (Tort Hədiyyə)", desc: "2 Böyük pizza, 8 Fast food, 8 Fri, 3 Çips, 3 Popcorn, 3 Suxari, 2x1L Cola, 3 Çay, 2 Qreypfrut qəlyan, 3 Saat + Tort", variants: [{ label: "Set", price: 119.0 }], recipe: { "Pizza xəmiri": 2, "Fast food": 8, "Kartof fri": 8, "Çips": 3, "Popcorn": 3, "Suxari": 3, "Coca-Cola 1L": 2, "Çay": 3, "Qreypfrut": 2 } },
-
-    // ZAL SETLƏRİ
-    { id: "zs1", cat: "Zal Setləri", name: "Zal Seti 1", desc: "2 Fast food, 2 Kartof fri, 2 Coca-Cola 0.3, 2 Saat ZAL", variants: [{ label: "Set", price: 14.0 }], recipe: { "Fast food": 2, "Kartof fri": 2, "Coca-Cola 0.3": 2 } },
-    { id: "zs2", cat: "Zal Setləri", name: "Zal Seti 2", desc: "Saxsı qəlyan, Çaynik çay, Snickers, 2 Saat ZAL", variants: [{ label: "Set", price: 14.0 }], recipe: { "Qəlyan tütünü": 1, "Çay": 1, "Snickers": 1 } },
-    { id: "zs3", cat: "Zal Setləri", name: "Zal Seti 3", desc: "2 Dönər, 2 Ayran, 2 Saat ZAL", variants: [{ label: "Set", price: 9.0 }], recipe: { "Dönər": 2, "Ayran": 2 } },
-    { id: "zs4", cat: "Zal Setləri", name: "Zal Seti 4", desc: "Çips, 2 Coca-Cola 0.3, 1 Saat ZAL", variants: [{ label: "Set", price: 6.0 }], recipe: { "Çips": 1, "Coca-Cola 0.3": 2 } },
-    { id: "zs5", cat: "Zal Setləri", name: "Zal Seti 5", desc: "Çaynik çay, Snickers, 1 Saat ZAL", variants: [{ label: "Set", price: 6.0 }], recipe: { "Çay": 1, "Snickers": 1 } },
-
-    // VAXT (ƏN SONDA)
-    { id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", desc: "Zal / Oyun / Kabinet vaxtı (1 saat)", variants: [{ label: "1 saat", price: 1.0 }] },
-    { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", desc: "Zal / Oyun / Kabinet vaxtı (30 dəqiqə)", variants: [{ label: "Yarım saat", price: 0.5 }] }
+    { id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", variants: [{ label: "1 saat", price: 1.0 }] },
+    { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", variants: [{ label: "Yarım saat", price: 0.5 }] }
   ];
 
   const DEFAULT_STOCK = {
-    "Fast food": 60, "Dönər": 50, "Kartof fri": 80, "Nuggets": 30, "Toyuq qanadları": 25,
-    "Pizza xəmiri": 40, "Lahmacun": 40, "Pide": 30, "Şorba": 35, "Salat": 35,
-    "Coca-Cola 0.3": 72, "Coca-Cola banka": 48, "Coca-Cola 1L": 40, "Ayran": 50,
-    "Red Bull": 36, "Bizon": 48, "Çay": 100, "Snickers": 50, "Çips": 40,
-    "Popcorn": 40, "Suxari": 40, "Duzlu çubuqlar": 40, "Araxis": 35, "Ağ tum": 35,
-    "Çərəz seti": 25, "Meyvə seti": 20, "Şokolad": 30, "Mürəbbə": 30, "Rulet": 30,
-    "Qəlyan tütünü": 60, "Qreypfrut": 25, "Ananas": 15, "Jameson 1L": 10
+    "Fast food": 50, "Dönər": 50, "Kartof fri": 60, "Şorba": 30,
+    "Pizza xəmiri": 30, "Çay": 80, "Coca-Cola 0.3": 60, "Qəlyan tütünü": 50
   };
+
+  let state = null;
+  let activeZone = "Hamısı";
+  let activeTableId = null;
+  let activeCategory = "Fast Food";
+  let currentReceiptObj = null;
 
   function todayStr() {
     const d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function loadState() {
+  function money(n) { return Number(n || 0).toFixed(2) + " ₼"; }
+
+  function setAuthMode(mode) {
+    document.getElementById("loginBox").style.display = mode === "login" ? "block" : "none";
+    document.getElementById("registerBox").style.display = mode === "register" ? "block" : "none";
+    document.getElementById("tabLoginBtn").className = mode === "login" ? "btn-primary" : "btn-outline";
+    document.getElementById("tabRegBtn").className = mode === "register" ? "btn-primary" : "btn-outline";
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  async function apiCall(path, method = "GET", body = null) {
+    const headers = { "Content-Type": "application/json" };
+    if (AUTH_TOKEN) headers["Authorization"] = "Bearer " + AUTH_TOKEN;
+    const res = await fetch(API_BASE + path, {
+      method, headers, body: body ? JSON.stringify(body) : null
+    });
+    const data = await res.json();
+    if (!res.ok || data.ok === false) throw new Error(data.error || "Xəta baş verdi");
+    return data;
+  }
+
+  async function doRegister() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {
-      shop: {
-        name: "RESTORAN & LOUNGE",
-        address: "Bakı şəhəri",
-        phone: "+994 50 000 00 00",
-        tax: "",
-        footer: "Bizi seçdiyiniz üçün təşəkkür edirik!"
-      },
-      tables: [
-        { id: "t1", zone: "Zal", name: "Zal 1", custom: false },
-        { id: "t2", zone: "Zal", name: "Zal 2", custom: false },
-        { id: "t3", zone: "Zal", name: "Zal 3", custom: false },
-        { id: "t4", zone: "Zal", name: "Zal 4", custom: false },
-        { id: "t5", zone: "Zal", name: "Zal 5", custom: false },
-        { id: "t6", zone: "Zal", name: "Zal 6", custom: false },
-        { id: "k1", zone: "Kabinet", name: "Kabinet 1", custom: false },
-        { id: "k2", zone: "Kabinet", name: "Kabinet 2", custom: false },
-        { id: "k3", zone: "Kabinet", name: "Kabinet 3", custom: false },
-        { id: "k4", zone: "Kabinet", name: "Kabinet 4", custom: false },
-        { id: "a1", zone: "Al-apar", name: "Al-apar 1", custom: false },
-        { id: "a2", zone: "Al-apar", name: "Al-apar 2", custom: false }
-      ],
+      const first_name = document.getElementById("regFirst").value.trim();
+      const last_name = document.getElementById("regLast").value.trim();
+      const shop_name = document.getElementById("regShop").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+
+      const res = await apiCall("/api/register", "POST", { first_name, last_name, shop_name, email, password });
+      pendingEmail = email;
+      document.getElementById("verifyBox").style.display = "block";
+      document.getElementById("verifyInfoText").textContent = res.dev_code
+        ? `Test rejimi kodu: ${res.dev_code} (və ya ${email} ünvanına baxın)`
+        : `${email} ünvanına 6 rəqəmli kod göndərildi:`;
+      document.getElementById("authMsg").style.color = "#86efac";
+      document.getElementById("authMsg").textContent = "Kod göndərildi!";
+    } catch (e) {
+      document.getElementById("authMsg").style.color = "#fca5a5";
+      document.getElementById("authMsg").textContent = e.message;
+    }
+  }
+
+  async function doVerify() {
+    try {
+      const code = document.getElementById("verifyCodeIn").value.trim();
+      const res = await apiCall("/api/verify", "POST", { email: pendingEmail, code });
+      AUTH_TOKEN = res.token;
+      CURRENT_USER = res.user;
+      localStorage.setItem("pos_token", AUTH_TOKEN);
+      localStorage.setItem("pos_user", JSON.stringify(CURRENT_USER));
+      await afterAuthenticated();
+    } catch (e) {
+      document.getElementById("authMsg").style.color = "#fca5a5";
+      document.getElementById("authMsg").textContent = e.message;
+    }
+  }
+
+  async function doLogin() {
+    try {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const res = await apiCall("/api/login", "POST", { email, password });
+      AUTH_TOKEN = res.token;
+      CURRENT_USER = res.user;
+      localStorage.setItem("pos_token", AUTH_TOKEN);
+      localStorage.setItem("pos_user", JSON.stringify(CURRENT_USER));
+      await afterAuthenticated();
+    } catch (e) {
+      document.getElementById("authMsg").style.color = "#fca5a5";
+      document.getElementById("authMsg").textContent = e.message;
+    }
+  }
+
+  function doLogout() {
+    AUTH_TOKEN = "";
+    CURRENT_USER = null;
+    localStorage.removeItem("pos_token");
+    localStorage.removeItem("pos_user");
+    location.reload();
+  }
+
+  async function afterAuthenticated() {
+    document.getElementById("authScreen").style.display = "none";
+    const res = await apiCall("/api/state", "GET");
+    if (!res.state) {
+      document.getElementById("setupShopName").value = CURRENT_USER.shop_name || "Yeni Obyekt";
+      document.getElementById("setupScreen").style.display = "block";
+    } else {
+      state = res.state;
+      showMainApp();
+    }
+  }
+
+  async function finishSetup() {
+    const shopName = document.getElementById("setupShopName").value.trim() || "Obyekt";
+    const address = document.getElementById("setupAddress").value.trim();
+    const zalCount = parseInt(document.getElementById("setupZals").value, 10) || 0;
+    const cabCount = parseInt(document.getElementById("setupCabinets").value, 10) || 0;
+    const menuMode = document.getElementById("setupMenuMode").value;
+
+    const tables = [];
+    for (let i = 1; i <= zalCount; i++) tables.push({ id: "z_" + i, zone: "Zal", name: "Zal " + i, custom: true });
+    for (let i = 1; i <= cabCount; i++) tables.push({ id: "k_" + i, zone: "Kabinet", name: "Kabinet " + i, custom: true });
+    if (tables.length === 0) tables.push({ id: "z_1", zone: "Zal", name: "Zal 1", custom: true });
+
+    state = {
+      shop: { name: shopName, address, phone: "", footer: "Təşəkkür edirik!" },
+      tables,
       openOrders: {},
-      menu: DEFAULT_MENU,
-      stock: DEFAULT_STOCK,
+      menu: menuMode === "empty"
+        ? [{ id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", variants: [{ label: "1 saat", price: 1.0 }] },
+           { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", variants: [{ label: "Yarım saat", price: 0.5 }] }]
+        : DEFAULT_MENU,
+      stock: menuMode === "empty" ? {} : { ...DEFAULT_STOCK },
       receipts: []
     };
+
+    await saveState();
+    document.getElementById("setupScreen").style.display = "none";
+    showMainApp();
   }
 
-  let state = loadState();
-  let activeZone = "Hamısı";
-  let activeTableId = null;
-  let activeCategory = "Fast Food";
-  let currentReceiptObj = null;
-
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  async function saveState() {
+    if (!state) return;
+    await apiCall("/api/state", "POST", { state });
   }
 
-  function money(n) {
-    return Number(n || 0).toFixed(2) + " ₼";
+  function showMainApp() {
+    document.getElementById("appScreen").style.display = "block";
+    renderHeader();
+    renderTables();
   }
 
   function renderHeader() {
-    const sName = state.shop.name || "RESTORAN & KAFE POS";
-    document.getElementById("headerShopName").textContent = sName;
-    document.getElementById("headerShopLogo").textContent = (sName[0] || "R").toUpperCase();
-    document.getElementById("headerSubInfo").textContent = `${state.shop.address || ""} • ${todayStr()}`;
+    document.getElementById("headerShopName").textContent = state.shop.name || "POS";
+    document.getElementById("headerSubInfo").textContent = `${CURRENT_USER.first_name} ${CURRENT_USER.last_name} • ${todayStr()}`;
   }
 
   function switchTab(tab) {
@@ -936,27 +694,24 @@
     if (tab === "reports") renderReports();
   }
 
-  // ZALLAR VƏ MASALAR
   function renderTables() {
     const zones = ["Hamısı", ...new Set(state.tables.map(t => t.zone))];
-    const zoneTabs = document.getElementById("zoneTabs");
-    zoneTabs.innerHTML = zones.map(z =>
+    document.getElementById("zoneTabs").innerHTML = zones.map(z =>
       `<button class="chip ${activeZone === z ? "active" : ""}" onclick="activeZone='${z}';renderTables()">${z}</button>`
     ).join("");
 
-    const grid = document.getElementById("tablesGrid");
     const list = activeZone === "Hamısı" ? state.tables : state.tables.filter(t => t.zone === activeZone);
-    grid.innerHTML = list.map(t => {
+    document.getElementById("tablesGrid").innerHTML = list.map(t => {
       const ord = state.openOrders[t.id];
       const sum = ord ? ord.items.reduce((s, i) => s + i.price * i.qty, 0) : 0;
       const elapsed = ord ? Math.max(1, Math.floor((Date.now() - ord.openedAt) / 60000)) + " dəq" : "Boşdur";
       return `
-        <div class="table-card ${ord ? "busy" : ""}" onclick="selectTable('${t.id}')">
+        <div class="table-card ${ord ? "busy" : ""}" onclick="activeTableId='${t.id}';switchTab('order')">
           <div class="table-top">
             <div class="table-name">${t.name}</div>
             <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? "Məşğul" : "Boş"}</span>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${t.zone}</div>
+          <div style="font-size:11px;color:var(--muted)">${t.zone}</div>
           <div class="table-meta">
             <div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div>
             <div class="table-time">${elapsed}</div>
@@ -967,37 +722,31 @@
     }).join("");
   }
 
-  function selectTable(id) {
-    activeTableId = id;
-    switchTab("order");
-  }
-
   function openAddTableModal() {
     document.getElementById("newTableName").value = "";
     document.getElementById("addTableModal").classList.add("open");
   }
 
-  function addNewTable() {
+  async function addNewTable() {
     const zone = document.getElementById("newTableZone").value;
     const name = document.getElementById("newTableName").value.trim();
-    if (!name) return alert("Ad daxil edin!");
+    if (!name) return;
     state.tables.push({ id: "t_" + Date.now(), zone, name, custom: true });
-    saveState();
+    await saveState();
     closeModal("addTableModal");
     renderTables();
   }
 
-  function deleteTable(id) {
+  async function deleteTable(id) {
     if (state.openOrders[id]) return alert("Məşğul masanı silmək olmaz!");
     state.tables = state.tables.filter(t => t.id !== id);
-    saveState();
+    await saveState();
     renderTables();
   }
 
-  // SİFARİŞ VƏ MENYU
   function renderCategories() {
     const cats = [...new Set(state.menu.map(m => m.cat))];
-    if (!cats.includes(activeCategory)) activeCategory = cats[0];
+    if (!cats.includes(activeCategory)) activeCategory = cats[0] || "Vaxt";
     document.getElementById("catTabs").innerHTML = cats.map(c =>
       `<button class="chip ${activeCategory === c ? "active" : ""}" onclick="activeCategory='${c}';renderCategories();renderMenu()">${c}</button>`
     ).join("");
@@ -1005,56 +754,34 @@
 
   function renderMenu() {
     const q = document.getElementById("menuSearch").value.trim().toLowerCase();
-    const filtered = state.menu.filter(m => {
-      if (q) return m.name.toLowerCase().includes(q) || (m.desc || "").toLowerCase().includes(q);
-      return m.cat === activeCategory;
-    });
+    const filtered = state.menu.filter(m => q ? m.name.toLowerCase().includes(q) : m.cat === activeCategory);
     document.getElementById("menuGrid").innerHTML = filtered.map(m => `
       <div class="menu-item">
-        <div>
-          <div class="menu-name">${m.name}</div>
-          ${m.desc ? `<div class="menu-desc">${m.desc}</div>` : ""}
-        </div>
+        <div class="menu-name">${m.name}</div>
         <div class="price-btns">
           ${m.variants.map((v, idx) => `
-            <button class="price-btn" onclick="addToCart('${m.id}', ${idx})">
-              ${v.label}
-              <span>${money(v.price)}</span>
-            </button>
+            <button class="price-btn" onclick="addToCart('${m.id}', ${idx})">${v.label}<span>${money(v.price)}</span></button>
           `).join("")}
         </div>
       </div>
     `).join("");
   }
 
-  function addToCart(menuId, variantIdx) {
-    if (!activeTableId) {
-      activeTableId = state.tables[0].id;
-    }
+  async function addToCart(menuId, variantIdx) {
+    if (!activeTableId) activeTableId = state.tables[0].id;
     const item = state.menu.find(m => m.id === menuId);
     const variant = item.variants[variantIdx];
-    if (!state.openOrders[activeTableId]) {
-      state.openOrders[activeTableId] = { openedAt: Date.now(), note: "", items: [] };
-    }
+    if (!state.openOrders[activeTableId]) state.openOrders[activeTableId] = { openedAt: Date.now(), note: "", items: [] };
     const ord = state.openOrders[activeTableId];
     const key = menuId + "_" + variantIdx;
-    const existing = ord.items.find(i => i.key === key);
-    if (existing) {
-      existing.qty += 1;
-    } else {
-      ord.items.push({
-        key,
-        menuId,
-        name: item.variants.length > 1 ? `${item.name} (${variant.label})` : item.name,
-        price: variant.price,
-        qty: 1
-      });
-    }
-    saveState();
+    const ex = ord.items.find(i => i.key === key);
+    if (ex) ex.qty += 1;
+    else ord.items.push({ key, menuId, name: item.variants.length > 1 ? `${item.name} (${variant.label})` : item.name, price: variant.price, qty: 1 });
+    await saveState();
     renderCart();
   }
 
-  function changeQty(key, delta) {
+  async function changeQty(key, delta) {
     const ord = state.openOrders[activeTableId];
     if (!ord) return;
     const idx = ord.items.findIndex(i => i.key === key);
@@ -1062,45 +789,34 @@
     ord.items[idx].qty += delta;
     if (ord.items[idx].qty <= 0) ord.items.splice(idx, 1);
     if (ord.items.length === 0) delete state.openOrders[activeTableId];
-    saveState();
+    await saveState();
     renderCart();
   }
 
-  function saveOrderNote() {
+  async function saveOrderNote() {
     if (!activeTableId || !state.openOrders[activeTableId]) return;
     state.openOrders[activeTableId].note = document.getElementById("orderNoteInput").value;
-    saveState();
+    await saveState();
   }
 
   function renderCart() {
     const tbl = state.tables.find(t => t.id === activeTableId);
     document.getElementById("activeTableTitle").textContent = tbl ? `${tbl.name} (${tbl.zone})` : "Masa seçilməyib";
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
-    document.getElementById("activeTableTime").textContent = ord
-      ? `Açılıb: ${new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" })}`
-      : "Məhsul əlavə etdikdə masa avtomatik açılacaq";
-
+    document.getElementById("activeTableTime").textContent = ord ? `Açılıb: ${new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" })}` : "";
     const listEl = document.getElementById("cartList");
     if (!ord || ord.items.length === 0) {
-      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:10px 0">Səbət boşdur.</div>`;
+      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px">Səbət boşdur.</div>`;
       document.getElementById("cartCountLabel").textContent = "0 məhsul";
       document.getElementById("cartTotalLabel").textContent = "0.00 ₼";
-      document.getElementById("orderNoteInput").value = "";
       return;
     }
-
     document.getElementById("orderNoteInput").value = ord.note || "";
-    const totalQty = ord.items.reduce((s, i) => s + i.qty, 0);
-    const totalSum = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
-    document.getElementById("cartCountLabel").textContent = `${totalQty} ədəd`;
-    document.getElementById("cartTotalLabel").textContent = money(totalSum);
-
+    document.getElementById("cartCountLabel").textContent = `${ord.items.reduce((s, i) => s + i.qty, 0)} ədəd`;
+    document.getElementById("cartTotalLabel").textContent = money(ord.items.reduce((s, i) => s + i.price * i.qty, 0));
     listEl.innerHTML = ord.items.map(i => `
       <div class="cart-row">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:700">${i.name}</div>
-          <div style="font-size:11px;color:var(--muted)">${money(i.price)} × ${i.qty} = <strong>${money(i.price * i.qty)}</strong></div>
-        </div>
+        <div><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${money(i.price)} × ${i.qty}</div></div>
         <div class="qty-controls">
           <button class="qty-btn" onclick="changeQty('${i.key}', -1)">−</button>
           <span style="min-width:18px;text-align:center;font-weight:700">${i.qty}</span>
@@ -1110,42 +826,27 @@
     `).join("");
   }
 
-  function deductStock(items) {
-    items.forEach(ci => {
-      const m = state.menu.find(x => x.id === ci.menuId);
-      if (!m) return;
-      if (m.recipe) {
-        Object.entries(m.recipe).forEach(([k, count]) => {
-          if (state.stock[k] !== undefined) state.stock[k] = Math.max(0, state.stock[k] - count * ci.qty);
-        });
-      } else if (m.stockKey && state.stock[m.stockKey] !== undefined) {
-        state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
-      }
-    });
-  }
-
-  function closeOrder(method) {
+  async function closeOrder(method) {
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
     if (!ord || ord.items.length === 0) return alert("Sifariş boşdur!");
     const tbl = state.tables.find(t => t.id === activeTableId);
     const total = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
-
     const receipt = {
       id: "ÇEK-" + String(state.receipts.length + 1001),
       date: todayStr(),
       time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
       tableName: tbl ? tbl.name : "Masa",
-      method,
-      note: ord.note || "",
-      items: JSON.parse(JSON.stringify(ord.items)),
-      total,
-      isPre: false
+      method, note: ord.note || "", items: JSON.parse(JSON.stringify(ord.items)), total
     };
-
-    deductStock(ord.items);
+    ord.items.forEach(ci => {
+      const m = state.menu.find(x => x.id === ci.menuId);
+      if (m && m.stockKey && state.stock[m.stockKey] !== undefined) {
+        state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
+      }
+    });
     state.receipts.unshift(receipt);
     delete state.openOrders[activeTableId];
-    saveState();
+    await saveState();
     renderCart();
     openReceiptModal(receipt);
   }
@@ -1154,284 +855,104 @@
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
     if (!ord || ord.items.length === 0) return alert("Açıq sifariş yoxdur!");
     const tbl = state.tables.find(t => t.id === activeTableId);
-    const total = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
     openReceiptModal({
-      id: "HESAB (PRE-ÇEK)",
-      date: todayStr(),
+      id: "HESAB (PRE-ÇEK)", date: todayStr(),
       time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
-      tableName: tbl ? tbl.name : "Masa",
-      method: "Ödənilməyib",
-      note: ord.note || "",
-      items: ord.items,
-      total,
-      isPre: true
+      tableName: tbl ? tbl.name : "Masa", method: "Ödənilməyib",
+      note: ord.note || "", items: ord.items,
+      total: ord.items.reduce((s, i) => s + i.price * i.qty, 0)
     });
   }
 
-  /* =========================================================================
-     YENİLƏNMİŞ ÇEK / QƏBZ SİSTEMİ (Termal 58/80mm + Kəskin PNG + Önizləmə)
-     ========================================================================= */
   function openReceiptModal(r) {
     currentReceiptObj = r;
-    const html = `
-      <div class="receipt-center">
-        <strong style="font-size:15px;letter-spacing:0.4px">${state.shop.name}</strong><br/>
-        ${state.shop.address ? state.shop.address + "<br/>" : ""}
-        ${state.shop.phone ? "Tel: " + state.shop.phone + "<br/>" : ""}
-        ${state.shop.tax ? state.shop.tax + "<br/>" : ""}
-      </div>
+    document.getElementById("receiptPrintable").innerHTML = `
+      <div class="receipt-center"><strong style="font-size:15px">${state.shop.name}</strong><br/>${state.shop.address || ""}</div>
       <div class="receipt-hr"></div>
       <div class="receipt-line"><span>Sənəd:</span><strong>${r.id}</strong></div>
       <div class="receipt-line"><span>Masa:</span><span>${r.tableName}</span></div>
       <div class="receipt-line"><span>Tarix:</span><span>${r.date} ${r.time}</span></div>
       <div class="receipt-line"><span>Ödəniş:</span><span>${r.method}</span></div>
       <div class="receipt-hr"></div>
-      ${r.items.map(i => `
-        <div class="receipt-line">
-          <span>${i.name} x${i.qty}</span>
-          <strong>${(i.price * i.qty).toFixed(2)} ₼</strong>
-        </div>
-      `).join("")}
-      ${r.note ? `<div class="receipt-hr"></div><div>Qeyd: ${r.note}</div>` : ""}
+      ${r.items.map(i => `<div class="receipt-line"><span>${i.name} x${i.qty}</span><span>${(i.price * i.qty).toFixed(2)} ₼</span></div>`).join("")}
       <div class="receipt-hr"></div>
-      <div class="receipt-line" style="font-size:15px;font-weight:bold">
-        <span>CƏMİ:</span><span>${r.total.toFixed(2)} ₼</span>
-      </div>
+      <div class="receipt-line" style="font-size:15px;font-weight:bold"><span>CƏMİ:</span><span>${r.total.toFixed(2)} ₼</span></div>
       <div class="receipt-hr"></div>
       <div class="receipt-center">${state.shop.footer || ""}</div>
-      <div id="pngPreviewBox" style="margin-top:12px;display:none;text-align:center;border-top:1px dashed #aaa;padding-top:10px">
-        <div style="font-size:11px;color:#333;margin-bottom:6px;font-weight:bold">Şəkli telefon yaddaşına saxlamaq üçün üzərinə basılı saxla:</div>
-        <img id="pngPreviewImg" style="max-width:100%;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12)" alt="Çek şəkli" />
+      <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center">
+        <img id="pngPreviewImg" style="max-width:100%;border:1px solid #ccc;border-radius:6px" />
       </div>
     `;
-    document.getElementById("receiptPrintable").innerHTML = html;
     document.getElementById("receiptModal").classList.add("open");
   }
 
   function formatReceiptPlain(r) {
-    const lines = [
+    return [
       `🧾 ${state.shop.name}`,
-      state.shop.address ? `📍 ${state.shop.address}` : "",
-      state.shop.phone ? `📞 Tel: ${state.shop.phone}` : "",
-      state.shop.tax ? `${state.shop.tax}` : "",
-      `Sənəd: ${r.id} | Masa: ${r.tableName}`,
-      `Tarix: ${r.date} ${r.time} | Ödəniş: ${r.method}`,
+      `${r.id} | ${r.tableName} | ${r.date} ${r.time}`,
+      `Ödəniş: ${r.method}`,
       "------------------------",
       ...r.items.map(i => `${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} ₼`),
-      r.note ? `Qeyd: ${r.note}` : "",
       "------------------------",
-      `YEKUN: ${r.total.toFixed(2)} ₼`,
-      state.shop.footer || ""
-    ].filter(Boolean);
-    return lines.join("\n");
+      `YEKUN: ${r.total.toFixed(2)} ₼`
+    ].join("\n");
   }
 
-  function copyReceiptText() {
-    if (!currentReceiptObj) return;
-    const text = formatReceiptPlain(currentReceiptObj);
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      alert("Çek mətni kopyalandı!");
-    } catch (e) {
-      if (navigator.clipboard) navigator.clipboard.writeText(text);
-      alert("Çek mətni kopyalandı!");
-    }
-  }
-
-  function shareReceiptTelegram() {
-    if (!currentReceiptObj) return;
-    const url = "https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj));
-    window.open(url, "_blank");
-  }
+  function copyReceiptText() { if (currentReceiptObj) { navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj)); alert("Kopyalandı!"); } }
+  function shareReceiptTelegram() { if (currentReceiptObj) window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj)), "_blank"); }
 
   function downloadReceiptPNG() {
     if (!currentReceiptObj) return;
-    const r = currentReceiptObj;
-
-    // 2x Retina keyfiyyətli kəskin PNG generatoru (Azərbaycan hərfləri ilə)
-    const scale = 2;
-    const width = 440;
-    const headerLines = [
-      state.shop.name,
-      state.shop.address || "",
-      state.shop.phone ? `Tel: ${state.shop.phone}` : "",
-      state.shop.tax || ""
-    ].filter(Boolean);
-
-    const extraHeight = (headerLines.length * 24) + (r.items.length * 30) + (r.note ? 30 : 0);
-    const height = 270 + extraHeight;
-
+    const lines = formatReceiptPlain(currentReceiptObj).split("\n");
     const canvas = document.createElement("canvas");
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    canvas.width = 440; canvas.height = 60 + lines.length * 28;
     const ctx = canvas.getContext("2d");
-    ctx.scale(scale, scale);
-
-    // Ağ fon və çərçivə
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = "#d4d4d8";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(10, 10, width - 20, height - 20);
-
-    let y = 40;
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#09090b";
-    ctx.font = "bold 19px Arial, sans-serif";
-    ctx.fillText(headerLines[0], width / 2, y);
-
-    ctx.font = "500 13px Arial, sans-serif";
-    ctx.fillStyle = "#3f3f46";
-    for (let i = 1; i < headerLines.length; i++) {
-      y += 21;
-      ctx.fillText(headerLines[i], width / 2, y);
-    }
-
-    // Sənəd etiketi
-    y += 26;
-    ctx.fillStyle = "#18181b";
-    ctx.fillRect(28, y - 16, width - 56, 24);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 12px Arial, sans-serif";
-    ctx.fillText(`${r.id} • ${r.method.toUpperCase()}`, width / 2, y);
-
-    // Meta məlumatlar
-    y += 28;
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#18181b";
-    ctx.font = "600 13px Arial, sans-serif";
-    ctx.fillText(`Masa: ${r.tableName}`, 28, y);
-    ctx.textAlign = "right";
-    ctx.fillText(`${r.date} ${r.time}`, width - 28, y);
-
-    // Kəsik xətt
-    y += 16;
-    ctx.strokeStyle = "#71717a";
-    ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    ctx.moveTo(28, y);
-    ctx.lineTo(width - 28, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Məhsullar siyahısı
-    y += 24;
-    r.items.forEach(item => {
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#09090b";
-      ctx.font = "600 14px Arial, sans-serif";
-      const label = `${item.name} x${item.qty}`.slice(0, 32);
-      ctx.fillText(label, 28, y);
-
-      ctx.textAlign = "right";
-      ctx.font = "bold 14px Arial, sans-serif";
-      ctx.fillText(`${(item.price * item.qty).toFixed(2)} ₼`, width - 28, y);
-      y += 26;
-    });
-
-    if (r.note) {
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#52525b";
-      ctx.font = "italic 12px Arial, sans-serif";
-      ctx.fillText(`Qeyd: ${r.note.slice(0, 46)}`, 28, y);
-      y += 22;
-    }
-
-    // Yekun xətt
-    ctx.strokeStyle = "#18181b";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(28, y);
-    ctx.lineTo(width - 28, y);
-    ctx.stroke();
-
-    y += 28;
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#09090b";
-    ctx.font = "bold 18px Arial, sans-serif";
-    ctx.fillText("CƏMİ MƏBLƏĞ:", 28, y);
-    ctx.textAlign = "right";
-    ctx.fillText(`${r.total.toFixed(2)} ₼`, width - 28, y);
-
-    y += 32;
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#3f3f46";
-    ctx.font = "500 13px Arial, sans-serif";
-    ctx.fillText((state.shop.footer || "").slice(0, 48), width / 2, y);
-
-    const dataUrl = canvas.toDataURL("image/png");
-
-    // 1) Telegram Mini App daxilində basılı saxlayıb qalereyaya yazmaq üçün önizləməni aç
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#111"; ctx.font = "600 16px Arial, sans-serif";
+    lines.forEach((ln, idx) => ctx.fillText(ln, 20, 36 + idx * 28));
+    const url = canvas.toDataURL("image/png");
     const box = document.getElementById("pngPreviewBox");
     const img = document.getElementById("pngPreviewImg");
-    if (box && img) {
-      img.src = dataUrl;
-      box.style.display = "block";
-      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-
-    // 2) Brauzer / masaüstü yükləməsini başlat
-    const link = document.createElement("a");
-    link.download = `${r.id}.png`;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (box && img) { img.src = url; box.style.display = "block"; }
+    const a = document.createElement("a"); a.download = `${currentReceiptObj.id}.png`; a.href = url; a.click();
   }
 
-  // MASA KÖÇÜRMƏ, YENİ MƏHSUL, ANBAR, OBYEKT
   function openMoveModal() {
-    if (!activeTableId || !state.openOrders[activeTableId]) return alert("Bu masada aktiv sifariş yoxdur!");
+    if (!activeTableId || !state.openOrders[activeTableId]) return;
     const free = state.tables.filter(t => t.id !== activeTableId && !state.openOrders[t.id]);
-    if (free.length === 0) return alert("Boş masa yoxdur!");
-    document.getElementById("moveTargetSelect").innerHTML = free.map(t => `<option value="${t.id}">${t.name} (${t.zone})</option>`).join("");
+    if (!free.length) return alert("Boş masa yoxdur!");
+    document.getElementById("moveTargetSelect").innerHTML = free.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
     document.getElementById("moveModal").classList.add("open");
   }
 
-  function confirmMoveTable() {
+  async function confirmMoveTable() {
     const targetId = document.getElementById("moveTargetSelect").value;
     state.openOrders[targetId] = state.openOrders[activeTableId];
     delete state.openOrders[activeTableId];
     activeTableId = targetId;
-    saveState();
-    closeModal("moveModal");
-    renderCart();
+    await saveState(); closeModal("moveModal"); renderCart();
   }
 
   function openAddProductModal() {
     const cats = [...new Set(state.menu.map(m => m.cat))];
+    if (!cats.includes("Vaxt")) cats.push("Vaxt");
     document.getElementById("newProdCat").innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
-    document.getElementById("newProdName").value = "";
-    document.getElementById("newProdPrice").value = "";
     document.getElementById("addProductModal").classList.add("open");
   }
 
-  function addNewProduct() {
+  async function addNewProduct() {
     const cat = document.getElementById("newProdCat").value;
     const name = document.getElementById("newProdName").value.trim();
     const price = parseFloat(document.getElementById("newProdPrice").value);
-    if (!name || isNaN(price)) return alert("Ad və qiymət daxil edin!");
+    if (!name || isNaN(price)) return;
     state.menu.push({ id: "m_" + Date.now(), cat, name, variants: [{ label: "Standart", price }] });
-    saveState();
-    closeModal("addProductModal");
-    activeCategory = cat;
-    renderCategories();
-    renderMenu();
+    await saveState(); closeModal("addProductModal"); renderCategories(); renderMenu();
   }
 
   function renderStock() {
-    const entries = Object.entries(state.stock);
-    document.getElementById("stockList").innerHTML = entries.map(([name, qty]) => `
+    document.getElementById("stockList").innerHTML = Object.entries(state.stock).map(([name, qty]) => `
       <div class="list-card ${qty <= 5 ? "low-stock" : ""}">
-        <div>
-          <div style="font-weight:700">${name}</div>
-          <div style="font-size:12px;color:${qty <= 5 ? "#fca5a5" : "var(--muted)"}">Qalıq: <strong>${qty}</strong> ədəd</div>
-        </div>
+        <div><strong>${name}</strong><div style="font-size:12px;color:var(--muted)">Qalıq: ${qty}</div></div>
         <div style="display:flex;gap:6px">
           <button class="btn-outline btn-sm" onclick="updateStock('${name}', -1)">−1</button>
           <button class="btn-green btn-sm" onclick="updateStock('${name}', 10)">+10</button>
@@ -1440,69 +961,50 @@
     `).join("");
   }
 
-  function updateStock(name, delta) {
+  async function updateStock(name, delta) {
     state.stock[name] = Math.max(0, (state.stock[name] || 0) + delta);
-    saveState();
-    renderStock();
+    await saveState(); renderStock();
   }
 
-  function openAddStockModal() {
-    document.getElementById("newStockName").value = "";
-    document.getElementById("addStockModal").classList.add("open");
-  }
-
-  function addNewStock() {
+  function openAddStockModal() { document.getElementById("addStockModal").classList.add("open"); }
+  async function addNewStock() {
     const name = document.getElementById("newStockName").value.trim();
     const qty = parseInt(document.getElementById("newStockQty").value, 10) || 0;
     if (!name) return;
     state.stock[name] = qty;
-    saveState();
-    closeModal("addStockModal");
-    renderStock();
+    await saveState(); closeModal("addStockModal"); renderStock();
   }
 
   function openShopModal() {
     document.getElementById("shopNameIn").value = state.shop.name || "";
     document.getElementById("shopAddressIn").value = state.shop.address || "";
     document.getElementById("shopPhoneIn").value = state.shop.phone || "";
-    document.getElementById("shopTaxIn").value = state.shop.tax || "";
     document.getElementById("shopFooterIn").value = state.shop.footer || "";
     document.getElementById("shopModal").classList.add("open");
   }
 
-  function saveShopInfo() {
-    state.shop.name = document.getElementById("shopNameIn").value.trim() || "RESTORAN & KAFE POS";
+  async function saveShopInfo() {
+    state.shop.name = document.getElementById("shopNameIn").value.trim() || "POS";
     state.shop.address = document.getElementById("shopAddressIn").value.trim();
     state.shop.phone = document.getElementById("shopPhoneIn").value.trim();
-    state.shop.tax = document.getElementById("shopTaxIn").value.trim();
     state.shop.footer = document.getElementById("shopFooterIn").value.trim();
-    saveState();
-    renderHeader();
-    closeModal("shopModal");
+    await saveState(); renderHeader(); closeModal("shopModal");
   }
 
-  // KASSA / AÇOT VƏ TARİX FİLTRİ
   function setPeriod(period) {
     document.querySelectorAll("#sec-reports .chip").forEach(c => c.classList.remove("active"));
-    const btn = document.getElementById("p-" + period);
-    if (btn) btn.classList.add("active");
-
-    const now = new Date();
-    const end = todayStr();
-    let start = end;
-
+    const b = document.getElementById("p-" + period);
+    if (b) b.classList.add("active");
+    const now = new Date(); const end = todayStr(); let start = end;
     if (period === "prevMonthToToday") {
       const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       start = prev.getFullYear() + "-" + String(prev.getMonth() + 1).padStart(2, "0") + "-01";
     } else if (period === "thisMonth") {
       start = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-01";
     } else if (period === "last30") {
-      const d30 = new Date(Date.now() - 29 * 86400000);
-      start = d30.getFullYear() + "-" + String(d30.getMonth() + 1).padStart(2, "0") + "-" + String(d30.getDate()).padStart(2, "0");
-    } else if (period === "all") {
-      start = "2000-01-01";
-    }
-
+      const d = new Date(Date.now() - 29 * 86400000);
+      start = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    } else if (period === "all") start = "2000-01-01";
     document.getElementById("dateFrom").value = start;
     document.getElementById("dateTo").value = end;
     renderReports();
@@ -1513,112 +1015,52 @@
     renderReports();
   }
 
-  function getFilteredReceipts() {
-    const from = document.getElementById("dateFrom").value || todayStr();
-    const to = document.getElementById("dateTo").value || todayStr();
-    return state.receipts.filter(r => r.date >= from && r.date <= to);
-  }
-
   function renderReports() {
-    if (!document.getElementById("dateFrom").value) {
-      setPeriod("today");
-      return;
-    }
-    const list = getFilteredReceipts();
-    const total = list.reduce((s, r) => s + r.total, 0);
-    const cash = list.filter(r => r.method === "Nəğd").reduce((s, r) => s + r.total, 0);
-    const card = list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0);
-
-    document.getElementById("kpiTotal").textContent = money(total);
+    if (!document.getElementById("dateFrom").value) { setPeriod("today"); return; }
+    const from = document.getElementById("dateFrom").value;
+    const to = document.getElementById("dateTo").value;
+    const list = state.receipts.filter(r => r.date >= from && r.date <= to);
+    document.getElementById("kpiTotal").textContent = money(list.reduce((s, r) => s + r.total, 0));
     document.getElementById("kpiCount").textContent = list.length;
-    document.getElementById("kpiCash").textContent = money(cash);
-    document.getElementById("kpiCard").textContent = money(card);
+    document.getElementById("kpiCash").textContent = money(list.filter(r => r.method === "Nəğd").reduce((s, r) => s + r.total, 0));
+    document.getElementById("kpiCard").textContent = money(list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0));
 
     const byDay = {};
     list.forEach(r => {
-      if (!byDay[r.date]) byDay[r.date] = { count: 0, total: 0, cash: 0, card: 0 };
-      byDay[r.date].count += 1;
-      byDay[r.date].total += r.total;
-      if (r.method === "Nəğd") byDay[r.date].cash += r.total;
-      if (r.method === "Kart") byDay[r.date].card += r.total;
+      if (!byDay[r.date]) byDay[r.date] = { count: 0, total: 0 };
+      byDay[r.date].count += 1; byDay[r.date].total += r.total;
     });
+    document.getElementById("dailySummaryList").innerHTML = Object.keys(byDay).sort().reverse().map(d =>
+      `<div class="list-card"><div><strong>📅 ${d}</strong><div style="font-size:11px;color:var(--muted)">${byDay[d].count} çek</div></div><strong style="color:var(--green)">${money(byDay[d].total)}</strong></div>`
+    ).join("") || `<div style="color:var(--muted);font-size:13px">Satış yoxdur.</div>`;
 
-    const days = Object.keys(byDay).sort().reverse();
-    document.getElementById("dailySummaryList").innerHTML = days.length
-      ? days.map(d => `
-          <div class="list-card">
-            <div>
-              <strong>📅 ${d}</strong>
-              <div style="font-size:11px;color:var(--muted)">${byDay[d].count} çek • Nəğd: ${money(byDay[d].cash)} • Kart: ${money(byDay[d].card)}</div>
-            </div>
-            <strong style="color:var(--green)">${money(byDay[d].total)}</strong>
-          </div>
-        `).join("")
-      : `<div style="color:var(--muted);font-size:13px">Seçilən tarixdə satış yoxdur.</div>`;
-
-    document.getElementById("receiptsHistoryList").innerHTML = list.map(r => `
-      <div class="list-card" style="cursor:pointer" onclick='openReceiptModal(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
-        <div>
-          <strong>${r.id} — ${r.tableName}</strong>
-          <div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.method}</div>
-        </div>
-        <strong style="color:var(--green)">${money(r.total)}</strong>
-      </div>
-    `).join("");
+    document.getElementById("receiptsHistoryList").innerHTML = list.map((r, i) =>
+      `<div class="list-card" style="cursor:pointer" onclick="openHistoryReceipt(${i})"><div><strong>${r.id} — ${r.tableName}</strong><div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.method}</div></div><strong style="color:var(--green)">${money(r.total)}</strong></div>`
+    ).join("");
   }
 
-  function buildReportSummaryText() {
+  function openHistoryReceipt(idx) {
     const from = document.getElementById("dateFrom").value;
     const to = document.getElementById("dateTo").value;
-    const list = getFilteredReceipts();
-    const total = list.reduce((s, r) => s + r.total, 0);
-    const cash = list.filter(r => r.method === "Nəğd").reduce((s, r) => s + r.total, 0);
-    const card = list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0);
-    return [
-      `📊 ${state.shop.name} — KASSA AÇOTU`,
-      `Dövr: ${from} — ${to}`,
-      `Çek sayı: ${list.length}`,
-      `Nəğd: ${money(cash)}`,
-      `Kart: ${money(card)}`,
-      `ÜMUMİ ALVER: ${money(total)}`
-    ].join("\n");
+    const list = state.receipts.filter(r => r.date >= from && r.date <= to);
+    if (list[idx]) openReceiptModal(list[idx]);
   }
 
-  function copyReportText() {
-    const text = buildReportSummaryText();
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      alert("Açot mətni kopyalandı!");
-    } catch (e) {
-      if (navigator.clipboard) navigator.clipboard.writeText(text);
-      alert("Açot mətni kopyalandı!");
-    }
+  function buildReportText() {
+    const from = document.getElementById("dateFrom").value;
+    const to = document.getElementById("dateTo").value;
+    const list = state.receipts.filter(r => r.date >= from && r.date <= to);
+    return `📊 ${state.shop.name} (${from} — ${to})\nÇek: ${list.length}\nCəmi: ${money(list.reduce((s, r) => s + r.total, 0))}`;
   }
 
-  function shareReportTelegram() {
-    window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportSummaryText()), "_blank");
-  }
+  function copyReportText() { navigator.clipboard.writeText(buildReportText()); alert("Açot kopyalandı!"); }
+  function shareReportTelegram() { window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportText()), "_blank"); }
+  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-  function exportBackup() {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `pos-backup-${todayStr()}.json`;
-    a.click();
+  if (AUTH_TOKEN && CURRENT_USER) {
+    document.getElementById("authScreen").style.display = "none";
+    afterAuthenticated().catch(() => { document.getElementById("authScreen").style.display = "block"; });
   }
-
-  function closeModal(id) {
-    document.getElementById(id).classList.remove("open");
-  }
-
-  // Başlanğıc
-  renderHeader();
-  renderTables();
 </script>
 </body>
 </html>
