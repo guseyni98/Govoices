@@ -75,6 +75,7 @@
     .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #052010; }
     .btn-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
     .btn-amber { background: linear-gradient(135deg, #fbbf24, #d97706); color: #1a1102; }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5; }
     .btn-outline { background: transparent; border: 1px solid var(--border); }
     .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
@@ -250,7 +251,7 @@
       <div class="field"><label>Soyad</label><input class="input" id="regLast" placeholder="Soyadınız" /></div>
       <div class="field"><label>Obyektin Adı</label><input class="input" id="regShop" placeholder="Məs: PremierLeague" /></div>
       <div class="field"><label>E-poçt (Gmail / Hotmail / iCloud)</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com" /></div>
-      <div class="field"><label>Parol</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
+      <div class="field"><label>Parol (Çek silmək üçün lazım olacaq)</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
       <button class="btn-primary" id="regSubmitBtn" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod göndər</button>
     </div>
 
@@ -278,7 +279,6 @@
     </div>
   </header>
 
-  <!-- YUXARI SÜRƏTLİ REJİM KEÇİDİ: RESTORAN / LOUNGE VƏ YA MOYKA -->
   <div class="mode-bar">
     <button class="mode-btn active-rest" id="modeRestBtn" onclick="switchBizMode('restaurant')">
       🍽️ Restoran / Lounge
@@ -289,13 +289,11 @@
   </div>
 
   <div class="container">
-    <!-- BÖLMƏ 1: ZALLAR / KABİNETLƏR VƏ YA BOKSLAR -->
     <section id="sec-tables" class="section active">
       <div class="tabs-row" id="zoneTabs"></div>
       <div class="tables-grid" id="tablesGrid"></div>
     </section>
 
-    <!-- BÖLMƏ 2: SİFARİŞ / YUMA -->
     <section id="sec-order" class="section">
       <div class="order-header">
         <div>
@@ -309,7 +307,6 @@
         </div>
       </div>
 
-      <!-- MOYKA ÜÇÜN MAŞIN NÖMRƏSİ VƏ 1-2 MOYŞİK -->
       <div id="carWashOrderPanel" class="car-panel" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div class="field" style="margin:0">
@@ -361,7 +358,6 @@
       </div>
     </section>
 
-    <!-- BÖLMƏ 3: ANBAR -->
     <section id="sec-stock" class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <strong>Anbar Qalıqları və Satılanlar</strong>
@@ -370,7 +366,6 @@
       <div id="stockList"></div>
     </section>
 
-    <!-- BÖLMƏ 4: AÇOT / HESABAT -->
     <section id="sec-reports" class="section">
       <div class="tabs-row">
         <button class="chip active" id="p-today" onclick="setPeriod('today')">Bu gün</button>
@@ -392,7 +387,6 @@
         <div class="kpi-card"><div class="kpi-label">Kart</div><div class="kpi-val" id="kpiCard">0.00 ₼</div></div>
       </div>
 
-      <!-- MOYŞİKLƏRİN FAİZ HESABATI -->
       <div id="washersReportSection" style="display:none;margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <h4 style="margin:0">👷 Moyşiklərin Faiz Hesabatı</h4>
@@ -519,6 +513,23 @@
   </div>
 </div>
 
+<!-- ÇEK SİLMƏK ÜÇÜN PAROL TƏSDİQ MODALI -->
+<div class="modal-backdrop" id="deleteReceiptModal">
+  <div class="modal">
+    <h3>🔒 Çeki Silmək Üçün Parolu Yazın</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="deleteReceiptInfo"></div>
+    <div class="field">
+      <label>Qeydiyyat Parolu</label>
+      <input type="password" class="input" id="deleteReceiptPassIn" placeholder="Parolunuzu daxil edin" />
+    </div>
+    <div id="deleteReceiptErr" style="font-size:12px;color:#fca5a5;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('deleteReceiptModal')">Ləğv et</button>
+      <button class="btn-primary" onclick="confirmDeleteReceipt()">Təsdiqlə və Sil</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="receiptModal">
   <div class="modal">
     <div id="receiptPrintable" class="premium-receipt"></div>
@@ -634,6 +645,7 @@
   let activeCategory = "";
   let currentReceiptObj = null;
   let lastPngDataUrl = "";
+  let pendingDeleteReceiptId = null;
 
   function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
   function dataKey(email) { return "gh_pos_dual_v1_" + email; }
@@ -1528,17 +1540,48 @@
       `<div class="list-card"><div><strong>📅 ${d}</strong><div style="font-size:11px;color:var(--muted)">${byDay[d].count} ${isWash() ? "maşın" : "çek"}</div></div><strong style="color:var(--green)">${money(byDay[d].total)}</strong></div>`
     ).join("") || `<div style="color:var(--muted);font-size:13px">Satış yoxdur.</div>`;
 
-    document.getElementById("receiptsHistoryList").innerHTML = list.map((r, i) =>
-      `<div class="list-card" style="cursor:pointer" onclick="openHistoryReceipt(${i})"><div><strong>${r.id} — ${r.tableName}${r.carPlate ? " (" + r.carPlate + ")" : ""}</strong><div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.waiter || ""} • ${r.method}</div></div><strong style="color:var(--green)">${money(r.total)}</strong></div>`
-    ).join("");
+    document.getElementById("receiptsHistoryList").innerHTML = list.map(r => `
+      <div class="list-card" style="cursor:pointer" onclick="openReceiptById('${r.id}')">
+        <div>
+          <strong>${r.id} — ${r.tableName}${r.carPlate ? " (" + r.carPlate + ")" : ""}</strong>
+          <div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.waiter || ""} • ${r.method}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong style="color:var(--green)">${money(r.total)}</strong>
+          <button class="btn-danger btn-sm" onclick="event.stopPropagation();promptDeleteReceipt('${r.id}')">🗑️</button>
+        </div>
+      </div>
+    `).join("") || `<div style="color:var(--muted);font-size:13px">Çek yoxdur.</div>`;
   }
 
-  function openHistoryReceipt(idx) {
+  function openReceiptById(id) {
+    const r = cur().receipts.find(x => x.id === id);
+    if (r) openReceiptModal(r, false);
+  }
+
+  function promptDeleteReceipt(id) {
+    const r = cur().receipts.find(x => x.id === id);
+    if (!r) return;
+    pendingDeleteReceiptId = id;
+    document.getElementById("deleteReceiptInfo").textContent = `${r.id} (${r.tableName}, ${money(r.total)}) çekini silmək üçün parolu daxil edin:`;
+    document.getElementById("deleteReceiptPassIn").value = "";
+    document.getElementById("deleteReceiptErr").textContent = "";
+    document.getElementById("deleteReceiptModal").classList.add("open");
+  }
+
+  function confirmDeleteReceipt() {
+    const passIn = document.getElementById("deleteReceiptPassIn").value;
+    const u = users[currentEmail];
+    if (!u || passIn !== u.password) {
+      document.getElementById("deleteReceiptErr").textContent = "Parol yanlışdır! Çek silinmədi.";
+      return;
+    }
     const b = cur();
-    const from = document.getElementById("dateFrom").value;
-    const to = document.getElementById("dateTo").value;
-    const list = b.receipts.filter(r => r.date >= from && r.date <= to);
-    if (list[idx]) openReceiptModal(list[idx], false);
+    b.receipts = b.receipts.filter(x => x.id !== pendingDeleteReceiptId);
+    pendingDeleteReceiptId = null;
+    saveState();
+    closeModal("deleteReceiptModal");
+    renderReports();
   }
 
   function buildReportText() {
