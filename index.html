@@ -8,15 +8,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root {
-      --bg: #0f1318;
-      --card: #171d26;
-      --card2: #1f2733;
-      --border: #2b3545;
-      --text: #f3f5f8;
+      --bg: #0c0f14;
+      --card: #151a22;
+      --card2: #1d2430;
+      --border: #2a3342;
+      --text: #f5f7fa;
       --muted: #9aa6b8;
       --accent: #e53935;
+      --gold: #f59e0b;
       --green: #22c55e;
-      --amber: #f59e0b;
       --blue: #3b82f6;
       --radius: 14px;
     }
@@ -29,17 +29,10 @@
       padding-bottom: 84px;
     }
     header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: rgba(15, 19, 24, 0.96);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(12, 15, 20, 0.96); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
     .brand { min-width: 0; }
     .brand-title { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -47,20 +40,15 @@
     .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
     button {
-      border: none;
-      border-radius: 10px;
-      padding: 9px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text);
-      background: var(--card2);
+      border: none; border-radius: 10px; padding: 9px 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--text); background: var(--card2);
     }
     button:active { transform: scale(0.97); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-green { background: var(--green); color: #062110; }
-    .btn-blue { background: var(--blue); color: #fff; }
-    .btn-amber { background: var(--amber); color: #1d1202; }
+    .btn-primary { background: linear-gradient(135deg, #ef4444, #c81e1e); color: #fff; }
+    .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #052010; }
+    .btn-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+    .btn-amber { background: linear-gradient(135deg, #fbbf24, #d97706); color: #1a1102; }
     .btn-outline { background: transparent; border: 1px solid var(--border); }
     .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
@@ -74,7 +62,7 @@
 
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
-      background: #131820; border-top: 1px solid var(--border);
+      background: #11161f; border-top: 1px solid var(--border);
       display: grid; grid-template-columns: repeat(4, 1fr);
       padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); gap: 4px;
     }
@@ -83,7 +71,7 @@
       display: flex; flex-direction: column; align-items: center; gap: 3px;
       padding: 7px 4px; font-size: 11px; border-radius: 10px;
     }
-    .nav-btn.active { background: rgba(229, 57, 53, 0.16); color: #fff; }
+    .nav-btn.active { background: rgba(229, 57, 53, 0.18); color: #fff; }
     .nav-icon { font-size: 17px; }
 
     .tabs-row {
@@ -105,12 +93,12 @@
       padding: 13px; position: relative; display: flex; flex-direction: column; justify-content: space-between;
       min-height: 100px; cursor: pointer;
     }
-    .table-card.busy { border-color: var(--amber); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
+    .table-card.busy { border-color: var(--gold); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
     .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .table-name { font-size: 15px; font-weight: 800; }
     .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
     .badge-free { background: rgba(34, 197, 94, 0.16); color: var(--green); }
-    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--amber); }
+    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--gold); }
     .table-meta { margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
     .table-sum { font-size: 16px; font-weight: 800; }
     .table-time { font-size: 11px; color: var(--muted); }
@@ -160,25 +148,81 @@
     .low-stock { border-color: var(--accent); }
 
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 60;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 60;
       display: none; align-items: center; justify-content: center; padding: 14px;
     }
     .modal-backdrop.open { display: flex; }
     .modal {
       background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 16px;
+      width: 100%; max-width: 450px; max-height: 92vh; overflow-y: auto; padding: 16px;
     }
     .modal h3 { margin: 0 0 12px; font-size: 17px; }
     .field { margin-bottom: 10px; }
     .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
-    .receipt-paper {
-      background: #fff; color: #111; font-family: Arial, sans-serif;
-      padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.45;
+    /* PREMIUM ÇEK DİZAYNI */
+    .premium-receipt {
+      background: linear-gradient(180deg, #12161e 0%, #19202c 100%);
+      color: #f8fafc;
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 14px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     }
-    .receipt-center { text-align: center; }
-    .receipt-hr { border-top: 1px dashed #444; margin: 8px 0; }
-    .receipt-line { display: flex; justify-content: space-between; gap: 8px; }
+    .prem-head {
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(255,255,255,0.2);
+    }
+    .prem-brand {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      color: #fbbf24;
+    }
+    .prem-addr {
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-top: 3px;
+    }
+    .prem-meta {
+      margin: 10px 0;
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
+    }
+    .prem-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 12.5px;
+      padding: 4px 0;
+    }
+    .prem-items {
+      border-top: 1px dashed rgba(255,255,255,0.2);
+      border-bottom: 1px dashed rgba(255,255,255,0.2);
+      padding: 8px 0;
+      margin: 8px 0;
+    }
+    .prem-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 17px;
+      font-weight: 900;
+      color: #4ade80;
+      padding-top: 6px;
+    }
+    .prem-foot {
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255,255,255,0.15);
+    }
 
     @media print {
       @page { margin: 0; }
@@ -186,7 +230,8 @@
       #receiptPrintable, #receiptPrintable * { visibility: visible; }
       #receiptPrintable {
         position: fixed; left: 0; top: 0; width: 100%; max-width: 78mm;
-        margin: 0 auto; padding: 6px; font-size: 12px; color: #000 !important; background: #fff !important;
+        margin: 0 auto; padding: 6px; font-size: 12px;
+        color: #000 !important; background: #fff !important; border: none !important; box-shadow: none !important;
       }
     }
   </style>
@@ -222,7 +267,7 @@
     </div>
 
     <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--amber);margin-bottom:8px" id="verifyInfoText"></div>
+      <div style="font-size:12px;color:var(--gold);margin-bottom:8px" id="verifyInfoText"></div>
       <div class="field"><label>6 Rəqəmli Təsdiq Kodu</label><input class="input" id="verifyCodeIn" placeholder="123456" /></div>
       <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
     </div>
@@ -231,7 +276,7 @@
   </div>
 </div>
 
-<!-- İLK QURAŞDIRMA (OBYEKTİNİ QUR) -->
+<!-- İLK QURAŞDIRMA -->
 <div id="setupScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <h2 style="margin:0 0 6px">🏪 Obyektinizi Qurun</h2>
@@ -409,10 +454,17 @@
 
 <div class="modal-backdrop" id="addProductModal">
   <div class="modal">
-    <h3>+ Yeni Məhsul</h3>
-    <div class="field"><label>Kateqoriya</label><select class="input" id="newProdCat"></select></div>
-    <div class="field"><label>Adı</label><input class="input" id="newProdName" /></div>
-    <div class="field"><label>Qiymət (AZN)</label><input type="number" step="0.1" class="input" id="newProdPrice" /></div>
+    <h3>+ Yeni Məhsul / Kateqoriya</h3>
+    <div class="field">
+      <label>Kateqoriya</label>
+      <select class="input" id="newProdCat" onchange="toggleNewCatInput()"></select>
+    </div>
+    <div class="field" id="customCatWrap" style="display:none">
+      <label>Yeni Kateqoriyanın Adı</label>
+      <input class="input" id="customCatName" placeholder="Məs: VIP Setlər, Kokteyllər..." />
+    </div>
+    <div class="field"><label>Məhsulun Adı</label><input class="input" id="newProdName" placeholder="Məs: Club Sandwich" /></div>
+    <div class="field"><label>Qiymət (AZN)</label><input type="number" step="0.1" class="input" id="newProdPrice" placeholder="6.5" /></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-outline" onclick="closeModal('addProductModal')">Bağla</button>
       <button class="btn-green" onclick="addNewProduct()">Əlavə et</button>
@@ -434,10 +486,20 @@
 
 <div class="modal-backdrop" id="receiptModal">
   <div class="modal">
-    <div id="receiptPrintable" class="receipt-paper"></div>
+    <div id="receiptPrintable" class="premium-receipt"></div>
+    <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center;background:#0f1318;padding:10px;border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--gold);margin-bottom:6px">
+        Şəkli qalereyaya salmaq üçün üzərinə basılı saxla:
+      </div>
+      <img id="pngPreviewImg" style="max-width:100%;border-radius:8px;display:block;margin:0 auto" />
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-amber btn-sm" onclick="openPngInBrowser()">🌐 Brauzerdə Aç</button>
+        <button class="btn-green btn-sm" onclick="sharePngFile()">📤 Şəkli Paylaş</button>
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <button class="btn-primary" onclick="window.print()">🖨️ Çap Et (58/80mm)</button>
-      <button class="btn-green" onclick="downloadReceiptPNG()">🖼️ Şəkil (PNG)</button>
+      <button class="btn-primary" onclick="triggerPrint()">🖨️ Çap Et (58/80mm)</button>
+      <button class="btn-green" onclick="generateReceiptPNG()">🖼️ Şəkil (PNG)</button>
       <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
       <button class="btn-outline" onclick="copyReceiptText()">📋 Kopyala</button>
     </div>
@@ -449,7 +511,6 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  // === EMAILJS AÇARLARI ===
   const EMAILJS_PUBLIC_KEY = "fytvLlTCcjoAJB0Ol";
   const EMAILJS_SERVICE_ID = "service_og139ah";
   const EMAILJS_TEMPLATE_ID = "template_cjrc6vs";
@@ -487,6 +548,7 @@
   let activeTableId = null;
   let activeCategory = "Fast Food";
   let currentReceiptObj = null;
+  let lastPngDataUrl = "";
 
   function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
   function dataKey(email) { return "gh_pos_data_" + email; }
@@ -533,26 +595,18 @@
 
     try {
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email: email,
-        email: email,
-        to_name: `${firstName} ${lastName}`,
-        shop_name: shopName,
-        passcode: code,
-        code: code,
-        time: "15 dəqiqə"
+        to_email: email, email: email, to_name: `${firstName} ${lastName}`,
+        shop_name: shopName, passcode: code, code: code, time: "15 dəqiqə"
       });
       document.getElementById("verifyBox").style.display = "block";
       document.getElementById("verifyInfoText").textContent = `${email} ünvanına 6 rəqəmli təsdiq kodu göndərildi (Spam qovluğunu da yoxlayın):`;
-      msg.style.color = "#86efac";
-      msg.textContent = "Təsdiq kodu e-poçtunuza göndərildi!";
+      msg.style.color = "#86efac"; msg.textContent = "Təsdiq kodu e-poçtunuza göndərildi!";
     } catch (err) {
       document.getElementById("verifyBox").style.display = "block";
       document.getElementById("verifyInfoText").textContent = `E-poçt göndərilmədi (${err?.text || "xəta"}). Müvəqqəti kod: ${code}`;
-      msg.style.color = "#fca5a5";
-      msg.textContent = "EmailJS göndərmə xətası: şablonda To Email hissəsinin {{email}} və ya {{to_email}} olduğunu yoxlayın.";
+      msg.style.color = "#fca5a5"; msg.textContent = "EmailJS göndərmə xətası.";
     } finally {
-      btn.disabled = false;
-      btn.textContent = "Qeydiyyatdan keç və Kod göndər";
+      btn.disabled = false; btn.textContent = "Qeydiyyatdan keç və Kod göndər";
     }
   }
 
@@ -560,13 +614,9 @@
     const code = document.getElementById("verifyCodeIn").value.trim();
     const u = users[pendingVerifyEmail];
     const msg = document.getElementById("authMsg");
-    if (!u || u.code !== code) {
-      msg.style.color = "#fca5a5"; msg.textContent = "Kod yanlışdır!"; return;
-    }
-    u.verified = true;
-    saveUsers();
-    currentEmail = u.email;
-    localStorage.setItem(SESSION_KEY, currentEmail);
+    if (!u || u.code !== code) { msg.style.color = "#fca5a5"; msg.textContent = "Kod yanlışdır!"; return; }
+    u.verified = true; saveUsers();
+    currentEmail = u.email; localStorage.setItem(SESSION_KEY, currentEmail);
     enterAfterAuth();
   }
 
@@ -575,24 +625,18 @@
     const password = document.getElementById("loginPassword").value;
     const msg = document.getElementById("authMsg");
     const u = users[email];
-    if (!u || u.password !== password) {
-      msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və ya parol yanlışdır!"; return;
-    }
+    if (!u || u.password !== password) { msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və ya parol yanlışdır!"; return; }
     if (!u.verified) {
       pendingVerifyEmail = email;
       document.getElementById("verifyBox").style.display = "block";
       document.getElementById("verifyInfoText").textContent = `${email} üçün təsdiq kodu daxil edin:`;
       return;
     }
-    currentEmail = email;
-    localStorage.setItem(SESSION_KEY, currentEmail);
+    currentEmail = email; localStorage.setItem(SESSION_KEY, currentEmail);
     enterAfterAuth();
   }
 
-  function doLogout() {
-    localStorage.removeItem(SESSION_KEY);
-    location.reload();
-  }
+  function doLogout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
 
   function enterAfterAuth() {
     document.getElementById("authScreen").style.display = "none";
@@ -619,9 +663,8 @@
     if (tables.length === 0) tables.push({ id: "z_1", zone: "Zal", name: "Zal 1", custom: true });
 
     state = {
-      shop: { name: shopName, address, phone: "", footer: "Təşəkkür edirik!" },
-      tables,
-      openOrders: {},
+      shop: { name: shopName, address, phone: "", footer: "Bizi seçdiyiniz üçün təşəkkür edirik!" },
+      tables, openOrders: {},
       menu: menuMode === "empty"
         ? [{ id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", variants: [{ label: "1 saat", price: 1.0 }] },
            { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", variants: [{ label: "Yarım saat", price: 0.5 }] }]
@@ -629,20 +672,12 @@
       stock: menuMode === "empty" ? {} : { ...DEFAULT_STOCK },
       receipts: []
     };
-    saveState();
-    document.getElementById("setupScreen").style.display = "none";
-    showMainApp();
+    saveState(); document.getElementById("setupScreen").style.display = "none"; showMainApp();
   }
 
-  function saveState() {
-    if (state && currentEmail) localStorage.setItem(dataKey(currentEmail), JSON.stringify(state));
-  }
+  function saveState() { if (state && currentEmail) localStorage.setItem(dataKey(currentEmail), JSON.stringify(state)); }
 
-  function showMainApp() {
-    document.getElementById("appScreen").style.display = "block";
-    renderHeader();
-    renderTables();
-  }
+  function showMainApp() { document.getElementById("appScreen").style.display = "block"; renderHeader(); renderTables(); }
 
   function renderHeader() {
     const u = users[currentEmail];
@@ -810,55 +845,150 @@
 
   function openReceiptModal(r) {
     currentReceiptObj = r;
+    lastPngDataUrl = "";
+    document.getElementById("pngPreviewBox").style.display = "none";
     document.getElementById("receiptPrintable").innerHTML = `
-      <div class="receipt-center"><strong style="font-size:15px">${state.shop.name}</strong><br/>${state.shop.address || ""}</div>
-      <div class="receipt-hr"></div>
-      <div class="receipt-line"><span>Sənəd:</span><strong>${r.id}</strong></div>
-      <div class="receipt-line"><span>Masa:</span><span>${r.tableName}</span></div>
-      <div class="receipt-line"><span>Tarix:</span><span>${r.date} ${r.time}</span></div>
-      <div class="receipt-line"><span>Ödəniş:</span><span>${r.method}</span></div>
-      <div class="receipt-hr"></div>
-      ${r.items.map(i => `<div class="receipt-line"><span>${i.name} x${i.qty}</span><span>${(i.price * i.qty).toFixed(2)} ₼</span></div>`).join("")}
-      <div class="receipt-hr"></div>
-      <div class="receipt-line" style="font-size:15px;font-weight:bold"><span>CƏMİ:</span><span>${r.total.toFixed(2)} ₼</span></div>
-      <div class="receipt-hr"></div>
-      <div class="receipt-center">${state.shop.footer || ""}</div>
-      <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center">
-        <img id="pngPreviewImg" style="max-width:100%;border:1px solid #ccc;border-radius:6px" />
+      <div class="prem-head">
+        <div class="prem-brand">${state.shop.name}</div>
+        ${state.shop.address ? `<div class="prem-addr">📍 ${state.shop.address}</div>` : ""}
+        ${state.shop.phone ? `<div class="prem-addr">📞 ${state.shop.phone}</div>` : ""}
       </div>
+      <div class="prem-meta">
+        <div class="prem-row"><span>Sənəd:</span><strong>${r.id}</strong></div>
+        <div class="prem-row"><span>Masa:</span><strong>${r.tableName}</strong></div>
+        <div class="prem-row"><span>Tarix / Saat:</span><span>${r.date} • ${r.time}</span></div>
+        <div class="prem-row"><span>Ödəniş üsulu:</span><span>${r.method}</span></div>
+      </div>
+      <div class="prem-items">
+        ${r.items.map(i => `
+          <div class="prem-row">
+            <span>${i.name} <strong>×${i.qty}</strong></span>
+            <strong>${(i.price * i.qty).toFixed(2)} ₼</strong>
+          </div>
+        `).join("")}
+        ${r.note ? `<div style="margin-top:6px;font-size:11px;color:#fbbf24">Qeyd: ${r.note}</div>` : ""}
+      </div>
+      <div class="prem-total">
+        <span>YEKUN:</span>
+        <span>${r.total.toFixed(2)} ₼</span>
+      </div>
+      <div class="prem-foot">${state.shop.footer || "Təşəkkür edirik!"}</div>
     `;
     document.getElementById("receiptModal").classList.add("open");
   }
 
-  function formatReceiptPlain(r) {
-    return [
-      `🧾 ${state.shop.name}`,
-      `${r.id} | ${r.tableName} | ${r.date} ${r.time}`,
-      `Ödəniş: ${r.method}`,
-      "------------------------",
-      ...r.items.map(i => `${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} ₼`),
-      "------------------------",
-      `YEKUN: ${r.total.toFixed(2)} ₼`
-    ].join("\n");
+  function triggerPrint() {
+    try {
+      window.print();
+    } catch (e) {
+      generateReceiptPNG();
+      alert("Çap pəncərəsi açılmasa, yaranan PNG şəkli ilə çap və ya paylaşım edə bilərsiniz.");
+    }
   }
 
-  function copyReceiptText() { if (currentReceiptObj) { navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj)); alert("Kopyalandı!"); } }
+  function formatReceiptPlain(r) {
+    return [
+      `✦ ${state.shop.name} ✦`,
+      state.shop.address ? `📍 ${state.shop.address}` : "",
+      `Sənəd: ${r.id} | Masa: ${r.tableName}`,
+      `Tarix: ${r.date} ${r.time} | Ödəniş: ${r.method}`,
+      "--------------------------------",
+      ...r.items.map(i => `${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} ₼`),
+      "--------------------------------",
+      `YEKUN: ${r.total.toFixed(2)} ₼`,
+      state.shop.footer || ""
+    ].filter(Boolean).join("\n");
+  }
+
+  function copyReceiptText() { if (currentReceiptObj) { navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj)); alert("Çek mətni kopyalandı!"); } }
   function shareReceiptTelegram() { if (currentReceiptObj) window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj)), "_blank"); }
 
-  function downloadReceiptPNG() {
+  function generateReceiptPNG() {
     if (!currentReceiptObj) return;
-    const lines = formatReceiptPlain(currentReceiptObj).split("\n");
+    const r = currentReceiptObj;
+    const w = 460;
+    const itemRows = r.items.length;
+    const h = 230 + itemRows * 30;
     const canvas = document.createElement("canvas");
-    canvas.width = 440; canvas.height = 60 + lines.length * 28;
+    canvas.width = w * 2;
+    canvas.height = h * 2;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#111"; ctx.font = "600 16px Arial, sans-serif";
-    lines.forEach((ln, idx) => ctx.fillText(ln, 20, 36 + idx * 28));
-    const url = canvas.toDataURL("image/png");
+    ctx.scale(2, 2);
+
+    ctx.fillStyle = "#12161e";
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(12, 12, w - 24, h - 24);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(state.shop.name || "POS", w / 2, 44);
+
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "12px Arial, sans-serif";
+    if (state.shop.address) ctx.fillText(state.shop.address, w / 2, 64);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "13px Arial, sans-serif";
+    ctx.fillText(`Sənəd: ${r.id}`, 26, 94);
+    ctx.fillText(`Masa: ${r.tableName}`, 26, 114);
+    ctx.fillText(`Tarix: ${r.date} ${r.time}`, 26, 134);
+    ctx.fillText(`Ödəniş: ${r.method}`, 26, 154);
+
+    let y = 182;
+    r.items.forEach(i => {
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(`${i.name} x${i.qty}`, 26, y);
+      ctx.textAlign = "right";
+      ctx.fillText(`${(i.price * i.qty).toFixed(2)} ₼`, w - 26, y);
+      ctx.textAlign = "left";
+      y += 28;
+    });
+
+    y += 8;
+    ctx.fillStyle = "#4ade80";
+    ctx.font = "bold 18px Arial, sans-serif";
+    ctx.fillText("YEKUN:", 26, y);
+    ctx.textAlign = "right";
+    ctx.fillText(`${r.total.toFixed(2)} ₼`, w - 26, y);
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "12px Arial, sans-serif";
+    ctx.fillText(state.shop.footer || "Təşəkkür edirik!", w / 2, h - 24);
+
+    lastPngDataUrl = canvas.toDataURL("image/png");
     const box = document.getElementById("pngPreviewBox");
     const img = document.getElementById("pngPreviewImg");
-    if (box && img) { img.src = url; box.style.display = "block"; }
-    const a = document.createElement("a"); a.download = `${currentReceiptObj.id}.png`; a.href = url; a.click();
+    img.src = lastPngDataUrl;
+    box.style.display = "block";
+  }
+
+  function openPngInBrowser() {
+    if (!lastPngDataUrl) return;
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(`<title>${currentReceiptObj?.id || "Çek"}</title><body style="margin:0;background:#0c0f14;display:flex;justify-content:center;align-items:center;min-height:100vh"><img src="${lastPngDataUrl}" style="max-width:100%;height:auto"/></body>`);
+    }
+  }
+
+  async function sharePngFile() {
+    if (!lastPngDataUrl || !navigator.share) {
+      openPngInBrowser();
+      return;
+    }
+    try {
+      const res = await fetch(lastPngDataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${currentReceiptObj?.id || "cek"}.png`, { type: "image/png" });
+      await navigator.share({ files: [file], title: currentReceiptObj?.id || "Çek" });
+    } catch (e) {
+      openPngInBrowser();
+    }
   }
 
   function openMoveModal() {
@@ -880,17 +1010,33 @@
   function openAddProductModal() {
     const cats = [...new Set(state.menu.map(m => m.cat))];
     if (!cats.includes("Vaxt")) cats.push("Vaxt");
-    document.getElementById("newProdCat").innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    const sel = document.getElementById("newProdCat");
+    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("") + `<option value="__NEW__">+ Yeni kateqoriya yarat...</option>`;
+    document.getElementById("customCatWrap").style.display = "none";
+    document.getElementById("customCatName").value = "";
+    document.getElementById("newProdName").value = "";
+    document.getElementById("newProdPrice").value = "";
     document.getElementById("addProductModal").classList.add("open");
   }
 
+  function toggleNewCatInput() {
+    const val = document.getElementById("newProdCat").value;
+    document.getElementById("customCatWrap").style.display = val === "__NEW__" ? "block" : "none";
+  }
+
   function addNewProduct() {
-    const cat = document.getElementById("newProdCat").value;
+    let cat = document.getElementById("newProdCat").value;
+    if (cat === "__NEW__") {
+      cat = document.getElementById("customCatName").value.trim();
+      if (!cat) return alert("Yeni kateqoriya adını yazın!");
+    }
     const name = document.getElementById("newProdName").value.trim();
     const price = parseFloat(document.getElementById("newProdPrice").value);
-    if (!name || isNaN(price)) return;
+    if (!name || isNaN(price)) return alert("Məhsul adını və qiyməti yazın!");
     state.menu.push({ id: "m_" + Date.now(), cat, name, variants: [{ label: "Standart", price }] });
-    saveState(); closeModal("addProductModal"); renderCategories(); renderMenu();
+    saveState(); closeModal("addProductModal");
+    activeCategory = cat;
+    renderCategories(); renderMenu();
   }
 
   function renderStock() {
