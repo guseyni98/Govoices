@@ -1,28 +1,1433 @@
-function triggerPrint() {
-  if (!currentReceiptObj) return;
-  const r = currentReceiptObj;
-  const receiptHtml = buildReceiptHtml(r, r.isPre);
-
-  const printWin = window.open("", "_blank", "width=420,height=680");
-  if (printWin && printWin.document) {
-    printWin.document.open();
-    printWin.document.write(`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${r.id || "Çek"}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kassa POS — Restoran, Lounge & Moyka</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    :root {
+      --bg: #0c0f14;
+      --card: #151a22;
+      --card2: #1d2430;
+      --border: #2a3342;
+      --text: #f5f7fa;
+      --muted: #9aa6b8;
+      --accent: #e53935;
+      --accent-grad: linear-gradient(135deg, #ef4444, #c81e1e);
+      --gold: #f59e0b;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --radius: 14px;
+    }
+    body.theme-carwash {
+      --bg: #07111a;
+      --card: #0e1c29;
+      --card2: #15283a;
+      --border: #1e3a52;
+      --accent: #0ea5e9;
+      --accent-grad: linear-gradient(135deg, #0284c7, #0369a1);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 84px;
+    }
+    header {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(12, 15, 20, 0.96); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    body.theme-carwash header { background: rgba(7, 17, 26, 0.96); }
+    .brand { min-width: 0; }
+    .brand-title { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-sub { font-size: 11px; color: var(--muted); }
+    .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .mode-bar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 8px 14px 4px; max-width: 960px; margin: 0 auto;
+    }
+    .mode-btn {
+      padding: 9px 10px; border-radius: 11px; font-size: 12.5px; font-weight: 800;
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .mode-btn.active-rest {
+      background: rgba(229, 57, 53, 0.18); border-color: #ef4444; color: #fff;
+    }
+    .mode-btn.active-wash {
+      background: rgba(14, 165, 233, 0.22); border-color: #0ea5e9; color: #e0f2fe;
+    }
+
+    button {
+      border: none; border-radius: 10px; padding: 9px 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--text); background: var(--card2);
+    }
+    button:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-grad); color: #fff; }
+    .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #052010; }
+    .btn-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+    .btn-amber { background: linear-gradient(135deg, #fbbf24, #d97706); color: #1a1102; }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); }
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+
+    .auth-wrap { max-width: 440px; margin: 20px auto; padding: 14px; }
+    .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+
+    .screen-code-box {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 12px;
       padding: 12px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .screen-code-digits {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--gold);
+      margin-top: 4px;
+      user-select: all;
+    }
+
+    .container { padding: 8px 14px 14px; max-width: 960px; margin: 0 auto; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      background: #11161f; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); gap: 4px;
+    }
+    body.theme-carwash .bottom-nav { background: #0a1520; }
+    .nav-btn {
+      background: transparent; color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 7px 4px; font-size: 11px; border-radius: 10px;
+    }
+    .nav-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .nav-icon { font-size: 17px; }
+
+    .tabs-row {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;
+      scrollbar-width: none;
+    }
+    .tabs-row::-webkit-scrollbar { display: none; }
+    .chip {
+      white-space: nowrap; padding: 8px 13px; border-radius: 999px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 700;
+    }
+    .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .tables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 640px) { .tables-grid { grid-template-columns: repeat(3, 1fr); } }
+    .table-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 13px; position: relative; display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 108px; cursor: pointer;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    .table-card.busy { border-color: var(--gold); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
+    body.theme-carwash .table-card.busy { border-color: #38bdf8; background: linear-gradient(180deg, rgba(14, 165, 233, 0.2), var(--card)); }
+    .table-card.pressing { transform: scale(0.95); border-color: #fff; }
+
+    @keyframes iosWiggle {
+      0% { transform: rotate(-1.1deg); }
+      50% { transform: rotate(1.1deg); }
+      100% { transform: rotate(-1.1deg); }
+    }
+    body.jiggle-mode .table-card {
+      animation: iosWiggle 0.26s infinite ease-in-out;
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+    .ios-minus-badge {
+      display: none;
+      position: absolute; top: -8px; left: -8px;
+      width: 24px; height: 24px; border-radius: 999px;
+      background: #ef4444; color: #fff;
+      font-size: 16px; font-weight: 900; line-height: 22px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    body.jiggle-mode .ios-minus-badge { display: block; }
+
+    .jiggle-bar {
+      display: none;
+      justify-content: space-between; align-items: center;
+      background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px;
+    }
+    body.jiggle-mode .jiggle-bar { display: flex; }
+
+    .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+    .table-name { font-size: 15px; font-weight: 800; }
+    .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+    .badge-free { background: rgba(34, 197, 94, 0.16); color: var(--green); }
+    .badge-busy { background: rgba(245, 158, 11, 0.22); color: var(--gold); }
+    .plate-pill {
+      display: inline-block; margin-top: 5px; padding: 2px 8px; border-radius: 6px;
+      background: #fff; color: #0f172a; font-weight: 900; font-size: 12px; letter-spacing: 0.6px;
+      border: 1.5px solid #0f172a;
+    }
+    .table-meta { margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .table-sum { font-size: 16px; font-weight: 800; }
+    .table-time { font-size: 11px; color: var(--muted); }
+
+    .zone-hint {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .order-header {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .car-panel {
+      background: var(--card); border: 1px solid #0ea5e9; border-radius: var(--radius);
+      padding: 12px; margin-bottom: 10px;
+    }
+    .input, select, textarea {
+      width: 100%; background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
+      font-family: inherit;
+    }
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
+    @media (min-width: 640px) { .menu-grid { grid-template-columns: repeat(3, 1fr); } }
+    .menu-item {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    }
+    .menu-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+    .menu-name { font-size: 13px; font-weight: 700; }
+    .edit-prod-btn { padding: 3px 7px; font-size: 11px; background: var(--card2); border: 1px solid var(--border); color: var(--gold); }
+    .price-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .price-btn {
+      flex: 1; background: var(--card2); border: 1px solid var(--border);
+      padding: 7px 8px; font-size: 12px; font-weight: 700; text-align: center;
+    }
+    .price-btn span { color: var(--green); display: block; font-size: 13px; }
+
+    .cart-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+    .cart-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .cart-row:last-child { border-bottom: none; }
+    .qty-controls { display: flex; align-items: center; gap: 6px; }
+    .qty-btn { width: 28px; height: 28px; padding: 0; font-size: 15px; }
+    .pay-bar { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 11px; }
+    .kpi-label { font-size: 11px; color: var(--muted); }
+    .kpi-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .list-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+    .low-stock { border-color: var(--accent); }
+    .sold-badge { font-size: 11px; color: var(--gold); font-weight: 700; margin-top: 2px; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 60;
+      display: none; align-items: center; justify-content: center; padding: 14px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 450px; max-height: 92vh; overflow-y: auto; padding: 16px;
+    }
+    .modal h3 { margin: 0 0 12px; font-size: 17px; }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+    .premium-receipt {
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+      border-radius: 10px;
+      padding: 16px 14px;
+      font-family: "Courier New", Courier, monospace;
+    }
+    .prem-head { text-align: center; }
+    .prem-brand { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; }
+    .prem-sub { font-size: 12px; font-weight: 800; margin-top: 4px; letter-spacing: 0.6px; }
+    .prem-addr { font-size: 11px; color: #222; margin-top: 3px; font-family: Arial, sans-serif; }
+    .prem-meta { margin: 10px 0 6px; font-size: 12px; }
+    .prem-grid2 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+    .prem-hr { border-top: 1px dashed #000000; margin: 8px 0; }
+    .prem-cols { display: grid; grid-template-columns: 1fr 56px 76px; font-weight: 800; font-size: 12px; align-items: center; }
+    .prem-item { display: grid; grid-template-columns: 1fr 56px 76px; font-size: 12px; padding: 4px 0; align-items: start; gap: 4px; }
+    .col-mid { text-align: center; }
+    .col-right { text-align: right; }
+    .prem-sum-line { display: flex; justify-content: space-between; font-size: 12.5px; margin: 4px 0; }
+    .prem-grand { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; margin-top: 6px; }
+    .prem-foot { text-align: center; font-size: 12px; margin-top: 12px; font-family: Arial, sans-serif; font-weight: 600; }
+
+    @media print {
+      @page { margin: 4mm; }
+      body * { visibility: hidden; }
+      #receiptModal, #receiptModal * { visibility: visible; }
+      #receiptModal {
+        position: fixed; inset: 0; background: #fff !important;
+        display: block !important; padding: 0 !important;
+      }
+      .modal {
+        max-width: 100% !important; max-height: none !important;
+        background: #fff !important; border: none !important; padding: 0 !important;
+      }
+      .premium-receipt {
+        border: none !important; border-radius: 0 !important;
+        width: 100% !important; padding: 2px !important;
+      }
+      #receiptModal button { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- GİRİŞ / QEYDİYYAT / QEYDİYYAT TƏSDİQ KODU -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <h2 style="margin:0 0 4px">💼 Kassa POS</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Restoran, Lounge və Avtoyuma (Moyka) idarəetmə sistemi
+    </div>
+
+    <div class="auth-tabs">
+      <button class="btn-primary" id="tabLoginBtn" onclick="setAuthMode('login')">Giriş</button>
+      <button class="btn-outline" id="tabRegBtn" onclick="setAuthMode('register')">Qeydiyyat</button>
+    </div>
+
+    <div id="loginBox">
+      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" autocomplete="email" /></div>
+      <div class="field"><label>Parol</label><input class="input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
+      <button class="btn-green" id="loginSubmitBtn" style="width:100%" onclick="doLogin()">Daxil ol</button>
+    </div>
+
+    <div id="registerBox" style="display:none">
+      <div class="field"><label>Ad</label><input class="input" id="regFirst" placeholder="Adınız" /></div>
+      <div class="field"><label>Soyad</label><input class="input" id="regLast" placeholder="Soyadınız" /></div>
+      <div class="field"><label>Obyektin Adı</label><input class="input" id="regShop" placeholder="Məs: PremierLeague" /></div>
+      <div class="field"><label>E-poçt</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com" /></div>
+      <div class="field"><label>Parol (Çek silmək üçün lazım olacaq)</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
+      <button class="btn-primary" id="regSubmitBtn" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod al</button>
+    </div>
+
+    <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="screen-code-box">
+        <div style="font-size:12px;color:#fde68a" id="verifyInfoText">Qeydiyyat təsdiq kodu:</div>
+        <div class="screen-code-digits" id="screenGeneratedCode">------</div>
+      </div>
+      <div class="field"><label>Ekrandakı 6 Rəqəmli Kodu Daxil Edin</label><input class="input" id="verifyCodeIn" inputmode="numeric" placeholder="123456" /></div>
+      <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
+    </div>
+
+    <div id="authMsg" style="margin-top:10px;font-size:12px;color:#fca5a5"></div>
+  </div>
+</div>
+
+<!-- ƏSAS POS -->
+<div id="appScreen" style="display:none">
+  <header>
+    <div class="brand">
+      <div class="brand-title" id="headerShopName">POS</div>
+      <div class="brand-sub" id="headerSubInfo"></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline btn-sm" onclick="openShopModal()">🏪 Obyekt</button>
+      <button class="btn-primary btn-sm" id="headerAddZoneBtn" onclick="openAddTableModal()">+ Zal / Kabinet</button>
+      <button class="btn-outline btn-sm" onclick="doLogout()">Çıxış</button>
+    </div>
+  </header>
+
+  <div class="mode-bar">
+    <button class="mode-btn active-rest" id="modeRestBtn" onclick="switchBizMode('restaurant')">
+      🍽️ Restoran / Lounge
+    </button>
+    <button class="mode-btn" id="modeWashBtn" onclick="switchBizMode('carwash')">
+      🚗 Moyka
+    </button>
+  </div>
+
+  <div class="container">
+    <section id="sec-tables" class="section active">
+      <div class="jiggle-bar">
+        <span>Düzenleme rejimi aktivdir (silmək üçün sol üstteki <strong>−</strong> düyməsinə basın)</span>
+        <button class="btn-green btn-sm" onclick="exitJiggleMode()">Bitti</button>
+      </div>
+      <div class="tabs-row" id="zoneTabs"></div>
+      <div class="tables-grid" id="tablesGrid"></div>
+      <div class="zone-hint" id="zoneLongPressHint">
+        💡 Qeyd: Zal və ya kabineti redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.
+      </div>
+    </section>
+
+    <section id="sec-order" class="section">
+      <div class="order-header">
+        <div>
+          <div style="font-weight:800;font-size:15px" id="activeTableTitle">Seçilməyib</div>
+          <div style="font-size:11px;color:var(--muted)" id="activeTableTime"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-outline btn-sm" onclick="openMoveModal()">⇄ Köçür</button>
+          <button class="btn-amber btn-sm" onclick="showPreReceipt()">🧾 Hesab (Pre-çek)</button>
+          <button class="btn-outline btn-sm" id="backToZonesBtn" onclick="switchTab('tables')">← Zallar</button>
+        </div>
+      </div>
+
+      <div id="carWashOrderPanel" class="car-panel" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="field" style="margin:0">
+            <label>Maşın Nömrəsi</label>
+            <input class="input" id="carPlateInput" placeholder="90-AA-123" style="text-transform:uppercase;font-weight:800" onchange="saveCarOrderMeta()" />
+          </div>
+          <div class="field" style="margin:0">
+            <label>Maşın Modeli / Növü</label>
+            <input class="input" id="carModelInput" placeholder="Məs: Sedan / CİP" onchange="saveCarOrderMeta()" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field" style="margin:0">
+            <label>1-ci Moyşik (Əsas)</label>
+            <select class="input" id="washer1Select" onchange="saveCarOrderMeta()"></select>
+          </div>
+          <div class="field" style="margin:0">
+            <label>2-ci Moyşik (Birlikdə yuyursa)</label>
+            <select class="input" id="washer2Select" onchange="saveCarOrderMeta()"></select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input class="input" id="menuSearch" placeholder="Axtar..." oninput="renderMenu()" />
+        <button class="btn-blue btn-sm" style="white-space:nowrap" id="addProdBtn" onclick="openAddProductModal()">+ Məhsul</button>
+      </div>
+
+      <div class="tabs-row" id="catTabs"></div>
+      <div class="menu-grid" id="menuGrid"></div>
+
+      <div class="cart-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong id="cartTitleText">Açıq Sifariş Siyahısı</strong>
+          <span style="font-size:12px;color:var(--muted)" id="cartCountLabel">0 ədəd</span>
+        </div>
+        <div id="cartList"></div>
+        <div class="field" style="margin-top:10px">
+          <input class="input" id="orderNoteInput" placeholder="Qeyd..." onchange="saveOrderNote()" />
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:800;margin-top:8px">
+          <span>YEKUN MƏBLƏĞ:</span>
+          <span style="color:var(--green)" id="cartTotalLabel">0.00 ₼</span>
+        </div>
+        <div class="pay-bar">
+          <button class="btn-green" onclick="closeOrder('Nağd')">💵 Nağd Bağla</button>
+          <button class="btn-blue" onclick="closeOrder('Kart')">💳 Kartla Bağla</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-stock" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong>Anbar Qalıqları və Satılanlar</strong>
+        <button class="btn-primary btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
+      </div>
+      <div id="stockList"></div>
+    </section>
+
+    <section id="sec-reports" class="section">
+      <div class="tabs-row">
+        <button class="chip active" id="p-today" onclick="setPeriod('today')">Bu gün</button>
+        <button class="chip" id="p-prevMonthToToday" onclick="setPeriod('prevMonthToToday')">Keçən aydan bu günə</button>
+        <button class="chip" id="p-thisMonth" onclick="setPeriod('thisMonth')">Bu ay</button>
+        <button class="chip" id="p-last30" onclick="setPeriod('last30')">Son 30 gün</button>
+        <button class="chip" id="p-all" onclick="setPeriod('all')">Bütün tarixlər</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="field" style="margin:0"><label>Tarixdən</label><input type="date" class="input" id="dateFrom" onchange="onCustomDateChange()" /></div>
+        <div class="field" style="margin:0"><label>Tarixədək</label><input type="date" class="input" id="dateTo" onchange="onCustomDateChange()" /></div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Ümumi Alver</div><div class="kpi-val" style="color:var(--green)" id="kpiTotal">0.00 ₼</div></div>
+        <div class="kpi-card"><div class="kpi-label" id="kpiCountLabel">Bağlanmış Çek</div><div class="kpi-val" id="kpiCount">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Nağd</div><div class="kpi-val" id="kpiCash">0.00 ₼</div></div>
+        <div class="kpi-card"><div class="kpi-label">Kart</div><div class="kpi-val" id="kpiCard">0.00 ₼</div></div>
+      </div>
+
+      <div id="washersReportSection" style="display:none;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h4 style="margin:0">👷 Moyşiklərin Faiz Hesabatı</h4>
+          <button class="btn-primary btn-sm" onclick="openAddWasherModal()">+ Moyşik Əlavə Et</button>
+        </div>
+        <div id="washersReportList"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+        <button class="btn-primary btn-sm" onclick="copyReportText()">📋 Açotu Kopyala</button>
+        <button class="btn-blue btn-sm" onclick="shareReportTelegram()">✈️ Telegram-a Göndər</button>
+      </div>
+
+      <h4 style="margin:10px 0 6px">Günlük Xülasə</h4>
+      <div id="dailySummaryList"></div>
+
+      <h4 style="margin:14px 0 6px">Çeklər Tarixçəsi</h4>
+      <div id="receiptsHistoryList"></div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-tables" onclick="switchTab('tables')"><span class="nav-icon" id="navIcon1">🪑</span><span id="navText1">Zallar</span></button>
+    <button class="nav-btn" id="nav-order" onclick="switchTab('order')"><span class="nav-icon" id="navIcon2">🍽️</span><span id="navText2">Sifariş</span></button>
+    <button class="nav-btn" id="nav-stock" onclick="switchTab('stock')"><span class="nav-icon">📦</span><span>Anbar</span></button>
+    <button class="nav-btn" id="nav-reports" onclick="switchTab('reports')"><span class="nav-icon">📊</span><span>Açot</span></button>
+  </nav>
+</div>
+
+<!-- İPHONE TƏRZLİ BASILI SAXLAMA MENYUSU -->
+<div class="modal-backdrop" id="zoneActionModal">
+  <div class="modal">
+    <h3 id="zoneActionTitle">Seçim</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="zoneActionSub"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-amber" onclick="openEditZoneFromMenu()">✏️ Adını / Bölməsini Redaktə Et</button>
+      <button class="btn-outline" onclick="enterJiggleModeFromMenu()">⚙️ Düzenlemeyi Başlat (Silmə rejimi)</button>
+      <button class="btn-danger" onclick="deleteZoneFromMenu()">🗑️ Sil</button>
+      <button class="btn-outline" onclick="closeModal('zoneActionModal')">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZAL / KABİNET / BOKS REDAKTƏ MODALI -->
+<div class="modal-backdrop" id="editZoneModal">
+  <div class="modal">
+    <h3>✏️ Redaktə Et</h3>
+    <input type="hidden" id="editZoneId" />
+    <div class="field"><label>Bölmə</label><select class="input" id="editZoneType"></select></div>
+    <div class="field"><label>Adı</label><input class="input" id="editZoneName" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('editZoneModal')">Bağla</button>
+      <button class="btn-green" onclick="saveEditedZone()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- OBYEKT MƏLUMATLARI MODALI -->
+<div class="modal-backdrop" id="shopModal">
+  <div class="modal">
+    <h3>🏪 Obyekt Məlumatları</h3>
+    <div class="field"><label>Obyektin Adı</label><input class="input" id="shopNameIn" /></div>
+    <div class="field"><label>Ünvan</label><input class="input" id="shopAddressIn" /></div>
+    <div class="field"><label>Telefon</label><input class="input" id="shopPhoneIn" /></div>
+    <div class="field" id="shopServiceWrap">
+      <label>Servis Haqqı (10%)</label>
+      <select class="input" id="shopServiceIn">
+        <option value="0">0% (Servis haqqı yoxdur)</option>
+        <option value="10">10% Servis haqqı</option>
+      </select>
+    </div>
+    <div class="field"><label>Çek Sonu Qeydi</label><input class="input" id="shopFooterIn" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('shopModal')">Bağla</button>
+      <button class="btn-green" onclick="saveShopInfo()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addTableModal">
+  <div class="modal">
+    <h3 id="addTableModalTitle">+ Yeni Zal / Kabinet</h3>
+    <div class="field"><label>Bölmə</label><select class="input" id="newTableZone"></select></div>
+    <div class="field"><label>Adı</label><input class="input" id="newTableName" placeholder="Məs: Zal 8 və ya Boks 3" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addTableModal')">Bağla</button>
+      <button class="btn-primary" onclick="addNewTable()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="moveModal">
+  <div class="modal">
+    <h3>Köçür</h3>
+    <div class="field"><label>Boş Yer</label><select class="input" id="moveTargetSelect"></select></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('moveModal')">Bağla</button>
+      <button class="btn-primary" onclick="confirmMoveTable()">Köçür</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addProductModal">
+  <div class="modal">
+    <h3>+ Yeni Məhsul / Xidmət</h3>
+    <div class="field"><label>Kateqoriya</label><select class="input" id="newProdCat" onchange="toggleNewCatInput()"></select></div>
+    <div class="field" id="customCatWrap" style="display:none"><label>Yeni Kateqoriyanın Adı</label><input class="input" id="customCatName" placeholder="Məs: Detailing, Lounge..." /></div>
+    <div class="field"><label>Adı</label><input class="input" id="newProdName" placeholder="Məs: Tam Detailing" /></div>
+    <div class="field"><label>Qiymət (AZN)</label><input type="number" step="0.1" class="input" id="newProdPrice" placeholder="25" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addProductModal')">Bağla</button>
+      <button class="btn-green" onclick="addNewProduct()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editProductModal">
+  <div class="modal">
+    <h3>✏️ Redaktə Et</h3>
+    <input type="hidden" id="editProdId" />
+    <div class="field"><label>Kateqoriya</label><input class="input" id="editProdCat" /></div>
+    <div class="field"><label>Adı</label><input class="input" id="editProdName" /></div>
+    <div id="editVariantsBox"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn-outline" onclick="closeModal('editProductModal')">Bağla</button>
+      <button class="btn-green" onclick="saveEditedProduct()">Yadda Saxla</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addStockModal">
+  <div class="modal">
+    <h3>+ Yeni Anbar Malı</h3>
+    <div class="field"><label>Adı</label><input class="input" id="newStockName" /></div>
+    <div class="field"><label>Başlanğıc Say</label><input type="number" class="input" id="newStockQty" value="20" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addStockModal')">Bağla</button>
+      <button class="btn-green" onclick="addNewStock()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addWasherModal">
+  <div class="modal">
+    <h3>👷 Yeni Moyşik Əlavə Et</h3>
+    <div class="field"><label>Moyşikin Adı</label><input class="input" id="newWasherName" placeholder="Məs: Eltac" /></div>
+    <div class="field"><label>Faiz Dərəcəsi (%)</label><input type="number" min="1" max="100" class="input" id="newWasherPct" value="40" /></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('addWasherModal')">Bağla</button>
+      <button class="btn-green" onclick="addNewWasher()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="deleteReceiptModal">
+  <div class="modal">
+    <h3>🔒 Çeki Silmək Üçün Parolu Yazın</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="deleteReceiptInfo"></div>
+    <div class="field">
+      <label>Qeydiyyat Parolu</label>
+      <input type="password" class="input" id="deleteReceiptPassIn" placeholder="Parolunuzu daxil edin" />
+    </div>
+    <div id="deleteReceiptErr" style="font-size:12px;color:#fca5a5;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-outline" onclick="closeModal('deleteReceiptModal')">Ləğv et</button>
+      <button class="btn-primary" onclick="confirmDeleteReceipt()">Təsdiqlə və Sil</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal">
+    <div id="receiptPrintable" class="premium-receipt"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button class="btn-primary" onclick="triggerPrint()">🖨️ Çap Et</button>
+      <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
+      <button class="btn-outline" style="grid-column:1 / -1" onclick="copyReceiptText()">📋 Kopyala</button>
+    </div>
+    <button class="btn-outline" style="width:100%;margin-top:8px" onclick="closeModal('receiptModal')">Bağla</button>
+  </div>
+</div>
+
+<!-- GİZLİ PRINTER ÇAP ÇƏRÇİVƏSİ -->
+<iframe id="hiddenPrintFrame" style="position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;"></iframe>
+
+<script>
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  const USERS_KEY = "gh_pos_users_v1";
+  const SESSION_KEY = "gh_pos_session_v1";
+
+  const DEFAULT_MENU_REST = [
+    { id: "ff1", cat: "Fast Food", name: "Şaurma", variants: [{ label: "Sadə", price: 4.0 }, { label: "+ Fri", price: 6.0 }], stockKey: "Fast food" },
+    { id: "ff2", cat: "Fast Food", name: "Dönər", variants: [{ label: "Sadə", price: 3.0 }, { label: "+ Fri", price: 5.0 }], stockKey: "Dönər" },
+    { id: "ff7", cat: "Fast Food", name: "Fri", variants: [{ label: "Standart", price: 3.0 }], stockKey: "Kartof fri" },
+    { id: "sr1", cat: "Şorbalar", name: "Mərci şorbası", variants: [{ label: "1 pors", price: 4.0 }], stockKey: "Şorba" },
+    { id: "pz1", cat: "Pizzalar", name: "Marqarita", variants: [{ label: "Kiçik", price: 8.0 }, { label: "Böyük", price: 12.0 }], stockKey: "Pizza xəmiri" },
+    { id: "ii1", cat: "İsti içkilər", name: "Çay (Çaynik)", variants: [{ label: "Çaynik", price: 3.0 }], stockKey: "Çay" },
+    { id: "si1", cat: "Soyuq içkilər", name: "Coca-Cola 0.3", variants: [{ label: "0.3L", price: 1.5 }], stockKey: "Coca-Cola 0.3" },
+    { id: "ql1", cat: "Lounge / Qəlyan", name: "Saxsı Qəlyan", variants: [{ label: "Standart", price: 12.0 }], stockKey: "Qəlyan tütünü" },
+    { id: "vx1", cat: "Vaxt", name: "1 Saat Vaxt", variants: [{ label: "1 saat", price: 1.0 }] },
+    { id: "vx2", cat: "Vaxt", name: "Yarım Saat Vaxt", variants: [{ label: "Yarım saat", price: 0.5 }] }
+  ];
+
+  const DEFAULT_STOCK_REST = {
+    "Fast food": 50, "Dönər": 50, "Kartof fri": 60, "Şorba": 30,
+    "Pizza xəmiri": 30, "Çay": 80, "Coca-Cola 0.3": 60, "Qəlyan tütünü": 50
+  };
+
+  const DEFAULT_MENU_WASH = [
+    { id: "cw1", cat: "Standart Yuma", name: "Napor + Şampun (Üst-İç)", variants: [{ label: "Sedan", price: 10.0 }, { label: "CİP", price: 15.0 }], stockKey: "Şampun (Litr)" },
+    { id: "cw2", cat: "Standart Yuma", name: "Yalnız Üst Yuma (Köpük)", variants: [{ label: "Sedan", price: 6.0 }, { label: "CİP", price: 8.0 }], stockKey: "Aktiv Köpük (Litr)" },
+    { id: "cw3", cat: "Detailing", name: "Detailing Təmizləmə", variants: [{ label: "Sedan", price: 40.0 }, { label: "CİP", price: 55.0 }], stockKey: "Mikrofiber Əski" },
+    { id: "cw4", cat: "Detailing", name: "Kimyəvi Təmizləmə (Ximçistka)", variants: [{ label: "Tam Salon", price: 120.0 }], stockKey: "Şampun (Litr)" },
+    { id: "cw5", cat: "Əlavə Xidmət", name: "Motor Yuma", variants: [{ label: "Standart", price: 15.0 }], stockKey: "Aktiv Köpük (Litr)" },
+    { id: "cw6", cat: "Əlavə Xidmət", name: "Təkər Qaraltma + Ətir", variants: [{ label: "Paket", price: 5.0 }], stockKey: "Təkər Qaraldan" }
+  ];
+
+  const DEFAULT_STOCK_WASH = {
+    "Şampun (Litr)": 40,
+    "Aktiv Köpük (Litr)": 50,
+    "Mikrofiber Əski": 30,
+    "Təkər Qaraldan": 25,
+    "Şüşə Silən": 20
+  };
+
+  function makeBucket(type) {
+    if (type === "carwash") {
+      return {
+        tables: [
+          { id: "b_1", zone: "Boks", name: "Boks 1", custom: true },
+          { id: "b_2", zone: "Boks", name: "Boks 2", custom: true }
+        ],
+        openOrders: {},
+        menu: JSON.parse(JSON.stringify(DEFAULT_MENU_WASH)),
+        stock: { ...DEFAULT_STOCK_WASH },
+        soldCounts: {},
+        washers: [
+          { id: "w1", name: "Eltac", percent: 40 },
+          { id: "w2", name: "Şakir", percent: 50 }
+        ],
+        receipts: []
+      };
+    }
+    return {
+      tables: [
+        { id: "z_1", zone: "Zal", name: "Zal 1", custom: true },
+        { id: "z_2", zone: "Zal", name: "Zal 2", custom: true },
+        { id: "z_3", zone: "Zal", name: "Zal 3", custom: true },
+        { id: "z_4", zone: "Zal", name: "Zal 4", custom: true },
+        { id: "k_1", zone: "Kabinet", name: "Kabinet 1", custom: true },
+        { id: "k_2", zone: "Kabinet", name: "Kabinet 2", custom: true }
+      ],
+      openOrders: {},
+      menu: JSON.parse(JSON.stringify(DEFAULT_MENU_REST)),
+      stock: { ...DEFAULT_STOCK_REST },
+      soldCounts: {},
+      washers: [],
+      receipts: []
+    };
+  }
+
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
+  let currentEmail = localStorage.getItem(SESSION_KEY) || "";
+  let pendingVerifyEmail = "";
+  let rootState = null;
+  let activeMode = "restaurant";
+  let activeZone = "Hamısı";
+  let activeTableId = null;
+  let activeCategory = "";
+  let currentReceiptObj = null;
+  let pendingDeleteReceiptId = null;
+  let selectedZoneActionId = null;
+  let longPressTimer = null;
+  let longPressTriggered = false;
+  let jiggleMode = false;
+
+  function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  function dataKey(email) { return "gh_pos_dual_v1_" + email; }
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function money(n) { return Number(n || 0).toFixed(2) + " ₼"; }
+  function num2(n) { return Number(n || 0).toFixed(2).replace(".", ","); }
+  function isWash() { return activeMode === "carwash"; }
+  function cur() { return rootState.modes[activeMode]; }
+
+  function setAuthMode(mode) {
+    document.getElementById("loginBox").style.display = mode === "login" ? "block" : "none";
+    document.getElementById("registerBox").style.display = mode === "register" ? "block" : "none";
+    document.getElementById("tabLoginBtn").className = mode === "login" ? "btn-primary" : "btn-outline";
+    document.getElementById("tabRegBtn").className = mode === "register" ? "btn-primary" : "btn-outline";
+    document.getElementById("authMsg").textContent = "";
+    if (mode === "login") {
+      document.getElementById("verifyBox").style.display = "none";
+    }
+  }
+
+  function showRegisterCode(email, code) {
+    pendingVerifyEmail = email;
+    document.getElementById("verifyBox").style.display = "block";
+    document.getElementById("verifyInfoText").textContent = `${email} qeydiyyat təsdiq kodu:`;
+    document.getElementById("screenGeneratedCode").textContent = code;
+    document.getElementById("verifyCodeIn").value = "";
+    document.getElementById("verifyCodeIn").focus();
+  }
+
+  function doRegister() {
+    const firstName = document.getElementById("regFirst").value.trim();
+    const lastName = document.getElementById("regLast").value.trim();
+    const shopName = document.getElementById("regShop").value.trim();
+    const email = document.getElementById("regEmail").value.trim().toLowerCase();
+    const password = document.getElementById("regPassword").value;
+    const msg = document.getElementById("authMsg");
+
+    if (!firstName || !lastName || !shopName || !email || !password) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Bütün xanaları doldurun!"; return;
+    }
+    if (!email.includes("@")) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Düzgün e-poçt yazın!"; return;
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    users[email] = { firstName, lastName, shopName, email, password, code, verified: false };
+    saveUsers();
+
+    msg.style.color = "#86efac";
+    msg.textContent = "Qeydiyyat kodu yaradıldı. Kodu daxil edib təsdiqləyin.";
+    showRegisterCode(email, code);
+  }
+
+  function doVerify() {
+    const code = document.getElementById("verifyCodeIn").value.trim();
+    const u = users[pendingVerifyEmail];
+    const msg = document.getElementById("authMsg");
+    if (!u || u.code !== code) { msg.style.color = "#fca5a5"; msg.textContent = "Kod yanlışdır!"; return; }
+    u.verified = true;
+    saveUsers();
+    currentEmail = u.email;
+    localStorage.setItem(SESSION_KEY, currentEmail);
+    enterAfterAuth();
+  }
+
+  function doLogin() {
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const password = document.getElementById("loginPassword").value;
+    const msg = document.getElementById("authMsg");
+
+    if (!email || !email.includes("@") || !password) {
+      msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və parolu daxil edin!"; return;
+    }
+
+    const existing = users[email];
+    if (existing) {
+      if (existing.password !== password) {
+        msg.style.color = "#fca5a5"; msg.textContent = "Parol yanlışdır!"; return;
+      }
+      existing.verified = true;
+      saveUsers();
+      currentEmail = email;
+      localStorage.setItem(SESSION_KEY, currentEmail);
+      enterAfterAuth();
+      return;
+    }
+
+    // Başqa cihazdan girəndə ekranda təkrar kod göstərmədən e-poçt və parolla birbaşa daxil olur
+    const displayName = email.split("@")[0];
+    users[email] = {
+      firstName: displayName,
+      lastName: "",
+      shopName: "Kassa POS",
+      email,
+      password,
+      code: "",
+      verified: true
+    };
+    saveUsers();
+    currentEmail = email;
+    localStorage.setItem(SESSION_KEY, currentEmail);
+    enterAfterAuth();
+  }
+
+  function doLogout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
+
+  function enterAfterAuth() {
+    document.getElementById("authScreen").style.display = "none";
+    const saved = localStorage.getItem(dataKey(currentEmail));
+    const u = users[currentEmail];
+    if (!saved) {
+      rootState = {
+        shop: { name: u?.shopName || "Obyekt", address: "", phone: "", servicePercent: 0, footer: "Təşəkkür edirik!" },
+        modes: {
+          restaurant: makeBucket("restaurant"),
+          carwash: makeBucket("carwash")
+        }
+      };
+      saveState();
+    } else {
+      rootState = JSON.parse(saved);
+    }
+    activeMode = "restaurant";
+    showMainApp();
+  }
+
+  function saveState() { if (rootState && currentEmail) localStorage.setItem(dataKey(currentEmail), JSON.stringify(rootState)); }
+
+  function switchBizMode(mode) {
+    exitJiggleMode();
+    activeMode = mode;
+    activeZone = "Hamısı";
+    activeTableId = null;
+    activeCategory = "";
+    applyThemeAndLabels();
+    renderTables();
+    const activeSec = document.querySelector(".section.active")?.id?.replace("sec-", "") || "tables";
+    if (activeSec === "order") { renderCategories(); renderMenu(); renderCart(); }
+    if (activeSec === "stock") renderStock();
+    if (activeSec === "reports") renderReports();
+  }
+
+  function applyThemeAndLabels() {
+    const rBtn = document.getElementById("modeRestBtn");
+    const wBtn = document.getElementById("modeWashBtn");
+    if (isWash()) {
+      document.body.classList.add("theme-carwash");
+      wBtn.className = "mode-btn active-wash";
+      rBtn.className = "mode-btn";
+      document.getElementById("headerAddZoneBtn").textContent = "+ Boks";
+      document.getElementById("navIcon1").textContent = "🚗";
+      document.getElementById("navText1").textContent = "Bokslar";
+      document.getElementById("navIcon2").textContent = "🧼";
+      document.getElementById("navText2").textContent = "Yuma";
+      document.getElementById("backToZonesBtn").textContent = "← Bokslar";
+      document.getElementById("addProdBtn").textContent = "+ Xidmət";
+      document.getElementById("cartTitleText").textContent = "Seçilmiş Yuma Xidmətləri";
+      document.getElementById("kpiCountLabel").textContent = "Yuyulan Maşın";
+      document.getElementById("carWashOrderPanel").style.display = "block";
+      document.getElementById("washersReportSection").style.display = "block";
+      document.getElementById("shopServiceWrap").style.display = "none";
+      document.getElementById("zoneLongPressHint").innerHTML = "💡 Qeyd: Boksu və ya növbəni redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.";
+    } else {
+      document.body.classList.remove("theme-carwash");
+      rBtn.className = "mode-btn active-rest";
+      wBtn.className = "mode-btn";
+      document.getElementById("headerAddZoneBtn").textContent = "+ Zal / Kabinet";
+      document.getElementById("navIcon1").textContent = "🪑";
+      document.getElementById("navText1").textContent = "Zallar";
+      document.getElementById("navIcon2").textContent = "🍽️";
+      document.getElementById("navText2").textContent = "Sifariş";
+      document.getElementById("backToZonesBtn").textContent = "← Zallar";
+      document.getElementById("addProdBtn").textContent = "+ Məhsul";
+      document.getElementById("cartTitleText").textContent = "Açıq Sifariş Siyahısı";
+      document.getElementById("kpiCountLabel").textContent = "Bağlanmış Çek";
+      document.getElementById("carWashOrderPanel").style.display = "none";
+      document.getElementById("washersReportSection").style.display = "none";
+      document.getElementById("shopServiceWrap").style.display = "block";
+      document.getElementById("zoneLongPressHint").innerHTML = "💡 Qeyd: Zal və ya kabineti redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.";
+    }
+  }
+
+  function showMainApp() {
+    applyThemeAndLabels();
+    document.getElementById("appScreen").style.display = "block";
+    renderHeader();
+    renderTables();
+  }
+
+  function renderHeader() {
+    const u = users[currentEmail];
+    document.getElementById("headerShopName").textContent = rootState.shop.name || "POS";
+    document.getElementById("headerSubInfo").textContent = `${u ? (u.firstName + " " + u.lastName).trim() : ""} • ${todayStr()}`;
+  }
+
+  function switchTab(tab) {
+    if (tab !== "tables") exitJiggleMode();
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("sec-" + tab).classList.add("active");
+    document.getElementById("nav-" + tab).classList.add("active");
+    if (tab === "tables") renderTables();
+    if (tab === "order") { renderCategories(); renderMenu(); renderCart(); }
+    if (tab === "stock") renderStock();
+    if (tab === "reports") renderReports();
+  }
+
+  function startCardPress(el, tableId) {
+    if (jiggleMode) return;
+    longPressTriggered = false;
+    clearTimeout(longPressTimer);
+    el.classList.add("pressing");
+    longPressTimer = setTimeout(() => {
+      longPressTriggered = true;
+      el.classList.remove("pressing");
+      openZoneActionMenu(tableId);
+    }, 520);
+  }
+
+  function cancelCardPress(el) {
+    clearTimeout(longPressTimer);
+    if (el) el.classList.remove("pressing");
+  }
+
+  function handleCardClick(tableId) {
+    if (longPressTriggered) {
+      longPressTriggered = false;
+      return;
+    }
+    if (jiggleMode) {
+      openEditZoneModalById(tableId);
+      return;
+    }
+    activeTableId = tableId;
+    switchTab("order");
+  }
+
+  function openZoneActionMenu(tableId) {
+    const tbl = cur().tables.find(t => t.id === tableId);
+    if (!tbl) return;
+    selectedZoneActionId = tableId;
+    document.getElementById("zoneActionTitle").textContent = tbl.name;
+    document.getElementById("zoneActionSub").textContent = `Bölmə: ${tbl.zone}`;
+    document.getElementById("zoneActionModal").classList.add("open");
+  }
+
+  function openEditZoneModalById(id) {
+    const tbl = cur().tables.find(t => t.id === id);
+    if (!tbl) return;
+    document.getElementById("editZoneId").value = tbl.id;
+    document.getElementById("editZoneName").value = tbl.name;
+    const sel = document.getElementById("editZoneType");
+    sel.innerHTML = isWash()
+      ? `<option value="Boks">Boks</option><option value="Növbə">Növbə</option>`
+      : `<option value="Zal">Zal</option><option value="Kabinet">Kabinet</option><option value="Lounge">Lounge</option>`;
+    sel.value = tbl.zone;
+    document.getElementById("editZoneModal").classList.add("open");
+  }
+
+  function openEditZoneFromMenu() {
+    const id = selectedZoneActionId;
+    closeModal("zoneActionModal");
+    openEditZoneModalById(id);
+  }
+
+  function enterJiggleModeFromMenu() {
+    closeModal("zoneActionModal");
+    jiggleMode = true;
+    document.body.classList.add("jiggle-mode");
+  }
+
+  function exitJiggleMode() {
+    jiggleMode = false;
+    document.body.classList.remove("jiggle-mode");
+  }
+
+  function saveEditedZone() {
+    const b = cur();
+    const tbl = b.tables.find(t => t.id === document.getElementById("editZoneId").value);
+    if (!tbl) return;
+    const newName = document.getElementById("editZoneName").value.trim();
+    const newZone = document.getElementById("editZoneType").value;
+    if (!newName) return alert("Ad boş ola bilməz!");
+    tbl.name = newName;
+    tbl.zone = newZone;
+    saveState();
+    closeModal("editZoneModal");
+    renderTables();
+  }
+
+  function deleteZoneById(id) {
+    const b = cur();
+    if (!id) return;
+    if (b.openOrders[id]) return alert("Məşğul yeri silmək olmaz!");
+    b.tables = b.tables.filter(t => t.id !== id);
+    if (activeTableId === id) activeTableId = null;
+    saveState();
+    renderTables();
+  }
+
+  function deleteZoneFromMenu() {
+    const id = selectedZoneActionId;
+    closeModal("zoneActionModal");
+    deleteZoneById(id);
+  }
+
+  function renderTables() {
+    const b = cur();
+    const zones = ["Hamısı", ...new Set(b.tables.map(t => t.zone))];
+    document.getElementById("zoneTabs").innerHTML = zones.map(z =>
+      `<button class="chip ${activeZone === z ? "active" : ""}" onclick="activeZone='${z}';renderTables()">${z}</button>`
+    ).join("");
+    const list = activeZone === "Hamısı" ? b.tables : b.tables.filter(t => t.zone === activeZone);
+    document.getElementById("tablesGrid").innerHTML = list.map(t => {
+      const ord = b.openOrders[t.id];
+      const sum = ord ? ord.items.reduce((s, i) => s + i.price * i.qty, 0) : 0;
+      const elapsed = ord ? Math.max(1, Math.floor((Date.now() - ord.openedAt) / 60000)) + " dəq" : "Boşdur";
+      const plateHtml = (isWash() && ord && ord.carPlate) ? `<div class="plate-pill">${ord.carPlate}</div>` : "";
+      const washerInfo = (isWash() && ord && ord.washer1) ? `<div style="font-size:11px;color:#7dd3fc;margin-top:3px">👷 ${ord.washer1}${ord.washer2 ? " + " + ord.washer2 : ""}</div>` : "";
+      return `
+        <div class="table-card ${ord ? "busy" : ""}"
+          onpointerdown="startCardPress(this, '${t.id}')"
+          onpointerup="cancelCardPress(this)"
+          onpointerleave="cancelCardPress(this)"
+          onpointercancel="cancelCardPress(this)"
+          oncontextmenu="event.preventDefault(); openZoneActionMenu('${t.id}'); return false;"
+          onclick="handleCardClick('${t.id}')">
+          <div class="ios-minus-badge" onclick="event.stopPropagation(); deleteZoneById('${t.id}')">−</div>
+          <div class="table-top">
+            <div class="table-name">${t.name}</div>
+            <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? (isWash() ? "Yuyulur" : "Məşğul") : "Boş"}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">${t.zone}</div>
+          ${plateHtml}
+          ${washerInfo}
+          <div class="table-meta"><div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div><div class="table-time">${elapsed}</div></div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function openAddTableModal() {
+    document.getElementById("newTableName").value = "";
+    const sel = document.getElementById("newTableZone");
+    if (isWash()) {
+      document.getElementById("addTableModalTitle").textContent = "+ Yeni Boks / Növbə";
+      sel.innerHTML = `<option value="Boks">Boks</option><option value="Növbə">Növbə</option>`;
+    } else {
+      document.getElementById("addTableModalTitle").textContent = "+ Yeni Zal / Kabinet";
+      sel.innerHTML = `<option value="Zal">Zal</option><option value="Kabinet">Kabinet</option><option value="Lounge">Lounge</option>`;
+    }
+    document.getElementById("addTableModal").classList.add("open");
+  }
+
+  function addNewTable() {
+    const zone = document.getElementById("newTableZone").value;
+    const name = document.getElementById("newTableName").value.trim();
+    if (!name) return;
+    cur().tables.push({ id: "t_" + Date.now(), zone, name, custom: true });
+    saveState(); closeModal("addTableModal"); renderTables();
+  }
+
+  function renderCategories() {
+    const b = cur();
+    const cats = [...new Set(b.menu.map(m => m.cat))];
+    if (!cats.includes(activeCategory)) activeCategory = cats[0] || "";
+    document.getElementById("catTabs").innerHTML = cats.map(c =>
+      `<button class="chip ${activeCategory === c ? "active" : ""}" onclick="activeCategory='${c}';renderCategories();renderMenu()">${c}</button>`
+    ).join("");
+  }
+
+  function renderMenu() {
+    const b = cur();
+    const q = document.getElementById("menuSearch").value.trim().toLowerCase();
+    const filtered = b.menu.filter(m => q ? m.name.toLowerCase().includes(q) : m.cat === activeCategory);
+    document.getElementById("menuGrid").innerHTML = filtered.map(m => `
+      <div class="menu-item">
+        <div class="menu-top">
+          <div class="menu-name">${m.name}</div>
+          <button class="edit-prod-btn" onclick="openEditProductModal('${m.id}')">✏️ Redaktə</button>
+        </div>
+        <div class="price-btns">
+          ${m.variants.map((v, idx) => `<button class="price-btn" onclick="addToCart('${m.id}', ${idx})">${v.label}<span>${money(v.price)}</span></button>`).join("")}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function openEditProductModal(prodId) {
+    const prod = cur().menu.find(m => m.id === prodId);
+    if (!prod) return;
+    document.getElementById("editProdId").value = prod.id;
+    document.getElementById("editProdCat").value = prod.cat;
+    document.getElementById("editProdName").value = prod.name;
+    document.getElementById("editVariantsBox").innerHTML = prod.variants.map((v, idx) => `
+      <div class="field">
+        <label>Variant: ${v.label} — Qiymət (AZN)</label>
+        <input type="number" step="0.05" class="input edit-var-price" data-idx="${idx}" value="${v.price}" />
+      </div>
+    `).join("");
+    document.getElementById("editProductModal").classList.add("open");
+  }
+
+  function saveEditedProduct() {
+    const b = cur();
+    const prod = b.menu.find(m => m.id === document.getElementById("editProdId").value);
+    if (!prod) return;
+    const newCat = document.getElementById("editProdCat").value.trim();
+    const newName = document.getElementById("editProdName").value.trim();
+    if (!newCat || !newName) return alert("Kateqoriya və ad boş ola bilməz!");
+    for (const inp of document.querySelectorAll(".edit-var-price")) {
+      const val = parseFloat(inp.value);
+      if (isNaN(val) || val < 0) return alert("Düzgün qiymət daxil edin!");
+      prod.variants[parseInt(inp.getAttribute("data-idx"), 10)].price = val;
+    }
+    prod.cat = newCat; prod.name = newName; activeCategory = newCat;
+    saveState(); closeModal("editProductModal"); renderCategories(); renderMenu();
+  }
+
+  function ensureOpenOrder() {
+    const b = cur();
+    if (!activeTableId) activeTableId = b.tables[0].id;
+    if (!b.openOrders[activeTableId]) {
+      const defaultW1 = (isWash() && b.washers && b.washers[0]) ? b.washers[0].name : "";
+      b.openOrders[activeTableId] = { openedAt: Date.now(), note: "", carPlate: "", carModel: "", washer1: defaultW1, washer2: "", items: [] };
+    }
+    return b.openOrders[activeTableId];
+  }
+
+  function saveCarOrderMeta() {
+    const ord = ensureOpenOrder();
+    ord.carPlate = document.getElementById("carPlateInput").value.trim().toUpperCase();
+    ord.carModel = document.getElementById("carModelInput").value.trim();
+    ord.washer1 = document.getElementById("washer1Select").value;
+    ord.washer2 = document.getElementById("washer2Select").value;
+    if (ord.washer2 === ord.washer1) ord.washer2 = "";
+    saveState();
+  }
+
+  function addToCart(menuId, variantIdx) {
+    const b = cur();
+    const ord = ensureOpenOrder();
+    const item = b.menu.find(m => m.id === menuId);
+    const variant = item.variants[variantIdx];
+    const key = menuId + "_" + variantIdx;
+    const ex = ord.items.find(i => i.key === key);
+    if (ex) ex.qty += 1;
+    else ord.items.push({ key, menuId, name: item.variants.length > 1 ? `${item.name} (${variant.label})` : item.name, price: variant.price, qty: 1 });
+    saveState(); renderCart();
+  }
+
+  function changeQty(key, delta) {
+    const b = cur();
+    const ord = b.openOrders[activeTableId];
+    if (!ord) return;
+    const idx = ord.items.findIndex(i => i.key === key);
+    if (idx === -1) return;
+    ord.items[idx].qty += delta;
+    if (ord.items[idx].qty <= 0) ord.items.splice(idx, 1);
+    if (ord.items.length === 0 && !ord.carPlate) delete b.openOrders[activeTableId];
+    saveState(); renderCart();
+  }
+
+  function saveOrderNote() {
+    const b = cur();
+    if (!activeTableId || !b.openOrders[activeTableId]) return;
+    b.openOrders[activeTableId].note = document.getElementById("orderNoteInput").value;
+    saveState();
+  }
+
+  function calcTotals(items) {
+    const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const svcPct = isWash() ? 0 : Number(rootState.shop.servicePercent || 0);
+    const serviceAmt = svcPct > 0 ? +(subtotal * (svcPct / 100)).toFixed(2) : 0;
+    const total = +(subtotal + serviceAmt).toFixed(2);
+    return { subtotal, svcPct, serviceAmt, total };
+  }
+
+  function renderCart() {
+    const b = cur();
+    if (!activeTableId && b.tables[0]) activeTableId = b.tables[0].id;
+    const tbl = b.tables.find(t => t.id === activeTableId);
+    document.getElementById("activeTableTitle").textContent = tbl ? `${tbl.name} (${tbl.zone})` : "Seçilməyib";
+    const ord = activeTableId ? b.openOrders[activeTableId] : null;
+    document.getElementById("activeTableTime").textContent = ord ? `Açılıb: ${new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" })}` : "";
+
+    if (isWash()) {
+      const wOpts = (b.washers || []).map(w => `<option value="${w.name}">${w.name} (${w.percent}%)</option>`).join("");
+      document.getElementById("washer1Select").innerHTML = `<option value="">Seçilməyib</option>` + wOpts;
+      document.getElementById("washer2Select").innerHTML = `<option value="">Yoxdur (Tək yuyub)</option>` + wOpts;
+      document.getElementById("carPlateInput").value = ord?.carPlate || "";
+      document.getElementById("carModelInput").value = ord?.carModel || "";
+      document.getElementById("washer1Select").value = ord?.washer1 || (b.washers?.[0]?.name || "");
+      document.getElementById("washer2Select").value = ord?.washer2 || "";
+    }
+
+    const listEl = document.getElementById("cartList");
+    if (!ord || ord.items.length === 0) {
+      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px">Siyahı boşdur.</div>`;
+      document.getElementById("cartCountLabel").textContent = "0 ədəd";
+      document.getElementById("cartTotalLabel").textContent = "0.00 ₼";
+      return;
+    }
+    document.getElementById("orderNoteInput").value = ord.note || "";
+    document.getElementById("cartCountLabel").textContent = `${ord.items.reduce((s, i) => s + i.qty, 0)} ədəd`;
+    const t = calcTotals(ord.items);
+    document.getElementById("cartTotalLabel").textContent = money(t.total);
+    listEl.innerHTML = ord.items.map(i => `
+      <div class="cart-row">
+        <div><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${money(i.price)} × ${i.qty}</div></div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="changeQty('${i.key}', -1)">−</button>
+          <span style="min-width:18px;text-align:center;font-weight:700">${i.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${i.key}', 1)">+</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function closeOrder(method) {
+    const b = cur();
+    const ord = activeTableId ? b.openOrders[activeTableId] : null;
+    if (!ord || ord.items.length === 0) return alert("Xidmət / məhsul seçilməyib!");
+    if (isWash() && !ord.washer1 && !ord.washer2) return alert("Maşını yuyan moyşiki seçin!");
+
+    const tbl = b.tables.find(t => t.id === activeTableId);
+    const t = calcTotals(ord.items);
+    const u = users[currentEmail];
+
+    const workers = [];
+    if (isWash()) {
+      const w1 = (b.washers || []).find(w => w.name === ord.washer1);
+      const w2 = (b.washers || []).find(w => w.name === ord.washer2 && w.name !== ord.washer1);
+      if (w1 && w2) {
+        const half = +(t.total / 2).toFixed(2);
+        workers.push({ name: w1.name, percent: w1.percent, baseAmount: half, earned: +(half * (w1.percent / 100)).toFixed(2) });
+        workers.push({ name: w2.name, percent: w2.percent, baseAmount: half, earned: +(half * (w2.percent / 100)).toFixed(2) });
+      } else if (w1) {
+        workers.push({ name: w1.name, percent: w1.percent, baseAmount: t.total, earned: +(t.total * (w1.percent / 100)).toFixed(2) });
+      } else if (w2) {
+        workers.push({ name: w2.name, percent: w2.percent, baseAmount: t.total, earned: +(t.total * (w2.percent / 100)).toFixed(2) });
+      }
+    }
+
+    const receipt = {
+      id: "ÇEK-" + String(b.receipts.length + 1001),
+      orderNo: String(69878 + b.receipts.length),
+      date: todayStr(),
+      openedTime: new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      zoneName: tbl ? tbl.zone : "Zal",
+      tableName: tbl ? tbl.name : "Masa",
+      carPlate: ord.carPlate || "",
+      carModel: ord.carModel || "",
+      workers,
+      waiter: isWash() ? workers.map(w => w.name).join(" + ") : (u ? `${u.firstName} ${u.lastName}`.trim() : "Kassir"),
+      method, note: ord.note || "",
+      items: JSON.parse(JSON.stringify(ord.items)),
+      subtotal: t.subtotal,
+      svcPct: t.svcPct,
+      serviceAmt: t.serviceAmt,
+      total: t.total
+    };
+
+    if (!b.soldCounts) b.soldCounts = {};
+    ord.items.forEach(ci => {
+      const m = b.menu.find(x => x.id === ci.menuId);
+      if (m && m.stockKey) {
+        b.soldCounts[m.stockKey] = (b.soldCounts[m.stockKey] || 0) + ci.qty;
+        if (b.stock[m.stockKey] !== undefined) b.stock[m.stockKey] = Math.max(0, b.stock[m.stockKey] - ci.qty);
+      }
+    });
+
+    b.receipts.unshift(receipt);
+    delete b.openOrders[activeTableId];
+    saveState(); renderCart(); openReceiptModal(receipt, false);
+  }
+
+  function showPreReceipt() {
+    const b = cur();
+    const ord = activeTableId ? b.openOrders[activeTableId] : null;
+    if (!ord || ord.items.length === 0) return alert("Açıq sifariş yoxdur!");
+    const tbl = b.tables.find(t => t.id === activeTableId);
+    const t = calcTotals(ord.items);
+    const u = users[currentEmail];
+    openReceiptModal({
+      id: "QONAQ HESABI",
+      orderNo: String(69878 + b.receipts.length),
+      date: todayStr(),
+      openedTime: new Date(ord.openedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" }),
+      zoneName: tbl ? tbl.zone : "Zal",
+      tableName: tbl ? tbl.name : "Masa",
+      carPlate: ord.carPlate || "",
+      carModel: ord.carModel || "",
+      waiter: isWash() ? [ord.washer1, ord.washer2].filter(Boolean).join(" + ") : (u ? `${u.firstName} ${u.lastName}`.trim() : "Kassir"),
+      method: "Ödənilməyib",
+      note: ord.note || "",
+      items: ord.items,
+      subtotal: t.subtotal,
+      svcPct: t.svcPct,
+      serviceAmt: t.serviceAmt,
+      total: t.total
+    }, true);
+  }
+
+  function buildReceiptHtml(r, isPre) {
+    const svcLine = r.svcPct > 0
+      ? `<div class="prem-sum-line"><span>Servis "${r.svcPct}%":</span><span>+${num2(r.serviceAmt)}</span></div>`
+      : "";
+    const carLine = r.carPlate
+      ? `<div class="prem-grid2"><span>Maşın: <strong>${r.carPlate}</strong></span><span>${r.carModel || ""}</span></div>`
+      : "";
+    return `
+      <div class="prem-head">
+        <div class="prem-brand">${rootState.shop.name}</div>
+        <div class="prem-sub">${isPre ? "QONAQ HESABI" : r.id}</div>
+        ${rootState.shop.address ? `<div class="prem-addr">${rootState.shop.address}</div>` : ""}
+      </div>
+      <div class="prem-meta">
+        <div class="prem-grid2"><span>${isWash() ? "Bölmə" : "Zal"}: ${r.zoneName || "Zal"}</span><span>${isWash() ? "Yer" : "Masa"}: ${r.tableName}</span></div>
+        ${carLine}
+        <div class="prem-grid2"><span>Açılıb: ${r.date} ${r.openedTime || r.time}</span><span>Sifariş № ${r.orderNo || ""}</span></div>
+        <div class="prem-grid2"><span>${isWash() ? "Moyşik" : "Ofisiant"}: ${r.waiter || ""}</span><span>${r.method}</span></div>
+      </div>
+      <div class="prem-hr"></div>
+      <div class="prem-cols"><span>Adı</span><span class="col-mid">Miqdar</span><span class="col-right">Məbləğ</span></div>
+      <div class="prem-hr"></div>
+      ${r.items.map(i => `
+        <div class="prem-item">
+          <span>${i.name}</span>
+          <span class="col-mid">${i.qty}</span>
+          <span class="col-right">${num2(i.price * i.qty)}</span>
+        </div>
+      `).join("")}
+      ${r.note ? `<div style="font-size:11px;margin-top:4px">Qeyd: ${r.note}</div>` : ""}
+      <div class="prem-hr"></div>
+      <div class="prem-sum-line"><span>Tam məbləğ:</span><span>${num2(r.subtotal ?? r.total)}</span></div>
+      ${svcLine}
+      <div class="prem-sum-line"><span>Yekun:</span><span>${num2(r.total)}</span></div>
+      <div class="prem-grand"><span>YEKUN ÖDƏNİŞ:</span><span>${num2(r.total)} ₼</span></div>
+      <div class="prem-foot">${rootState.shop.footer || "Təşəkkür edirik"}</div>
+    `;
+  }
+
+  function openReceiptModal(r, isPre = false) {
+    currentReceiptObj = { ...r, isPre };
+    document.getElementById("receiptPrintable").innerHTML = buildReceiptHtml(r, isPre);
+    document.getElementById("receiptModal").classList.add("open");
+  }
+
+  function triggerPrint() {
+    if (!currentReceiptObj) return;
+    const r = currentReceiptObj;
+    const receiptHtml = buildReceiptHtml(r, r.isPre);
+    const frame = document.getElementById("hiddenPrintFrame");
+
+    if (frame && frame.contentWindow) {
+      const doc = frame.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <title>${r.id || "Çek"}</title>
+  <style>
+    @page { margin: 3mm; }
+    body {
+      margin: 0;
+      padding: 6px;
       background: #ffffff;
       color: #000000;
       font-family: "Courier New", Courier, monospace;
     }
     .premium-receipt {
       width: 100%;
-      max-width: 80mm;
+      max-width: 76mm;
       margin: 0 auto;
       color: #000000;
     }
@@ -35,7 +1440,7 @@ function triggerPrint() {
     .prem-hr { border-top: 1px dashed #000000; margin: 8px 0; }
     .prem-cols, .prem-item {
       display: grid;
-      grid-template-columns: 1fr 52px 72px;
+      grid-template-columns: 1fr 48px 70px;
       font-size: 12px;
       gap: 4px;
     }
@@ -54,26 +1459,327 @@ function triggerPrint() {
       padding-top: 6px;
     }
     .prem-foot { text-align: center; font-size: 11px; margin-top: 12px; font-family: Arial, sans-serif; }
-    @page { margin: 4mm; }
-    @media print {
-      body { padding: 0; }
-    }
   </style>
 </head>
 <body>
   <div class="premium-receipt">${receiptHtml}</div>
-  <script>
-    window.onload = function () {
-      setTimeout(function () {
-        window.print();
-      }, 200);
-    };
-  <\/script>
 </body>
 </html>`);
-    printWin.document.close();
-    return;
+      doc.close();
+      setTimeout(() => {
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch (e) {
+          window.print();
+        }
+      }, 150);
+      return;
+    }
+    window.print();
   }
 
-  window.print();
-}
+  function formatReceiptPlain(r) {
+    return [
+      `${rootState.shop.name}`,
+      r.isPre ? "QONAQ HESABI" : r.id,
+      rootState.shop.address || "",
+      `${r.zoneName || "Zal"}: ${r.tableName}${r.carPlate ? " | Maşın: " + r.carPlate : ""}`,
+      `Açılıb: ${r.date} ${r.openedTime || r.time} | № ${r.orderNo || ""}`,
+      `${isWash() ? "Moyşik" : "Ofisiant"}: ${r.waiter || ""}`,
+      "--------------------------------",
+      ...r.items.map(i => `${i.name}  x${i.qty}  ${num2(i.price * i.qty)}`),
+      "--------------------------------",
+      `Tam məbləğ: ${num2(r.subtotal ?? r.total)}`,
+      ...(r.svcPct > 0 ? [`Servis "${r.svcPct}%": +${num2(r.serviceAmt)}`] : []),
+      `YEKUN ÖDƏNİŞ: ${num2(r.total)} ₼`,
+      rootState.shop.footer || ""
+    ].filter(Boolean).join("\n");
+  }
+
+  function copyReceiptText() { if (currentReceiptObj) { navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj)); alert("Çek mətni kopyalandı!"); } }
+  function shareReceiptTelegram() { if (currentReceiptObj) window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj)), "_blank"); }
+
+  function openMoveModal() {
+    const b = cur();
+    if (!activeTableId || !b.openOrders[activeTableId]) return;
+    const free = b.tables.filter(t => t.id !== activeTableId && !b.openOrders[t.id]);
+    if (!free.length) return alert("Boş yer yoxdur!");
+    document.getElementById("moveTargetSelect").innerHTML = free.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+    document.getElementById("moveModal").classList.add("open");
+  }
+
+  function confirmMoveTable() {
+    const b = cur();
+    const targetId = document.getElementById("moveTargetSelect").value;
+    b.openOrders[targetId] = b.openOrders[activeTableId];
+    delete b.openOrders[activeTableId];
+    activeTableId = targetId;
+    saveState(); closeModal("moveModal"); renderCart();
+  }
+
+  function openAddProductModal() {
+    const b = cur();
+    const cats = [...new Set(b.menu.map(m => m.cat))];
+    const sel = document.getElementById("newProdCat");
+    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("") + `<option value="__NEW__">+ Yeni kateqoriya yarat...</option>`;
+    document.getElementById("customCatWrap").style.display = "none";
+    document.getElementById("customCatName").value = "";
+    document.getElementById("newProdName").value = "";
+    document.getElementById("newProdPrice").value = "";
+    document.getElementById("addProductModal").classList.add("open");
+  }
+
+  function toggleNewCatInput() {
+    document.getElementById("customCatWrap").style.display = document.getElementById("newProdCat").value === "__NEW__" ? "block" : "none";
+  }
+
+  function addNewProduct() {
+    const b = cur();
+    let cat = document.getElementById("newProdCat").value;
+    if (cat === "__NEW__") {
+      cat = document.getElementById("customCatName").value.trim();
+      if (!cat) return alert("Yeni kateqoriya adını yazın!");
+    }
+    const name = document.getElementById("newProdName").value.trim();
+    const price = parseFloat(document.getElementById("newProdPrice").value);
+    if (!name || isNaN(price)) return alert("Ad və qiymət daxil edin!");
+    b.menu.push({ id: "m_" + Date.now(), cat, name, variants: [{ label: "Standart", price }] });
+    saveState(); closeModal("addProductModal"); activeCategory = cat; renderCategories(); renderMenu();
+  }
+
+  function renderStock() {
+    const b = cur();
+    if (!b.soldCounts) b.soldCounts = {};
+    document.getElementById("stockList").innerHTML = Object.entries(b.stock).map(([name, qty]) => {
+      const sold = b.soldCounts[name] || 0;
+      return `
+        <div class="list-card ${qty <= 5 ? "low-stock" : ""}">
+          <div>
+            <strong>${name}</strong>
+            <div style="font-size:12px;color:var(--muted)">Qalıq: <strong>${qty}</strong></div>
+            <div class="sold-badge">${isWash() ? "İstifadə / Satış" : "Satılıb"}: ${sold}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-outline btn-sm" onclick="updateStock('${name}', -1)">−1</button>
+            <button class="btn-green btn-sm" onclick="updateStock('${name}', 10)">+10</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function updateStock(name, delta) {
+    const b = cur();
+    b.stock[name] = Math.max(0, (b.stock[name] || 0) + delta);
+    saveState(); renderStock();
+  }
+
+  function openAddStockModal() { document.getElementById("addStockModal").classList.add("open"); }
+  function addNewStock() {
+    const b = cur();
+    const name = document.getElementById("newStockName").value.trim();
+    const qty = parseInt(document.getElementById("newStockQty").value, 10) || 0;
+    if (!name) return;
+    b.stock[name] = qty;
+    if (!b.soldCounts) b.soldCounts = {};
+    if (b.soldCounts[name] === undefined) b.soldCounts[name] = 0;
+    saveState(); closeModal("addStockModal"); renderStock();
+  }
+
+  function openAddWasherModal() {
+    document.getElementById("newWasherName").value = "";
+    document.getElementById("newWasherPct").value = "40";
+    document.getElementById("addWasherModal").classList.add("open");
+  }
+
+  function addNewWasher() {
+    const b = cur();
+    const name = document.getElementById("newWasherName").value.trim();
+    const percent = parseFloat(document.getElementById("newWasherPct").value);
+    if (!name || isNaN(percent) || percent <= 0 || percent > 100) return alert("Ad və düzgün faiz (1-100) daxil edin!");
+    if (!b.washers) b.washers = [];
+    b.washers.push({ id: "w_" + Date.now(), name, percent });
+    saveState(); closeModal("addWasherModal"); renderReports();
+  }
+
+  function deleteWasher(id) {
+    const b = cur();
+    b.washers = (b.washers || []).filter(w => w.id !== id);
+    saveState(); renderReports();
+  }
+
+  function openShopModal() {
+    document.getElementById("shopNameIn").value = rootState.shop.name || "";
+    document.getElementById("shopAddressIn").value = rootState.shop.address || "";
+    document.getElementById("shopPhoneIn").value = rootState.shop.phone || "";
+    document.getElementById("shopServiceIn").value = String(rootState.shop.servicePercent || 0);
+    document.getElementById("shopFooterIn").value = rootState.shop.footer || "";
+    document.getElementById("shopModal").classList.add("open");
+  }
+
+  function saveShopInfo() {
+    rootState.shop.name = document.getElementById("shopNameIn").value.trim() || "POS";
+    rootState.shop.address = document.getElementById("shopAddressIn").value.trim();
+    rootState.shop.phone = document.getElementById("shopPhoneIn").value.trim();
+    rootState.shop.servicePercent = parseInt(document.getElementById("shopServiceIn").value, 10) || 0;
+    rootState.shop.footer = document.getElementById("shopFooterIn").value.trim();
+    saveState(); renderHeader(); closeModal("shopModal");
+  }
+
+  function setPeriod(period) {
+    document.querySelectorAll("#sec-reports .chip").forEach(c => c.classList.remove("active"));
+    const b = document.getElementById("p-" + period);
+    if (b) b.classList.add("active");
+    const now = new Date(); const end = todayStr(); let start = end;
+    if (period === "prevMonthToToday") {
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      start = prev.getFullYear() + "-" + String(prev.getMonth() + 1).padStart(2, "0") + "-01";
+    } else if (period === "thisMonth") {
+      start = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-01";
+    } else if (period === "last30") {
+      const d = new Date(Date.now() - 29 * 86400000);
+      start = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    } else if (period === "all") start = "2000-01-01";
+    document.getElementById("dateFrom").value = start;
+    document.getElementById("dateTo").value = end;
+    renderReports();
+  }
+
+  function onCustomDateChange() {
+    document.querySelectorAll("#sec-reports .chip").forEach(c => c.classList.remove("active"));
+    renderReports();
+  }
+
+  function renderReports() {
+    if (!document.getElementById("dateFrom").value) { setPeriod("today"); return; }
+    const b = cur();
+    const from = document.getElementById("dateFrom").value;
+    const to = document.getElementById("dateTo").value;
+    const list = b.receipts.filter(r => r.date >= from && r.date <= to);
+    const totalSum = list.reduce((s, r) => s + r.total, 0);
+
+    document.getElementById("kpiTotal").textContent = money(totalSum);
+    document.getElementById("kpiCount").textContent = list.length;
+    document.getElementById("kpiCash").textContent = money(list.filter(r => r.method === "Nağd").reduce((s, r) => s + r.total, 0));
+    document.getElementById("kpiCard").textContent = money(list.filter(r => r.method === "Kart").reduce((s, r) => s + r.total, 0));
+
+    if (isWash()) {
+      const stats = {};
+      (b.washers || []).forEach(w => {
+        stats[w.name] = { id: w.id, percent: w.percent, cars: 0, baseTotal: 0, earned: 0 };
+      });
+      list.forEach(r => {
+        (r.workers || []).forEach(wk => {
+          if (!stats[wk.name]) stats[wk.name] = { id: "", percent: wk.percent, cars: 0, baseTotal: 0, earned: 0 };
+          stats[wk.name].cars += 1;
+          stats[wk.name].baseTotal += wk.baseAmount;
+          stats[wk.name].earned += wk.earned;
+        });
+      });
+
+      let totalWorkersPay = 0;
+      const cardsHtml = Object.entries(stats).map(([name, st]) => {
+        totalWorkersPay += st.earned;
+        return `
+          <div class="list-card" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>👷 ${name}</strong> <span style="font-size:11px;color:#38bdf8">(${st.percent}%)</span></div>
+              ${st.id ? `<button class="btn-outline btn-sm" style="padding:2px 7px;color:#fca5a5" onclick="deleteWasher('${st.id}')">✕</button>` : ""}
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px">
+              <span>Yuduğu maşın: <strong style="color:#fff">${st.cars}</strong></span>
+              <span>Gördüyü iş: <strong style="color:#fff">${money(st.baseTotal)}</strong></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--border)">
+              <span>Moyşikin Maaşı (${st.percent}%):</span>
+              <strong style="color:var(--gold)">${money(st.earned)}</strong>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const netOwner = totalSum - totalWorkersPay;
+      document.getElementById("washersReportList").innerHTML = cardsHtml + `
+        <div class="kpi-card" style="border-color:#22c55e;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+            <span>Moyşiklərə veriləcək cəmi:</span><strong style="color:var(--gold)">${money(totalWorkersPay)}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-top:6px">
+            <span>Kassaya Qalan Xalis Gəlir:</span><strong style="color:var(--green)">${money(netOwner)}</strong>
+          </div>
+        </div>
+      `;
+    }
+
+    const byDay = {};
+    list.forEach(r => {
+      if (!byDay[r.date]) byDay[r.date] = { count: 0, total: 0 };
+      byDay[r.date].count += 1; byDay[r.date].total += r.total;
+    });
+    document.getElementById("dailySummaryList").innerHTML = Object.keys(byDay).sort().reverse().map(d =>
+      `<div class="list-card"><div><strong>📅 ${d}</strong><div style="font-size:11px;color:var(--muted)">${byDay[d].count} ${isWash() ? "maşın" : "çek"}</div></div><strong style="color:var(--green)">${money(byDay[d].total)}</strong></div>`
+    ).join("") || `<div style="color:var(--muted);font-size:13px">Satış yoxdur.</div>`;
+
+    document.getElementById("receiptsHistoryList").innerHTML = list.map(r => `
+      <div class="list-card" style="cursor:pointer" onclick="openReceiptById('${r.id}')">
+        <div>
+          <strong>${r.id} — ${r.tableName}${r.carPlate ? " (" + r.carPlate + ")" : ""}</strong>
+          <div style="font-size:11px;color:var(--muted)">${r.date} ${r.time} • ${r.waiter || ""} • ${r.method}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong style="color:var(--green)">${money(r.total)}</strong>
+          <button class="btn-danger btn-sm" onclick="event.stopPropagation();promptDeleteReceipt('${r.id}')">🗑️</button>
+        </div>
+      </div>
+    `).join("") || `<div style="color:var(--muted);font-size:13px">Çek yoxdur.</div>`;
+  }
+
+  function openReceiptById(id) {
+    const r = cur().receipts.find(x => x.id === id);
+    if (r) openReceiptModal(r, false);
+  }
+
+  function promptDeleteReceipt(id) {
+    const r = cur().receipts.find(x => x.id === id);
+    if (!r) return;
+    pendingDeleteReceiptId = id;
+    document.getElementById("deleteReceiptInfo").textContent = `${r.id} (${r.tableName}, ${money(r.total)}) çekini silmək üçün parolu daxil edin:`;
+    document.getElementById("deleteReceiptPassIn").value = "";
+    document.getElementById("deleteReceiptErr").textContent = "";
+    document.getElementById("deleteReceiptModal").classList.add("open");
+  }
+
+  function confirmDeleteReceipt() {
+    const passIn = document.getElementById("deleteReceiptPassIn").value;
+    const u = users[currentEmail];
+    if (!u || passIn !== u.password) {
+      document.getElementById("deleteReceiptErr").textContent = "Parol yanlışdır! Çek silinmədi.";
+      return;
+    }
+    const b = cur();
+    b.receipts = b.receipts.filter(x => x.id !== pendingDeleteReceiptId);
+    pendingDeleteReceiptId = null;
+    saveState();
+    closeModal("deleteReceiptModal");
+    renderReports();
+  }
+
+  function buildReportText() {
+    const b = cur();
+    const from = document.getElementById("dateFrom").value;
+    const to = document.getElementById("dateTo").value;
+    const list = b.receipts.filter(r => r.date >= from && r.date <= to);
+    return `📊 ${rootState.shop.name} (${isWash() ? "Moyka" : "Restoran/Lounge"} • ${from} — ${to})\nSay: ${list.length}\nCəmi: ${money(list.reduce((s, r) => s + r.total, 0))}`;
+  }
+
+  function copyReportText() { navigator.clipboard.writeText(buildReportText()); alert("Açot kopyalandı!"); }
+  function shareReportTelegram() { window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportText()), "_blank"); }
+  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+  if (currentEmail && users[currentEmail] && users[currentEmail].verified) {
+    enterAfterAuth();
+  }
+</script>
+</body>
+</html>
