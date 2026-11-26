@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Restoran & Kafe POS</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root {
       --bg: #0f1318;
@@ -63,96 +64,48 @@
     .btn-outline { background: transparent; border: 1px solid var(--border); }
     .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
-    .auth-wrap {
-      max-width: 440px;
-      margin: 24px auto;
-      padding: 16px;
-    }
-    .auth-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-    }
-    .auth-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    .auth-wrap { max-width: 440px; margin: 20px auto; padding: 14px; }
+    .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
 
     .container { padding: 12px 14px; max-width: 960px; margin: 0 auto; }
     .section { display: none; }
     .section.active { display: block; }
 
     .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 40;
-      background: #131820;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-      gap: 4px;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      background: #131820; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); gap: 4px;
     }
     .nav-btn {
-      background: transparent;
-      color: var(--muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 7px 4px;
-      font-size: 11px;
-      border-radius: 10px;
+      background: transparent; color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 7px 4px; font-size: 11px; border-radius: 10px;
     }
     .nav-btn.active { background: rgba(229, 57, 53, 0.16); color: #fff; }
     .nav-icon { font-size: 17px; }
 
     .tabs-row {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 10px;
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;
       scrollbar-width: none;
     }
     .tabs-row::-webkit-scrollbar { display: none; }
     .chip {
-      white-space: nowrap;
-      padding: 8px 13px;
-      border-radius: 999px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+      white-space: nowrap; padding: 8px 13px; border-radius: 999px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 700;
     }
     .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    .tables-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
+    .tables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     @media (min-width: 640px) { .tables-grid { grid-template-columns: repeat(3, 1fr); } }
     .table-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 13px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 100px;
-      cursor: pointer;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 13px; position: relative; display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 100px; cursor: pointer;
     }
-    .table-card.busy {
-      border-color: var(--amber);
-      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card));
-    }
+    .table-card.busy { border-color: var(--amber); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
     .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .table-name { font-size: 15px; font-weight: 800; }
     .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
@@ -162,30 +115,26 @@
     .table-sum { font-size: 16px; font-weight: 800; }
     .table-time { font-size: 11px; color: var(--muted); }
     .del-table-btn {
-      position: absolute; bottom: 8px; right: 8px;
-      padding: 3px 7px; font-size: 11px;
+      position: absolute; bottom: 8px; right: 8px; padding: 3px 7px; font-size: 11px;
       background: rgba(239, 68, 68, 0.18); color: #fca5a5;
     }
 
     .order-header {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px; margin-bottom: 10px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px;
     }
     .input, select {
       width: 100%; background: var(--card2); border: 1px solid var(--border);
       color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
     }
-    .menu-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px;
-    }
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
     @media (min-width: 640px) { .menu-grid { grid-template-columns: repeat(3, 1fr); } }
     .menu-item {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
     }
     .menu-name { font-size: 13px; font-weight: 700; }
-    .menu-desc { font-size: 11px; color: var(--muted); }
     .price-btns { display: flex; flex-wrap: wrap; gap: 6px; }
     .price-btn {
       flex: 1; background: var(--card2); border: 1px solid var(--border);
@@ -193,13 +142,8 @@
     }
     .price-btn span { color: var(--green); display: block; font-size: 13px; }
 
-    .cart-box {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
-    }
-    .cart-row {
-      display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      padding: 8px 0; border-bottom: 1px solid var(--border);
-    }
+    .cart-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+    .cart-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .cart-row:last-child { border-bottom: none; }
     .qty-controls { display: flex; align-items: center; gap: 6px; }
     .qty-btn { width: 28px; height: 28px; padding: 0; font-size: 15px; }
@@ -249,12 +193,12 @@
 </head>
 <body>
 
-<!-- GİRİŞ / QEYDİYYAT / TƏSDİQ EKRANI -->
+<!-- GİRİŞ / QEYDİYYAT / TƏSDİQ -->
 <div id="authScreen" class="auth-wrap">
   <div class="auth-card">
     <h2 style="margin:0 0 4px">🍽️ Restoran & Kafe POS</h2>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
-      Hesab yaradın, e-poçtunuzu təsdiqləyin və obyektinizi qurun
+      Qeydiyyatdan keçin, e-poçtunuzu təsdiqləyin və obyektinizi qurun
     </div>
 
     <div class="auth-tabs">
@@ -262,27 +206,24 @@
       <button class="btn-outline" id="tabRegBtn" onclick="setAuthMode('register')">Qeydiyyat</button>
     </div>
 
-    <!-- LOGIN FORM -->
     <div id="loginBox">
-      <div class="field"><label>E-poçt (Gmail, Hotmail, iCloud...)</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" /></div>
+      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" /></div>
       <div class="field"><label>Parol</label><input class="input" id="loginPassword" type="password" placeholder="••••••••" /></div>
       <button class="btn-green" style="width:100%" onclick="doLogin()">Daxil ol</button>
     </div>
 
-    <!-- REGISTER FORM -->
     <div id="registerBox" style="display:none">
       <div class="field"><label>Ad</label><input class="input" id="regFirst" placeholder="Adınız" /></div>
       <div class="field"><label>Soyad</label><input class="input" id="regLast" placeholder="Soyadınız" /></div>
       <div class="field"><label>Obyektin Adı</label><input class="input" id="regShop" placeholder="Məs: Dostlar Kafe" /></div>
-      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com / ad@hotmail.com / ad@icloud.com" /></div>
+      <div class="field"><label>E-poçt (Gmail / Hotmail / iCloud)</label><input class="input" id="regEmail" type="email" placeholder="ad@gmail.com" /></div>
       <div class="field"><label>Parol</label><input class="input" id="regPassword" type="password" placeholder="Ən azı 4 simvol" /></div>
-      <button class="btn-primary" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod göndər</button>
+      <button class="btn-primary" id="regSubmitBtn" style="width:100%" onclick="doRegister()">Qeydiyyatdan keç və Kod göndər</button>
     </div>
 
-    <!-- VERIFY CODE BOX -->
     <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--amber);margin-bottom:8px" id="verifyInfoText">E-poçta 6 rəqəmli təsdiq kodu göndərildi:</div>
-      <div class="field"><label>Təsdiq Kodu</label><input class="input" id="verifyCodeIn" placeholder="123456" /></div>
+      <div style="font-size:12px;color:var(--amber);margin-bottom:8px" id="verifyInfoText"></div>
+      <div class="field"><label>6 Rəqəmli Təsdiq Kodu</label><input class="input" id="verifyCodeIn" placeholder="123456" /></div>
       <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
     </div>
 
@@ -294,29 +235,27 @@
 <div id="setupScreen" class="auth-wrap" style="display:none">
   <div class="auth-card">
     <h2 style="margin:0 0 6px">🏪 Obyektinizi Qurun</h2>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
-      Zallar, kabinetlər və menyu seçiminizi edin
-    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Zallar, kabinetlər və menyu seçiminizi edin</div>
     <div class="field"><label>Obyektin Adı</label><input class="input" id="setupShopName" /></div>
     <div class="field"><label>Ünvan</label><input class="input" id="setupAddress" placeholder="Bakı şəhəri" /></div>
     <div class="field"><label>Zal Sayı</label><input type="number" min="0" max="50" class="input" id="setupZals" value="4" /></div>
     <div class="field"><label>Kabinet Sayı</label><input type="number" min="0" max="50" class="input" id="setupCabinets" value="2" /></div>
     <div class="field">
-      <label>Menyu Seçimi</label>
+      <label>Menyu</label>
       <select class="input" id="setupMenuMode">
-        <option value="default">Hazır Restoran/Kafe Menyusu + Vaxt (1 saat 1₼, Yarım saat 0.50₼)</option>
-        <option value="empty">Tam Boş Menyu (Özüm məhsullar əlavə edəcəyəm)</option>
+        <option value="default">Hazır Menyu + Vaxt (1 saat 1₼, Yarım saat 0.50₼)</option>
+        <option value="empty">Boş Menyu (Özüm məhsullar əlavə edəcəyəm)</option>
       </select>
     </div>
     <button class="btn-green" style="width:100%" onclick="finishSetup()">Obyekti Yarat və Başla</button>
   </div>
 </div>
 
-<!-- ƏSAS POS TƏTBİQİ -->
+<!-- ƏSAS POS -->
 <div id="appScreen" style="display:none">
   <header>
     <div class="brand">
-      <div class="brand-title" id="headerShopName">RESTORAN & KAFE POS</div>
+      <div class="brand-title" id="headerShopName">POS</div>
       <div class="brand-sub" id="headerSubInfo"></div>
     </div>
     <div class="header-actions">
@@ -375,7 +314,7 @@
 
     <section id="sec-stock" class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <strong>Anbar və Komponent Qalıqları</strong>
+        <strong>Anbar Qalıqları</strong>
         <button class="btn-primary btn-sm" onclick="openAddStockModal()">+ Yeni Anbar Malı</button>
       </div>
       <div id="stockList"></div>
@@ -510,10 +449,17 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  const API_BASE = "";
-  let AUTH_TOKEN = localStorage.getItem("pos_token") || "";
-  let CURRENT_USER = JSON.parse(localStorage.getItem("pos_user") || "null");
-  let pendingEmail = "";
+  // === EMAILJS AÇARLARI ===
+  const EMAILJS_PUBLIC_KEY = "fytvLlTCcjoAJB0Ol";
+  const EMAILJS_SERVICE_ID = "service_og139ah";
+  const EMAILJS_TEMPLATE_ID = "template_cjrc6vs";
+
+  if (window.emailjs) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+
+  const USERS_KEY = "gh_pos_users_v1";
+  const SESSION_KEY = "gh_pos_session_v1";
 
   const DEFAULT_MENU = [
     { id: "ff1", cat: "Fast Food", name: "Şaurma", variants: [{ label: "Sadə", price: 4.0 }, { label: "+ Fri", price: 6.0 }], stockKey: "Fast food" },
@@ -533,17 +479,21 @@
     "Pizza xəmiri": 30, "Çay": 80, "Coca-Cola 0.3": 60, "Qəlyan tütünü": 50
   };
 
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
+  let currentEmail = localStorage.getItem(SESSION_KEY) || "";
+  let pendingVerifyEmail = "";
   let state = null;
   let activeZone = "Hamısı";
   let activeTableId = null;
   let activeCategory = "Fast Food";
   let currentReceiptObj = null;
 
+  function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  function dataKey(email) { return "gh_pos_data_" + email; }
   function todayStr() {
     const d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
-
   function money(n) { return Number(n || 0).toFixed(2) + " ₼"; }
 
   function setAuthMode(mode) {
@@ -554,91 +504,109 @@
     document.getElementById("authMsg").textContent = "";
   }
 
-  async function apiCall(path, method = "GET", body = null) {
-    const headers = { "Content-Type": "application/json" };
-    if (AUTH_TOKEN) headers["Authorization"] = "Bearer " + AUTH_TOKEN;
-    const res = await fetch(API_BASE + path, {
-      method, headers, body: body ? JSON.stringify(body) : null
-    });
-    const data = await res.json();
-    if (!res.ok || data.ok === false) throw new Error(data.error || "Xəta baş verdi");
-    return data;
-  }
-
   async function doRegister() {
-    try {
-      const first_name = document.getElementById("regFirst").value.trim();
-      const last_name = document.getElementById("regLast").value.trim();
-      const shop_name = document.getElementById("regShop").value.trim();
-      const email = document.getElementById("regEmail").value.trim();
-      const password = document.getElementById("regPassword").value;
+    const firstName = document.getElementById("regFirst").value.trim();
+    const lastName = document.getElementById("regLast").value.trim();
+    const shopName = document.getElementById("regShop").value.trim();
+    const email = document.getElementById("regEmail").value.trim().toLowerCase();
+    const password = document.getElementById("regPassword").value;
+    const msg = document.getElementById("authMsg");
+    const btn = document.getElementById("regSubmitBtn");
 
-      const res = await apiCall("/api/register", "POST", { first_name, last_name, shop_name, email, password });
-      pendingEmail = email;
+    if (!firstName || !lastName || !shopName || !email || !password) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Bütün xanaları doldurun!"; return;
+    }
+    if (!email.includes("@")) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Düzgün e-poçt yazın!"; return;
+    }
+    if (users[email] && users[email].verified) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Bu e-poçt artıq qeydiyyatdan keçib!"; return;
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    users[email] = { firstName, lastName, shopName, email, password, code, verified: false };
+    saveUsers();
+    pendingVerifyEmail = email;
+
+    btn.disabled = true;
+    btn.textContent = "Kod göndərilir...";
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: email,
+        email: email,
+        to_name: `${firstName} ${lastName}`,
+        shop_name: shopName,
+        passcode: code,
+        code: code,
+        time: "15 dəqiqə"
+      });
       document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = res.dev_code
-        ? `Test rejimi kodu: ${res.dev_code} (və ya ${email} ünvanına baxın)`
-        : `${email} ünvanına 6 rəqəmli kod göndərildi:`;
-      document.getElementById("authMsg").style.color = "#86efac";
-      document.getElementById("authMsg").textContent = "Kod göndərildi!";
-    } catch (e) {
-      document.getElementById("authMsg").style.color = "#fca5a5";
-      document.getElementById("authMsg").textContent = e.message;
+      document.getElementById("verifyInfoText").textContent = `${email} ünvanına 6 rəqəmli təsdiq kodu göndərildi (Spam qovluğunu da yoxlayın):`;
+      msg.style.color = "#86efac";
+      msg.textContent = "Təsdiq kodu e-poçtunuza göndərildi!";
+    } catch (err) {
+      document.getElementById("verifyBox").style.display = "block";
+      document.getElementById("verifyInfoText").textContent = `E-poçt göndərilmədi (${err?.text || "xəta"}). Müvəqqəti kod: ${code}`;
+      msg.style.color = "#fca5a5";
+      msg.textContent = "EmailJS göndərmə xətası: şablonda To Email hissəsinin {{email}} və ya {{to_email}} olduğunu yoxlayın.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Qeydiyyatdan keç və Kod göndər";
     }
   }
 
-  async function doVerify() {
-    try {
-      const code = document.getElementById("verifyCodeIn").value.trim();
-      const res = await apiCall("/api/verify", "POST", { email: pendingEmail, code });
-      AUTH_TOKEN = res.token;
-      CURRENT_USER = res.user;
-      localStorage.setItem("pos_token", AUTH_TOKEN);
-      localStorage.setItem("pos_user", JSON.stringify(CURRENT_USER));
-      await afterAuthenticated();
-    } catch (e) {
-      document.getElementById("authMsg").style.color = "#fca5a5";
-      document.getElementById("authMsg").textContent = e.message;
+  function doVerify() {
+    const code = document.getElementById("verifyCodeIn").value.trim();
+    const u = users[pendingVerifyEmail];
+    const msg = document.getElementById("authMsg");
+    if (!u || u.code !== code) {
+      msg.style.color = "#fca5a5"; msg.textContent = "Kod yanlışdır!"; return;
     }
+    u.verified = true;
+    saveUsers();
+    currentEmail = u.email;
+    localStorage.setItem(SESSION_KEY, currentEmail);
+    enterAfterAuth();
   }
 
-  async function doLogin() {
-    try {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const res = await apiCall("/api/login", "POST", { email, password });
-      AUTH_TOKEN = res.token;
-      CURRENT_USER = res.user;
-      localStorage.setItem("pos_token", AUTH_TOKEN);
-      localStorage.setItem("pos_user", JSON.stringify(CURRENT_USER));
-      await afterAuthenticated();
-    } catch (e) {
-      document.getElementById("authMsg").style.color = "#fca5a5";
-      document.getElementById("authMsg").textContent = e.message;
+  function doLogin() {
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const password = document.getElementById("loginPassword").value;
+    const msg = document.getElementById("authMsg");
+    const u = users[email];
+    if (!u || u.password !== password) {
+      msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və ya parol yanlışdır!"; return;
     }
+    if (!u.verified) {
+      pendingVerifyEmail = email;
+      document.getElementById("verifyBox").style.display = "block";
+      document.getElementById("verifyInfoText").textContent = `${email} üçün təsdiq kodu daxil edin:`;
+      return;
+    }
+    currentEmail = email;
+    localStorage.setItem(SESSION_KEY, currentEmail);
+    enterAfterAuth();
   }
 
   function doLogout() {
-    AUTH_TOKEN = "";
-    CURRENT_USER = null;
-    localStorage.removeItem("pos_token");
-    localStorage.removeItem("pos_user");
+    localStorage.removeItem(SESSION_KEY);
     location.reload();
   }
 
-  async function afterAuthenticated() {
+  function enterAfterAuth() {
     document.getElementById("authScreen").style.display = "none";
-    const res = await apiCall("/api/state", "GET");
-    if (!res.state) {
-      document.getElementById("setupShopName").value = CURRENT_USER.shop_name || "Yeni Obyekt";
+    const saved = localStorage.getItem(dataKey(currentEmail));
+    if (!saved) {
+      document.getElementById("setupShopName").value = users[currentEmail]?.shopName || "Obyekt";
       document.getElementById("setupScreen").style.display = "block";
     } else {
-      state = res.state;
+      state = JSON.parse(saved);
       showMainApp();
     }
   }
 
-  async function finishSetup() {
+  function finishSetup() {
     const shopName = document.getElementById("setupShopName").value.trim() || "Obyekt";
     const address = document.getElementById("setupAddress").value.trim();
     const zalCount = parseInt(document.getElementById("setupZals").value, 10) || 0;
@@ -661,15 +629,13 @@
       stock: menuMode === "empty" ? {} : { ...DEFAULT_STOCK },
       receipts: []
     };
-
-    await saveState();
+    saveState();
     document.getElementById("setupScreen").style.display = "none";
     showMainApp();
   }
 
-  async function saveState() {
-    if (!state) return;
-    await apiCall("/api/state", "POST", { state });
+  function saveState() {
+    if (state && currentEmail) localStorage.setItem(dataKey(currentEmail), JSON.stringify(state));
   }
 
   function showMainApp() {
@@ -679,8 +645,9 @@
   }
 
   function renderHeader() {
+    const u = users[currentEmail];
     document.getElementById("headerShopName").textContent = state.shop.name || "POS";
-    document.getElementById("headerSubInfo").textContent = `${CURRENT_USER.first_name} ${CURRENT_USER.last_name} • ${todayStr()}`;
+    document.getElementById("headerSubInfo").textContent = `${u ? u.firstName + " " + u.lastName : ""} • ${todayStr()}`;
   }
 
   function switchTab(tab) {
@@ -699,7 +666,6 @@
     document.getElementById("zoneTabs").innerHTML = zones.map(z =>
       `<button class="chip ${activeZone === z ? "active" : ""}" onclick="activeZone='${z}';renderTables()">${z}</button>`
     ).join("");
-
     const list = activeZone === "Hamısı" ? state.tables : state.tables.filter(t => t.zone === activeZone);
     document.getElementById("tablesGrid").innerHTML = list.map(t => {
       const ord = state.openOrders[t.id];
@@ -707,41 +673,27 @@
       const elapsed = ord ? Math.max(1, Math.floor((Date.now() - ord.openedAt) / 60000)) + " dəq" : "Boşdur";
       return `
         <div class="table-card ${ord ? "busy" : ""}" onclick="activeTableId='${t.id}';switchTab('order')">
-          <div class="table-top">
-            <div class="table-name">${t.name}</div>
-            <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? "Məşğul" : "Boş"}</span>
-          </div>
+          <div class="table-top"><div class="table-name">${t.name}</div><span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? "Məşğul" : "Boş"}</span></div>
           <div style="font-size:11px;color:var(--muted)">${t.zone}</div>
-          <div class="table-meta">
-            <div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div>
-            <div class="table-time">${elapsed}</div>
-          </div>
+          <div class="table-meta"><div class="table-sum">${ord ? money(sum) : "0.00 ₼"}</div><div class="table-time">${elapsed}</div></div>
           ${(!ord && t.custom) ? `<button class="del-table-btn" onclick="event.stopPropagation();deleteTable('${t.id}')">✕</button>` : ""}
         </div>
       `;
     }).join("");
   }
 
-  function openAddTableModal() {
-    document.getElementById("newTableName").value = "";
-    document.getElementById("addTableModal").classList.add("open");
-  }
-
-  async function addNewTable() {
+  function openAddTableModal() { document.getElementById("newTableName").value = ""; document.getElementById("addTableModal").classList.add("open"); }
+  function addNewTable() {
     const zone = document.getElementById("newTableZone").value;
     const name = document.getElementById("newTableName").value.trim();
     if (!name) return;
     state.tables.push({ id: "t_" + Date.now(), zone, name, custom: true });
-    await saveState();
-    closeModal("addTableModal");
-    renderTables();
+    saveState(); closeModal("addTableModal"); renderTables();
   }
-
-  async function deleteTable(id) {
+  function deleteTable(id) {
     if (state.openOrders[id]) return alert("Məşğul masanı silmək olmaz!");
     state.tables = state.tables.filter(t => t.id !== id);
-    await saveState();
-    renderTables();
+    saveState(); renderTables();
   }
 
   function renderCategories() {
@@ -759,15 +711,13 @@
       <div class="menu-item">
         <div class="menu-name">${m.name}</div>
         <div class="price-btns">
-          ${m.variants.map((v, idx) => `
-            <button class="price-btn" onclick="addToCart('${m.id}', ${idx})">${v.label}<span>${money(v.price)}</span></button>
-          `).join("")}
+          ${m.variants.map((v, idx) => `<button class="price-btn" onclick="addToCart('${m.id}', ${idx})">${v.label}<span>${money(v.price)}</span></button>`).join("")}
         </div>
       </div>
     `).join("");
   }
 
-  async function addToCart(menuId, variantIdx) {
+  function addToCart(menuId, variantIdx) {
     if (!activeTableId) activeTableId = state.tables[0].id;
     const item = state.menu.find(m => m.id === menuId);
     const variant = item.variants[variantIdx];
@@ -777,11 +727,10 @@
     const ex = ord.items.find(i => i.key === key);
     if (ex) ex.qty += 1;
     else ord.items.push({ key, menuId, name: item.variants.length > 1 ? `${item.name} (${variant.label})` : item.name, price: variant.price, qty: 1 });
-    await saveState();
-    renderCart();
+    saveState(); renderCart();
   }
 
-  async function changeQty(key, delta) {
+  function changeQty(key, delta) {
     const ord = state.openOrders[activeTableId];
     if (!ord) return;
     const idx = ord.items.findIndex(i => i.key === key);
@@ -789,14 +738,13 @@
     ord.items[idx].qty += delta;
     if (ord.items[idx].qty <= 0) ord.items.splice(idx, 1);
     if (ord.items.length === 0) delete state.openOrders[activeTableId];
-    await saveState();
-    renderCart();
+    saveState(); renderCart();
   }
 
-  async function saveOrderNote() {
+  function saveOrderNote() {
     if (!activeTableId || !state.openOrders[activeTableId]) return;
     state.openOrders[activeTableId].note = document.getElementById("orderNoteInput").value;
-    await saveState();
+    saveState();
   }
 
   function renderCart() {
@@ -826,7 +774,7 @@
     `).join("");
   }
 
-  async function closeOrder(method) {
+  function closeOrder(method) {
     const ord = activeTableId ? state.openOrders[activeTableId] : null;
     if (!ord || ord.items.length === 0) return alert("Sifariş boşdur!");
     const tbl = state.tables.find(t => t.id === activeTableId);
@@ -840,15 +788,11 @@
     };
     ord.items.forEach(ci => {
       const m = state.menu.find(x => x.id === ci.menuId);
-      if (m && m.stockKey && state.stock[m.stockKey] !== undefined) {
-        state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
-      }
+      if (m && m.stockKey && state.stock[m.stockKey] !== undefined) state.stock[m.stockKey] = Math.max(0, state.stock[m.stockKey] - ci.qty);
     });
     state.receipts.unshift(receipt);
     delete state.openOrders[activeTableId];
-    await saveState();
-    renderCart();
-    openReceiptModal(receipt);
+    saveState(); renderCart(); openReceiptModal(receipt);
   }
 
   function showPreReceipt() {
@@ -925,12 +869,12 @@
     document.getElementById("moveModal").classList.add("open");
   }
 
-  async function confirmMoveTable() {
+  function confirmMoveTable() {
     const targetId = document.getElementById("moveTargetSelect").value;
     state.openOrders[targetId] = state.openOrders[activeTableId];
     delete state.openOrders[activeTableId];
     activeTableId = targetId;
-    await saveState(); closeModal("moveModal"); renderCart();
+    saveState(); closeModal("moveModal"); renderCart();
   }
 
   function openAddProductModal() {
@@ -940,13 +884,13 @@
     document.getElementById("addProductModal").classList.add("open");
   }
 
-  async function addNewProduct() {
+  function addNewProduct() {
     const cat = document.getElementById("newProdCat").value;
     const name = document.getElementById("newProdName").value.trim();
     const price = parseFloat(document.getElementById("newProdPrice").value);
     if (!name || isNaN(price)) return;
     state.menu.push({ id: "m_" + Date.now(), cat, name, variants: [{ label: "Standart", price }] });
-    await saveState(); closeModal("addProductModal"); renderCategories(); renderMenu();
+    saveState(); closeModal("addProductModal"); renderCategories(); renderMenu();
   }
 
   function renderStock() {
@@ -961,18 +905,18 @@
     `).join("");
   }
 
-  async function updateStock(name, delta) {
+  function updateStock(name, delta) {
     state.stock[name] = Math.max(0, (state.stock[name] || 0) + delta);
-    await saveState(); renderStock();
+    saveState(); renderStock();
   }
 
   function openAddStockModal() { document.getElementById("addStockModal").classList.add("open"); }
-  async function addNewStock() {
+  function addNewStock() {
     const name = document.getElementById("newStockName").value.trim();
     const qty = parseInt(document.getElementById("newStockQty").value, 10) || 0;
     if (!name) return;
     state.stock[name] = qty;
-    await saveState(); closeModal("addStockModal"); renderStock();
+    saveState(); closeModal("addStockModal"); renderStock();
   }
 
   function openShopModal() {
@@ -983,12 +927,12 @@
     document.getElementById("shopModal").classList.add("open");
   }
 
-  async function saveShopInfo() {
+  function saveShopInfo() {
     state.shop.name = document.getElementById("shopNameIn").value.trim() || "POS";
     state.shop.address = document.getElementById("shopAddressIn").value.trim();
     state.shop.phone = document.getElementById("shopPhoneIn").value.trim();
     state.shop.footer = document.getElementById("shopFooterIn").value.trim();
-    await saveState(); renderHeader(); closeModal("shopModal");
+    saveState(); renderHeader(); closeModal("shopModal");
   }
 
   function setPeriod(period) {
@@ -1057,9 +1001,8 @@
   function shareReportTelegram() { window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(buildReportText()), "_blank"); }
   function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-  if (AUTH_TOKEN && CURRENT_USER) {
-    document.getElementById("authScreen").style.display = "none";
-    afterAuthenticated().catch(() => { document.getElementById("authScreen").style.display = "block"; });
+  if (currentEmail && users[currentEmail] && users[currentEmail].verified) {
+    enterAfterAuth();
   }
 </script>
 </body>
