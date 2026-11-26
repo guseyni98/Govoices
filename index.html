@@ -188,9 +188,10 @@
       background: var(--card); border: 1px solid #0ea5e9; border-radius: var(--radius);
       padding: 12px; margin-bottom: 10px;
     }
-    .input, select {
+    .input, select, textarea {
       width: 100%; background: var(--card2); border: 1px solid var(--border);
       color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
+      font-family: inherit;
     }
     .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
     @media (min-width: 640px) { .menu-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -263,7 +264,7 @@
     .prem-foot { text-align: center; font-size: 12px; margin-top: 12px; font-family: Arial, sans-serif; font-weight: 600; }
 
     @media print {
-      @page { margin: 6mm; }
+      @page { margin: 4mm; }
       body * { visibility: hidden; }
       #receiptModal, #receiptModal * { visibility: visible; }
       #receiptModal {
@@ -276,7 +277,7 @@
       }
       .premium-receipt {
         border: none !important; border-radius: 0 !important;
-        width: 100% !important; padding: 4px !important;
+        width: 100% !important; padding: 2px !important;
       }
       #receiptModal button { display: none !important; }
     }
@@ -298,9 +299,9 @@
     </div>
 
     <div id="loginBox">
-      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" /></div>
-      <div class="field"><label>Parol</label><input class="input" id="loginPassword" type="password" placeholder="••••••••" /></div>
-      <button class="btn-green" style="width:100%" onclick="doLogin()">Daxil ol</button>
+      <div class="field"><label>E-poçt ünvanı</label><input class="input" id="loginEmail" type="email" placeholder="ad@gmail.com" autocomplete="email" /></div>
+      <div class="field"><label>Parol</label><input class="input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
+      <button class="btn-green" id="loginSubmitBtn" style="width:100%" onclick="doLogin()">Daxil ol</button>
     </div>
 
     <div id="registerBox" style="display:none">
@@ -314,7 +315,7 @@
 
     <div id="verifyBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
       <div style="font-size:12px;color:var(--gold);margin-bottom:8px" id="verifyInfoText"></div>
-      <div class="field"><label>6 Rəqəmli Təsdiq Kodu</label><input class="input" id="verifyCodeIn" placeholder="123456" /></div>
+      <div class="field"><label>6 Rəqəmli Təsdiq Kodu</label><input class="input" id="verifyCodeIn" inputmode="numeric" placeholder="123456" /></div>
       <button class="btn-blue" style="width:100%" onclick="doVerify()">Kodu Təsdiqlə</button>
     </div>
 
@@ -508,6 +509,7 @@
   </div>
 </div>
 
+<!-- OBYEKT + CİHAZLAR ARASI KÖÇÜRMƏ MODALI -->
 <div class="modal-backdrop" id="shopModal">
   <div class="modal">
     <h3>🏪 Obyekt Məlumatları</h3>
@@ -522,9 +524,26 @@
       </select>
     </div>
     <div class="field"><label>Çek Sonu Qeydi</label><input class="input" id="shopFooterIn" /></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px">
       <button class="btn-outline" onclick="closeModal('shopModal')">Bağla</button>
       <button class="btn-green" onclick="saveShopInfo()">Yadda Saxla</button>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">
+        🔄 Telefon və Kompüter Arası Məlumat Köçürmə
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
+        Bir cihazdakı zalları, menyunu və çekləri digərinə keçirmək üçün:
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn-blue btn-sm" onclick="exportBackupCode()">📤 Kodu Kopyala</button>
+        <button class="btn-amber btn-sm" onclick="toggleImportBox()">📥 Kodu Yapışdır</button>
+      </div>
+      <div id="importBackupWrap" style="display:none;margin-top:8px">
+        <textarea class="input" id="importBackupInput" rows="3" placeholder="Digər cihazdan kopyaladığınız kodu bura yapışdırın..."></textarea>
+        <button class="btn-green btn-sm" style="width:100%;margin-top:6px" onclick="importBackupCode()">✅ Məlumatları Yüklə</button>
+      </div>
     </div>
   </div>
 </div>
@@ -631,6 +650,9 @@
     <button class="btn-outline" style="width:100%;margin-top:8px" onclick="closeModal('receiptModal')">Bağla</button>
   </div>
 </div>
+
+<!-- GİZLİ PRINTER ÇAP ÇƏRÇİVƏSİ -->
+<iframe id="hiddenPrintFrame" style="position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;"></iframe>
 
 <script>
   const tg = window.Telegram && window.Telegram.WebApp;
@@ -749,6 +771,18 @@
     document.getElementById("authMsg").textContent = "";
   }
 
+  async function sendVerificationMail(u) {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: u.email,
+      email: u.email,
+      to_name: `${u.firstName || "İstifadəçi"} ${u.lastName || ""}`.trim(),
+      shop_name: u.shopName || "Kassa POS",
+      passcode: u.code,
+      code: u.code,
+      time: "15 dəqiqə"
+    });
+  }
+
   async function doRegister() {
     const firstName = document.getElementById("regFirst").value.trim();
     const lastName = document.getElementById("regLast").value.trim();
@@ -764,9 +798,6 @@
     if (!email.includes("@")) {
       msg.style.color = "#fca5a5"; msg.textContent = "Düzgün e-poçt yazın!"; return;
     }
-    if (users[email] && users[email].verified) {
-      msg.style.color = "#fca5a5"; msg.textContent = "Bu e-poçt artıq qeydiyyatdan keçib!"; return;
-    }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
     users[email] = { firstName, lastName, shopName, email, password, code, verified: false };
@@ -775,10 +806,7 @@
 
     btn.disabled = true; btn.textContent = "Kod göndərilir...";
     try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email: email, email: email, to_name: `${firstName} ${lastName}`,
-        shop_name: shopName, passcode: code, code: code, time: "15 dəqiqə"
-      });
+      await sendVerificationMail(users[email]);
       document.getElementById("verifyBox").style.display = "block";
       document.getElementById("verifyInfoText").textContent = `${email} ünvanına 6 rəqəmli təsdiq kodu göndərildi:`;
       msg.style.color = "#86efac"; msg.textContent = "Təsdiq kodu göndərildi!";
@@ -801,20 +829,56 @@
     enterAfterAuth();
   }
 
-  function doLogin() {
+  async function doLogin() {
     const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
     const msg = document.getElementById("authMsg");
+    const btn = document.getElementById("loginSubmitBtn");
+
+    if (!email || !email.includes("@") || !password) {
+      msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və parolu daxil edin!"; return;
+    }
+
     const u = users[email];
-    if (!u || u.password !== password) { msg.style.color = "#fca5a5"; msg.textContent = "E-poçt və ya parol yanlışdır!"; return; }
-    if (!u.verified) {
-      pendingVerifyEmail = email;
-      document.getElementById("verifyBox").style.display = "block";
-      document.getElementById("verifyInfoText").textContent = `${email} üçün təsdiq kodu daxil edin:`;
+    // Həmin cihazda artıq təsdiqlənmiş hesab varsa birbaşa açılır
+    if (u && u.verified) {
+      if (u.password !== password) {
+        msg.style.color = "#fca5a5"; msg.textContent = "Parol yanlışdır!"; return;
+      }
+      currentEmail = email;
+      localStorage.setItem(SESSION_KEY, currentEmail);
+      enterAfterAuth();
       return;
     }
-    currentEmail = email; localStorage.setItem(SESSION_KEY, currentEmail);
-    enterAfterAuth();
+
+    // Kompüterdə və ya yeni brauzerdə ilk dəfə giriş edilirsə: e-poçta 6 rəqəmli kod göndərib təsdiqləyir
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const displayName = email.split("@")[0];
+    users[email] = {
+      firstName: u?.firstName || displayName,
+      lastName: u?.lastName || "",
+      shopName: u?.shopName || "Kassa POS",
+      email,
+      password,
+      code,
+      verified: false
+    };
+    saveUsers();
+    pendingVerifyEmail = email;
+
+    btn.disabled = true; btn.textContent = "Təsdiq kodu göndərilir...";
+    try {
+      await sendVerificationMail(users[email]);
+      document.getElementById("verifyBox").style.display = "block";
+      document.getElementById("verifyInfoText").textContent = `Yeni cihaz təsdiqi: ${email} ünvanına 6 rəqəmli kod göndərildi:`;
+      msg.style.color = "#86efac"; msg.textContent = "E-poçtunuza gələn 6 rəqəmli kodu daxil edin.";
+    } catch (err) {
+      document.getElementById("verifyBox").style.display = "block";
+      document.getElementById("verifyInfoText").textContent = `E-poçt xətası. Təsdiq kodu: ${code}`;
+      msg.style.color = "#fca5a5"; msg.textContent = "Yuxarıdakı kodu daxil edib təsdiqləyin.";
+    } finally {
+      btn.disabled = false; btn.textContent = "Daxil ol";
+    }
   }
 
   function doLogout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
@@ -905,7 +969,7 @@
   function renderHeader() {
     const u = users[currentEmail];
     document.getElementById("headerShopName").textContent = rootState.shop.name || "POS";
-    document.getElementById("headerSubInfo").textContent = `${u ? u.firstName + " " + u.lastName : ""} • ${todayStr()}`;
+    document.getElementById("headerSubInfo").textContent = `${u ? (u.firstName + " " + u.lastName).trim() : ""} • ${todayStr()}`;
   }
 
   function switchTab(tab) {
@@ -1268,7 +1332,7 @@
       carPlate: ord.carPlate || "",
       carModel: ord.carModel || "",
       workers,
-      waiter: isWash() ? workers.map(w => w.name).join(" + ") : (u ? `${u.firstName} ${u.lastName}` : "Kassir"),
+      waiter: isWash() ? workers.map(w => w.name).join(" + ") : (u ? `${u.firstName} ${u.lastName}`.trim() : "Kassir"),
       method, note: ord.note || "",
       items: JSON.parse(JSON.stringify(ord.items)),
       subtotal: t.subtotal,
@@ -1308,7 +1372,7 @@
       tableName: tbl ? tbl.name : "Masa",
       carPlate: ord.carPlate || "",
       carModel: ord.carModel || "",
-      waiter: isWash() ? [ord.washer1, ord.washer2].filter(Boolean).join(" + ") : (u ? `${u.firstName} ${u.lastName}` : "Kassir"),
+      waiter: isWash() ? [ord.washer1, ord.washer2].filter(Boolean).join(" + ") : (u ? `${u.firstName} ${u.lastName}`.trim() : "Kassir"),
       method: "Ödənilməyib",
       note: ord.note || "",
       items: ord.items,
@@ -1368,27 +1432,28 @@
     if (!currentReceiptObj) return;
     const r = currentReceiptObj;
     const receiptHtml = buildReceiptHtml(r, r.isPre);
+    const frame = document.getElementById("hiddenPrintFrame");
 
-    const printWin = window.open("", "_blank", "width=420,height=680");
-    if (printWin && printWin.document) {
-      printWin.document.open();
-      printWin.document.write(`<!DOCTYPE html>
+    if (frame && frame.contentWindow) {
+      const doc = frame.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html>
 <html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${r.id || "Çek"}</title>
   <style>
+    @page { margin: 3mm; }
     body {
       margin: 0;
-      padding: 12px;
+      padding: 6px;
       background: #ffffff;
       color: #000000;
       font-family: "Courier New", Courier, monospace;
     }
     .premium-receipt {
       width: 100%;
-      max-width: 80mm;
+      max-width: 76mm;
       margin: 0 auto;
       color: #000000;
     }
@@ -1401,7 +1466,7 @@
     .prem-hr { border-top: 1px dashed #000000; margin: 8px 0; }
     .prem-cols, .prem-item {
       display: grid;
-      grid-template-columns: 1fr 52px 72px;
+      grid-template-columns: 1fr 48px 70px;
       font-size: 12px;
       gap: 4px;
     }
@@ -1420,27 +1485,23 @@
       padding-top: 6px;
     }
     .prem-foot { text-align: center; font-size: 11px; margin-top: 12px; font-family: Arial, sans-serif; }
-    @page { margin: 4mm; }
-    @media print {
-      body { padding: 0; }
-    }
   </style>
 </head>
 <body>
   <div class="premium-receipt">${receiptHtml}</div>
-  <script>
-    window.onload = function () {
-      setTimeout(function () {
-        window.print();
-      }, 200);
-    };
-  <\/script>
 </body>
 </html>`);
-      printWin.document.close();
+      doc.close();
+      setTimeout(() => {
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch (e) {
+          window.print();
+        }
+      }, 150);
       return;
     }
-
     window.print();
   }
 
@@ -1580,6 +1641,7 @@
     document.getElementById("shopPhoneIn").value = rootState.shop.phone || "";
     document.getElementById("shopServiceIn").value = String(rootState.shop.servicePercent || 0);
     document.getElementById("shopFooterIn").value = rootState.shop.footer || "";
+    document.getElementById("importBackupWrap").style.display = "none";
     document.getElementById("shopModal").classList.add("open");
   }
 
@@ -1590,6 +1652,37 @@
     rootState.shop.servicePercent = parseInt(document.getElementById("shopServiceIn").value, 10) || 0;
     rootState.shop.footer = document.getElementById("shopFooterIn").value.trim();
     saveState(); renderHeader(); closeModal("shopModal");
+  }
+
+  function exportBackupCode() {
+    if (!rootState) return;
+    const raw = JSON.stringify(rootState);
+    const encoded = btoa(unescape(encodeURIComponent(raw)));
+    navigator.clipboard.writeText(encoded);
+    alert("Bütün məlumatların ehtiyat kodu kopyalandı! Digər cihazda 'Kodu Yapışdır' bölməsinə yapışdırın.");
+  }
+
+  function toggleImportBox() {
+    const el = document.getElementById("importBackupWrap");
+    el.style.display = el.style.display === "none" ? "block" : "none";
+  }
+
+  function importBackupCode() {
+    const txt = document.getElementById("importBackupInput").value.trim();
+    if (!txt) return alert("Kodu yapışdırın!");
+    try {
+      const decoded = decodeURIComponent(escape(atob(txt)));
+      const parsed = JSON.parse(decoded);
+      if (!parsed || !parsed.modes || !parsed.shop) throw new Error("Invalid");
+      rootState = parsed;
+      saveState();
+      renderHeader();
+      renderTables();
+      closeModal("shopModal");
+      alert("Məlumatlar uğurla köçürüldü!");
+    } catch (e) {
+      alert("Kod yanlışdır və ya natamamdır!");
+    }
   }
 
   function setPeriod(period) {
