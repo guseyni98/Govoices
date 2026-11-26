@@ -121,10 +121,39 @@
       padding: 13px; position: relative; display: flex; flex-direction: column; justify-content: space-between;
       min-height: 108px; cursor: pointer;
       user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+      transition: transform 0.12s ease, border-color 0.12s ease;
     }
     .table-card.busy { border-color: var(--gold); background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), var(--card)); }
     body.theme-carwash .table-card.busy { border-color: #38bdf8; background: linear-gradient(180deg, rgba(14, 165, 233, 0.2), var(--card)); }
-    .table-card.pressing { transform: scale(0.96); border-color: #fff; }
+    .table-card.pressing { transform: scale(0.95); border-color: #fff; }
+
+    @keyframes iosWiggle {
+      0% { transform: rotate(-1.1deg); }
+      50% { transform: rotate(1.1deg); }
+      100% { transform: rotate(-1.1deg); }
+    }
+    body.jiggle-mode .table-card {
+      animation: iosWiggle 0.26s infinite ease-in-out;
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+    .ios-minus-badge {
+      display: none;
+      position: absolute; top: -8px; left: -8px;
+      width: 24px; height: 24px; border-radius: 999px;
+      background: #ef4444; color: #fff;
+      font-size: 16px; font-weight: 900; line-height: 22px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    body.jiggle-mode .ios-minus-badge { display: block; }
+
+    .jiggle-bar {
+      display: none;
+      justify-content: space-between; align-items: center;
+      background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px;
+    }
+    body.jiggle-mode .jiggle-bar { display: flex; }
+
     .table-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
     .table-name { font-size: 15px; font-weight: 800; }
     .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
@@ -233,7 +262,6 @@
     .prem-grand { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; margin-top: 6px; }
     .prem-foot { text-align: center; font-size: 12px; margin-top: 12px; font-family: Arial, sans-serif; font-weight: 600; }
 
-    /* TELEFONUN ÇAP PƏNCƏRƏSİNDƏ YALNIZ ÇEKİN GÖRÜNMƏSİ ÜÇÜN */
     @media print {
       @page { margin: 6mm; }
       body * { visibility: hidden; }
@@ -319,10 +347,14 @@
 
   <div class="container">
     <section id="sec-tables" class="section active">
+      <div class="jiggle-bar">
+        <span>Düzenleme rejimi aktivdir (silmək üçün sol üstteki <strong>−</strong> düyməsinə basın)</span>
+        <button class="btn-green btn-sm" onclick="exitJiggleMode()">Bitti</button>
+      </div>
       <div class="tabs-row" id="zoneTabs"></div>
       <div class="tables-grid" id="tablesGrid"></div>
       <div class="zone-hint" id="zoneLongPressHint">
-        💡 Qeyd: Zal, kabinet və ya boksu redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.
+        💡 Qeyd: Zal və ya kabineti redaktə etmək ya da silmək üçün kartın üzərinə <strong>basılı saxlayın</strong>.
       </div>
     </section>
 
@@ -448,13 +480,14 @@
   </nav>
 </div>
 
-<!-- BASILI SAXLAYANDA AÇILAN ZAL / KABİNET / BOKS MENYUSU -->
+<!-- İPHONE TƏRZLİ BASILI SAXLAMA MENYUSU -->
 <div class="modal-backdrop" id="zoneActionModal">
   <div class="modal">
     <h3 id="zoneActionTitle">Seçim</h3>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="zoneActionSub"></div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn-amber" onclick="openEditZoneFromMenu()">✏️ Adını / Bölməsini Redaktə Et</button>
+      <button class="btn-outline" onclick="enterJiggleModeFromMenu()">⚙️ Düzenlemeyi Başlat (Silmə rejimi)</button>
       <button class="btn-danger" onclick="deleteZoneFromMenu()">🗑️ Sil</button>
       <button class="btn-outline" onclick="closeModal('zoneActionModal')">Bağla</button>
     </div>
@@ -590,20 +623,10 @@
 <div class="modal-backdrop" id="receiptModal">
   <div class="modal">
     <div id="receiptPrintable" class="premium-receipt"></div>
-    <div id="pngPreviewBox" style="margin-top:10px;display:none;text-align:center;background:#0f1318;padding:10px;border-radius:10px;border:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--gold);margin-bottom:6px">
-        Çap şəkli hazırdır (üzərinə basılı saxlayıb saxlaya və ya paylaşa bilərsiniz):
-      </div>
-      <img id="pngPreviewImg" style="max-width:100%;border-radius:8px;display:block;margin:0 auto" />
-      <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">
-        <button class="btn-green btn-sm" onclick="sharePngFile()">📤 Paylaş / Printer</button>
-      </div>
-    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
       <button class="btn-primary" onclick="triggerPrint()">🖨️ Çap Et</button>
-      <button class="btn-green" onclick="generateReceiptPNG()">🖼️ Şəkil (PNG)</button>
       <button class="btn-blue" onclick="shareReceiptTelegram()">✈️ Telegram</button>
-      <button class="btn-outline" onclick="copyReceiptText()">📋 Kopyala</button>
+      <button class="btn-outline" style="grid-column:1 / -1" onclick="copyReceiptText()">📋 Kopyala</button>
     </div>
     <button class="btn-outline" style="width:100%;margin-top:8px" onclick="closeModal('receiptModal')">Bağla</button>
   </div>
@@ -701,11 +724,11 @@
   let activeTableId = null;
   let activeCategory = "";
   let currentReceiptObj = null;
-  let lastPngDataUrl = "";
   let pendingDeleteReceiptId = null;
   let selectedZoneActionId = null;
   let longPressTimer = null;
   let longPressTriggered = false;
+  let jiggleMode = false;
 
   function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
   function dataKey(email) { return "gh_pos_dual_v1_" + email; }
@@ -819,6 +842,7 @@
   function saveState() { if (rootState && currentEmail) localStorage.setItem(dataKey(currentEmail), JSON.stringify(rootState)); }
 
   function switchBizMode(mode) {
+    exitJiggleMode();
     activeMode = mode;
     activeZone = "Hamısı";
     activeTableId = null;
@@ -885,6 +909,7 @@
   }
 
   function switchTab(tab) {
+    if (tab !== "tables") exitJiggleMode();
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
     document.getElementById("sec-" + tab).classList.add("active");
@@ -896,6 +921,7 @@
   }
 
   function startCardPress(el, tableId) {
+    if (jiggleMode) return;
     longPressTriggered = false;
     clearTimeout(longPressTimer);
     el.classList.add("pressing");
@@ -916,6 +942,10 @@
       longPressTriggered = false;
       return;
     }
+    if (jiggleMode) {
+      openEditZoneModalById(tableId);
+      return;
+    }
     activeTableId = tableId;
     switchTab("order");
   }
@@ -925,14 +955,13 @@
     if (!tbl) return;
     selectedZoneActionId = tableId;
     document.getElementById("zoneActionTitle").textContent = tbl.name;
-    document.getElementById("zoneActionSub").textContent = `Bölmə: ${tbl.zone} — Nə etmək istəyirsiniz?`;
+    document.getElementById("zoneActionSub").textContent = `Bölmə: ${tbl.zone}`;
     document.getElementById("zoneActionModal").classList.add("open");
   }
 
-  function openEditZoneFromMenu() {
-    const tbl = cur().tables.find(t => t.id === selectedZoneActionId);
+  function openEditZoneModalById(id) {
+    const tbl = cur().tables.find(t => t.id === id);
     if (!tbl) return;
-    closeModal("zoneActionModal");
     document.getElementById("editZoneId").value = tbl.id;
     document.getElementById("editZoneName").value = tbl.name;
     const sel = document.getElementById("editZoneType");
@@ -941,6 +970,23 @@
       : `<option value="Zal">Zal</option><option value="Kabinet">Kabinet</option><option value="Lounge">Lounge</option>`;
     sel.value = tbl.zone;
     document.getElementById("editZoneModal").classList.add("open");
+  }
+
+  function openEditZoneFromMenu() {
+    const id = selectedZoneActionId;
+    closeModal("zoneActionModal");
+    openEditZoneModalById(id);
+  }
+
+  function enterJiggleModeFromMenu() {
+    closeModal("zoneActionModal");
+    jiggleMode = true;
+    document.body.classList.add("jiggle-mode");
+  }
+
+  function exitJiggleMode() {
+    jiggleMode = false;
+    document.body.classList.remove("jiggle-mode");
   }
 
   function saveEditedZone() {
@@ -957,16 +1003,20 @@
     renderTables();
   }
 
-  function deleteZoneFromMenu() {
+  function deleteZoneById(id) {
     const b = cur();
-    const id = selectedZoneActionId;
     if (!id) return;
     if (b.openOrders[id]) return alert("Məşğul yeri silmək olmaz!");
     b.tables = b.tables.filter(t => t.id !== id);
     if (activeTableId === id) activeTableId = null;
     saveState();
-    closeModal("zoneActionModal");
     renderTables();
+  }
+
+  function deleteZoneFromMenu() {
+    const id = selectedZoneActionId;
+    closeModal("zoneActionModal");
+    deleteZoneById(id);
   }
 
   function renderTables() {
@@ -990,6 +1040,7 @@
           onpointercancel="cancelCardPress(this)"
           oncontextmenu="event.preventDefault(); openZoneActionMenu('${t.id}'); return false;"
           onclick="handleCardClick('${t.id}')">
+          <div class="ios-minus-badge" onclick="event.stopPropagation(); deleteZoneById('${t.id}')">−</div>
           <div class="table-top">
             <div class="table-name">${t.name}</div>
             <span class="badge ${ord ? "badge-busy" : "badge-free"}">${ord ? (isWash() ? "Yuyulur" : "Məşğul") : "Boş"}</span>
@@ -1309,8 +1360,6 @@
 
   function openReceiptModal(r, isPre = false) {
     currentReceiptObj = { ...r, isPre };
-    lastPngDataUrl = "";
-    document.getElementById("pngPreviewBox").style.display = "none";
     document.getElementById("receiptPrintable").innerHTML = buildReceiptHtml(r, isPre);
     document.getElementById("receiptModal").classList.add("open");
   }
@@ -1340,106 +1389,6 @@
 
   function copyReceiptText() { if (currentReceiptObj) { navigator.clipboard.writeText(formatReceiptPlain(currentReceiptObj)); alert("Çek mətni kopyalandı!"); } }
   function shareReceiptTelegram() { if (currentReceiptObj) window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(formatReceiptPlain(currentReceiptObj)), "_blank"); }
-
-  function generateReceiptPNG() {
-    if (!currentReceiptObj) return;
-    const r = currentReceiptObj;
-    const w = 384;
-    const h = 320 + r.items.length * 28;
-    const canvas = document.createElement("canvas");
-    canvas.width = w * 2;
-    canvas.height = h * 2;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(2, 2);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.fillStyle = "#000000";
-    ctx.textAlign = "center";
-    ctx.font = "bold 20px Courier New, monospace";
-    ctx.fillText(rootState.shop.name || "POS", w / 2, 34);
-
-    ctx.font = "bold 13px Courier New, monospace";
-    ctx.fillText(r.isPre ? "QONAQ HESABI" : r.id, w / 2, 54);
-
-    ctx.font = "11px Arial, sans-serif";
-    if (rootState.shop.address) ctx.fillText(rootState.shop.address, w / 2, 71);
-
-    ctx.textAlign = "left";
-    ctx.font = "12px Courier New, monospace";
-    ctx.fillText(`${isWash() ? "Yer" : "Zal"}: ${r.tableName}`, 16, 96);
-    ctx.textAlign = "right";
-    ctx.fillText(r.carPlate ? `№ ${r.carPlate}` : `Sifariş № ${r.orderNo || ""}`, w - 16, 96);
-
-    ctx.textAlign = "left";
-    ctx.fillText(`Açılıb: ${r.date} ${r.openedTime || r.time}`, 16, 114);
-    ctx.fillText(`${isWash() ? "Moyşik" : "Ofisiant"}: ${r.waiter || ""}`, 16, 132);
-
-    ctx.fillText("------------------------------------------", 16, 148);
-    ctx.font = "bold 12px Courier New, monospace";
-    ctx.fillText("Adı", 16, 164);
-    ctx.textAlign = "center";
-    ctx.fillText("Miq", w - 105, 164);
-    ctx.textAlign = "right";
-    ctx.fillText("Məbləğ", w - 16, 164);
-    ctx.textAlign = "left";
-    ctx.fillText("------------------------------------------", 16, 178);
-
-    let y = 196;
-    ctx.font = "12px Courier New, monospace";
-    r.items.forEach(i => {
-      ctx.textAlign = "left";
-      ctx.fillText(i.name.slice(0, 22), 16, y);
-      ctx.textAlign = "center";
-      ctx.fillText(String(i.qty), w - 105, y);
-      ctx.textAlign = "right";
-      ctx.fillText(num2(i.price * i.qty), w - 16, y);
-      y += 25;
-    });
-
-    ctx.textAlign = "left";
-    ctx.fillText("------------------------------------------", 16, y);
-    y += 18;
-    ctx.fillText("Tam məbləğ:", 16, y);
-    ctx.textAlign = "right";
-    ctx.fillText(num2(r.subtotal ?? r.total), w - 16, y);
-
-    if (r.svcPct > 0) {
-      y += 18;
-      ctx.textAlign = "left";
-      ctx.fillText(`Servis "${r.svcPct}%":`, 16, y);
-      ctx.textAlign = "right";
-      ctx.fillText(`+${num2(r.serviceAmt)}`, w - 16, y);
-    }
-
-    y += 24;
-    ctx.textAlign = "left";
-    ctx.font = "bold 15px Courier New, monospace";
-    ctx.fillText("YEKUN ÖDƏNİŞ:", 16, y);
-    ctx.textAlign = "right";
-    ctx.fillText(`${num2(r.total)} AZN`, w - 16, y);
-
-    ctx.textAlign = "center";
-    ctx.font = "11px Arial, sans-serif";
-    ctx.fillText(rootState.shop.footer || "Təşəkkür edirik", w / 2, h - 18);
-
-    lastPngDataUrl = canvas.toDataURL("image/png");
-    const box = document.getElementById("pngPreviewBox");
-    const img = document.getElementById("pngPreviewImg");
-    img.src = lastPngDataUrl;
-    box.style.display = "block";
-  }
-
-  async function sharePngFile() {
-    if (!lastPngDataUrl) generateReceiptPNG();
-    try {
-      const res = await fetch(lastPngDataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${currentReceiptObj?.id || "cek"}.png`, { type: "image/png" });
-      if (navigator.share) await navigator.share({ files: [file], title: currentReceiptObj?.id || "Çek" });
-    } catch (e) {}
-  }
 
   function openMoveModal() {
     const b = cur();
